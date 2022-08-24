@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# configure script to write Makefile.inc
+#
+
+function general_help {
+    echo "Usage:
+  ./configure [options]
+
+proVBFHH requires fastjet, lhapdf and hoppet/struct-func-devel
+installed on your machine. For a default installation, the
+corresponding binaries need to be in your path.
+
+Options:
+ --help, -h                        : Print this message
+ --with-fastjet=DIR/fastjet-config : Set the path to fastjet-config
+ --with-lhapdf=DIR/lhapdf-config   : Set the path to lhapdf-config 
+ --with-hoppet=DIR/hoppet-config   : Set the path to hoppet-config
+ --compiler=COMPILER               : Set fortran compiler (gfortran or ifort) 
+                                     [default: gfortran]
+ --shell=SHELL                     : Set shell [default: /bin/bash]
+"
+}
+
+MKF="Makefile.inc"
+SHELL=/bin/bash
+VALID_OPTS="-h --help --with-lhapdf --with-fastjet --with-hoppet --compiler --shell --prefix"
+
+# Check if help requested.
+for OPT in "$@"; do
+    if [ "$OPT" = "-h" ] || [ "$OPT" = "--help" ]; then
+	general_help
+	exit
+    fi
+done
+
+
+cat > $MKF << "BLOCKTEXT"
+######################################################################
+# Makefile.inc for proVBFHH
+# File generated with:
+BLOCKTEXT
+echo "#  "$0 $@ >> $MKF
+for OPT in "$@"; do
+    if ! [[ $VALID_OPTS =~ (^| )${OPT%%=*}($| ) ]]; then
+	echo "WARNING: Ignoring unknown option \"${OPT%=*}\".";
+	continue
+    fi
+    OPT=${OPT#--with-}; OPT=${OPT#--};
+    KEY=${OPT%%=*};
+    VAL=${OPT#$KEY}; VAL=${VAL#*=};
+    KEY=$(echo $KEY | awk '{print toupper($0)}');  VAL=$(eval echo $VAL)
+    eval $KEY=\"$VAL\"; eval ${KEY}_SET=true
+done
+
+if ! [ -z "$PREFIX" ]; then
+    echo "WARNING: \"--prefix\" is not required by this package and will be ignored.";fi
+
+if [ -z "$COMPILER" ]; then COMPILER="gfortran"; fi
+if [ -z "$FASTJET" ]; then FASTJET="fastjet-config"; fi
+if [ -z "$LHAPDF" ]; then LHAPDF="lhapdf-config"; fi
+if [ -z "$HOPPET" ]; then HOPPET="hoppet-config"; fi
+
+cat >> $MKF << "BLOCKTEXT"
+######################################################################
+
+# external programs needed
+BLOCKTEXT
+
+cat >> $MKF << BLOCKTEXT
+FJEXEC=$FASTJET
+LHEXEC=$LHAPDF
+HPEXEC=$HOPPET
+BLOCKTEXT
+
+echo "# general settings " >> $MKF
+echo "COMPILER="$COMPILER >> $MKF
+echo "SHELL="$SHELL >> $MKF
+
+if [ ! -d obj-$COMPILER ]; then
+  mkdir -p obj-$COMPILER;
+fi

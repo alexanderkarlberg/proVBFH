@@ -1,0 +1,77 @@
+======================================================================
+----------------------------------------------------------------------
+ proVBFH-inclusive v.2.0.2
+ http://provbfh.hepforge.org/
+----------------------------------------------------------------------
+======================================================================
+
+proVBFH (projection-to-Born Vector Boson-Fusion Higgs production) is a
+computer program written to calculate QCD corrections in VBF single
+and double Higgs production.
+
+This package contains a stand-alone version of the inclusive process,
+integrating over all hadronic radiation. QCD corrections can be
+evaluated up to next-to-next-to-next-to leading order (N3LO) in the
+structure function approach.
+
+
+----------------------------------------------------------------------
+Installation
+---
+
+To compile proVBFH-inclusive, you will need
+* hoppet, the struct-func-devel branch (http://hoppet.hepforge.org/)
+* LHAPDF (http://lhapdf.hepforge.org/)
+
+The struct-func-devel branch of hoppet can be downloaded using
+
+  svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
+
+Once all dependencies are installed on your machine, proVBFH-inclusive
+can be compiled using:
+
+  ./configure [--with-LHAPDF=DIR --with-hoppet=DIR]
+  make
+
+in the main directory. This will create an executable "provbfh_incl".
+
+To compile proVBFH-inclusive with a local installation of hoppet or
+LHAPDF, change the "DIR" above in the configure step to the folder
+containing the hoppet-config and lhapdf-config executables
+respectively.
+
+
+----------------------------------------------------------------------
+Usage
+---
+
+To run proVBFH-inclusive, use the provbfh_incl executable, and pass command
+line arguments to specify inputs. Example:
+
+  ./provbfh_incl -pdf PDF4LHC15_nlo_mc -nlo -sqrts 8000 -xmur 0.5 -xmuf 0.5 -iseed 12
+
+The program will create a file "xsct_(n/nn/n3)lo_seedXXXX.dat"
+containing the total cross section and Monte Carlo error.
+
+A list of possible options is available in the documentation,
+docs/provbfh-incl-doc.pdf, or alternatively can also be obtained from
+parameters.f90.
+
+
+----------------------------------------------------------------------
+Dihiggs production
+---
+
+To run dihiggs VBF production instead of the single Higgs process,
+compile the "provbfhh_incl" program with
+
+  make provbfhh_incl
+
+which creates an executable "provbfhh_incl" that can be run with
+command line arguments exactly like the corresponding single Higgs
+program:
+
+  ./provbfhh_incl -pdf PDF4LHC15_nlo_mc -nlo -sqrts 8000 -xmur 0.5 -xmuf 0.5 -iseed 12
+  
+The program will create a file "xsct_(n/nn/n3)lo_seedXXXX.dat"
+containing the total cross section and Monte Carlo error.

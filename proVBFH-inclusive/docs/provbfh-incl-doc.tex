@@ -1,0 +1,156 @@
+\documentclass[12pt,a4]{article}
+
+
+\usepackage{a4wide}
+\usepackage{xspace}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[breaklinks=true]{hyperref}
+%\usepackage[colorlinks=true]{hyperref}
+\addtolength{\textwidth}{2cm}
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\textheight}{2cm}
+\addtolength{\topmargin}{-2cm}
+
+\newcommand{\provbfh}{\texttt{proVFBH}\xspace}
+\newcommand{\provbfhincl}{\texttt{proVFBH-inclusive}\xspace}
+\newcommand{\hoppet}{\texttt{hoppet}\xspace}
+\title{\texttt{proVBFH-inclusive v.2.0.2} manual}
+
+\begin{document}
+\maketitle
+
+This document provides a short documentation for the \provbfhincl code.
+
+%----------------------------------------------------------------------
+\section{Installation}
+To run \provbfhincl, you will need an installation of the following packages:
+\begin{itemize}
+\item \texttt{hoppet/struct-func-devel}:
+  \url{http://hoppet.hepforge.org/}.  Note that it is specifically the
+  struct-func-devel branch of \hoppet that is required.  It can be
+  downloaded using:
+\begin{verbatim}
+ svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
+\end{verbatim}
+\item \texttt{LHAPDF}: \url{http://lhapdf.hepforge.org/}.
+\end{itemize}
+With these installed, \provbfhincl can be compiled by going to the base
+directory and running
+\begin{verbatim}
+ ./configure [options]
+ make
+\end{verbatim}
+Available options in the \texttt{configure} script can be accessed
+through the \texttt{--help} or \texttt{-h} argument, as well as being
+described in the \texttt{INSTALL} text file.
+
+%----------------------------------------------------------------------
+\section{Setting up a run}
+To run \provbfhincl, you can simply call the executable
+\texttt{provbfh\_incl} created by the installation steps above.
+%
+All parameters are passed as command line options, with the full list
+of settings detailed in the section below, or accessible in
+\texttt{src/parameters.f90}.
+%
+Since executing the code will produce several files, the recommended
+usage is to start individual runs in dedicated subfolders.
+
+An example setup:
+\begin{verbatim}
+ mkdir nlo-14tev; cd $_
+ ../provbfh_incl -nlo -sqrts 14000 -iseed 2
+\end{verbatim}
+This will produce three files, two files \texttt{grids\_0002.dat} and
+\texttt{grids\_0002.top} containing the grid and an output file
+\texttt{xsct\_nlo\_seed0002.dat} containing the results of the run.
+%
+Different seed numbers and orders in
+$\alpha_s$ can be executed in the same location, as they will result
+in distinct output files.
+
+% ----------------------------------------------------------------------
+\section{Dihiggs production}
+To run \provbfhincl for dihiggs production, one needs to compile the
+\texttt{provbfhh\_incl} program with
+\begin{verbatim}
+ make provbfhh_incl
+\end{verbatim}
+which can then be executed exactly like the single Higgs program to
+calculate the total cross section in VBF Higgs pair production.
+% ----------------------------------------------------------------------
+\section{Input parameters}
+All accessible parameters can be specified as command line arguments.
+
+The available options, and their default value (in {\bf bold}), are:
+\begin{itemize}
+\item\texttt{-lo, -nlo, -nnlo, {\bf -n3lo}}: Order in $\alpha_s$.
+  
+\item\texttt{-sqrts} {\bf 13000}: Center-of-mass energy in GeV.
+
+\item\texttt{-scale-choice} {\bf 1}: Scale choice to use, with the options
+  \begin{itemize}
+  \item 0: Fixed scale at $\mu_0^2=m^2_h$.
+  \item 1: Vector boson momentum $\mu_0^2(Q_i^2)=Q^2_i=-q_i^2$.
+  \item 2: Common scale given by $\mu_0^2(Q_1, Q_2)=Q_1 Q_2$.
+  \item 3: 
+    $\mu_0^2(p_{t,H}) = \frac{m_H}{2} \sqrt{\left(\frac{m_H}{2}\right)^2
+      + p_{t,H}^2}$ from \cite{Cacciari:2015jma}.
+  \end{itemize}
+
+\item\texttt{-xmuf} {\bf 1.0}: Factor $x_{\mu_F}$ multiplying the
+  factorisation scale $\mu_F = x_{\mu_F} \mu_0$.
+
+\item\texttt{-xmur} {\bf 1.0}: Factor $x_{\mu_R}$ multiplying the
+  renormalisation scale $\mu_R = x_{\mu_R} \mu_0$.
+
+\item\texttt{-pdf} {\bf PDF4LHC15\_nnlo\_mc}: Choice of PDF set (by name).
+
+\item\texttt{-nmempdf} {\bf 0}: Member of the PDF.
+
+\item\texttt{-mh} {\bf 125.}: Higgs mass.
+
+\item\texttt{-hwidth} {\bf 0.00402964}: Higgs width.
+  
+\item\texttt{-mw} {\bf 80.398}: $W$ mass.
+
+\item\texttt{-wwidth} {\bf 2.141}: $W$ width.
+
+\item\texttt{-mz} {\bf 91.187}: $Z$ mass.
+
+\item\texttt{-zwidth} {\bf 2.4952}: $Z$ width.
+
+\item\texttt{-nf} {\bf 5}: number of quark flavours.
+  
+\item\texttt{-mt} {\bf 172.4}: top mass.
+
+\item\texttt{-mb} {\bf 4.75}: bottom mass.
+  
+\item\texttt{-readingrid}: Use available grid if possible.
+
+\item\texttt{-higgsbreitwigner}: Use a Breit-Wigner propagator for the higgs.
+
+\item\texttt{-higgsmasswindow} {\bf 30.}: Number of width to integrate around the BW peak.
+  
+\item\texttt{-ncall1} {\bf 100000}: Number of calls for the initialisation of the integration grid.
+
+\item\texttt{-itmx1} {\bf 12}: Number of iterations for the grid initialisation.
+  
+\item\texttt{-ncall2} {\bf 100000}: Number of calls for evaluating the integral.
+
+\item\texttt{-itmx2} {\bf 12}: Number of iterations for the integration.
+
+\item\texttt{-iseed} {\bf 10}: Random seed.
+
+\item\texttt{-pdfuncert}: Compute PDF uncertainties on the fly. Significantly increases computation time (scales linearly with the number of PDF members). Also computes alphas uncertainty if this is included in the PDF.
+
+\item\texttt{-3scaleuncert}: Compute 3 point (ie symmetric) scale variation.
+
+\item\texttt{-7scaleuncert}: Compute 7 point scale variation.
+
+\end{itemize}
+\end{document}

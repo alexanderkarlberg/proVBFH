@@ -1,0 +1,34 @@
+----------------------------------------------------------------------
+Installation instructions for proVBFH
+----------------------------------------------------------------------
+
+To compile proVBFH, you will first need to install
+* hoppet, the struct-func-devel branch (http://hoppet.hepforge.org/)
+* LHAPDF (http://lhapdf.hepforge.org/)
+* FastJet (http://fastjet.fr/)
+* A modern fortran compiler (gfortran version 4.6 or later or ifort)
+
+The struct-func-devel branch of hoppet can be downloaded using
+
+  svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
+
+Once all dependencies are installed on your machine, proVBFH can be
+compiled using:
+
+  ./configure [options]
+  make
+
+in the main directory. This will create an executable "proVBFH".
+
+The options for the configure script are:
+ --help, -h                             : Print a help message
+ --with-fastjet=/path/to/fastjet-config : Set path for fastjet-config
+ --with-lhapdf=/path/to/lhapdf-config   : Set path for lhapdf-config
+ --with-hoppet=/path/to/hoppet-config   : Set path for hoppet-config
+ --compiler=COMPILER                    : Set fortran compiler (gfortran, ifort) 
+ 					  [default: gfortran]
+ --shell=SHELL                          : Set shell [default: /bin/bash]
+
+To compile proVBFH with a local installation of hoppet, fastjet or
+LHAPDF, change path above in the configure step to the location of the
+hoppet-config, fastjet-config and lhapdf-config executables respectively.

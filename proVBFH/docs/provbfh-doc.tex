@@ -1,0 +1,440 @@
+\documentclass[12pt,a4]{article}
+\usepackage{a4wide}
+\usepackage{xspace}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[breaklinks=true]{hyperref}
+%\usepackage[colorlinks=true]{hyperref}
+\addtolength{\textwidth}{2cm}
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\textheight}{2cm}
+\addtolength{\topmargin}{-2cm}
+
+\newcommand{\provbfh}{\texttt{proVBFH}\xspace}
+\newcommand{\hoppet}{\texttt{hoppet}\xspace}
+\title{\texttt{proVBFH v.1.2.1} manual}
+
+\begin{document}
+\maketitle
+
+This manual provides a short documentation for the \provbfh code.
+
+\tableofcontents
+
+%----------------------------------------------------------------------
+\section{Credits}
+The \provbfh program was developed by Matteo Cacciari, Fr\'ed\'eric
+Dreyer, Alexander Karlberg, Gavin Salam and Giulia Zanderighi and is
+based on
+\begin{itemize}
+  \item M.~Cacciari, F.~A.~Dreyer, A.~Karlberg, G.~P.~Salam and G.~Zanderighi,
+  %``Fully Differential Vector-Boson-Fusion Higgs Production at Next-to-Next-to-Leading Order,''
+  Phys.\ Rev.\ Lett.\  {\bf 115} (2015) no.8,  082002
+  % doi:10.1103/PhysRevLett.115.082002
+  [arXiv:1506.02660 [hep-ph]],
+\item F.~A.~Dreyer and A.~Karlberg,
+  %``Vector-Boson Fusion Higgs Production at Three Loops in QCD,''
+  Phys.\ Rev.\ Lett.\  {\bf 117} (2016) no.7,  072001
+  % doi:10.1103/Phys\-RevLett.117.072001
+  [arXiv:1606.00840 [hep-ph]].
+\end{itemize}
+%
+The non-factorisable corrections are implemented as described in
+\begin{itemize}
+\item F.~A.~Dreyer, A.~Karlberg and L.~Tancredi,
+  % ``On the impact of non-factaorisable corrections in VBF single and double Higgs production,''
+  [arXiv:2005.11334 [hep-ph]].
+\end{itemize}
+%
+The code itself relies heavily on the machinery of the
+\texttt{POWHEG-BOX}, the implementation of VBF Hjjj production in the
+\texttt{POWHEG-BOX}, and the VBF phase as implemented in the VBF
+process in the \texttt{POWHEG-BOX}.
+%
+We therefore suggest that the following three publications be cited in
+addition to the above two when the program is being used to produce
+scientific results:
+
+\begin{itemize}
+\item S.~Alioli, P.~Nason, C.~Oleari and E.~Re,
+  %``A general framework for implementing NLO calculations in shower Monte Carlo programs: the POWHEG BOX,''
+  JHEP {\bf 1006} (2010) 043
+  % doi:10.1007/JHEP06(2010)043
+  [arXiv:1002.2581 [hep-ph]].
+\item P.~Nason and C.~Oleari,
+  %``NLO Higgs boson production via vector-boson fusion matched with shower in POWHEG,''
+  JHEP {\bf 1002} (2010) 037
+  % doi:10.1007/JHEP02(2010)037
+  [arXiv:0911.5299 [hep-ph]].
+\item B.~J\"ager, F.~Schissler and D.~Zeppenfeld,
+  %``Parton-shower effects on Higgs boson production via vector-boson fusion in association with three jets,''
+  JHEP {\bf 1407} (2014) 125
+  % doi:10.1007/JHEP07(2014)125
+  [arXiv:1405.6950 [hep-ph]].
+\end{itemize}
+
+When using results at next-to-next-to-next-to-leading order (N$^3$LO), the
+original references on third order coefficient functions should be
+cited as well
+\begin{itemize}
+\item A.~Vogt, S.~Moch and J.~A.~M.~Vermaseren,
+  %``The Three-loop splitting functions in QCD: The Singlet case,''
+  Nucl.\ Phys.\ B {\bf 691} (2004) 129
+  % doi:10.1016/j.nuclphysb.2004.04.024
+  [hep-ph/0404111].
+\item S.~Moch, J.~A.~M.~Vermaseren and A.~Vogt,
+  %``The Longitudinal structure function at the third order,''
+  Phys.\ Lett.\ B {\bf 606} (2005) 123
+  % doi:10.1016/j.physletb.2004.11.063
+  [hep-ph/041.2.1].
+\item J.~A.~M.~Vermaseren, A.~Vogt and S.~Moch,
+  %``The Third-order QCD corrections to deep-inelastic scattering by photon exchange,''
+  Nucl.\ Phys.\ B {\bf 724} (2005) 3
+  % doi:10.1016/j.nuclphysb.2005.06.020
+  [hep-ph/0504242].
+\item S.~Moch, M.~Rogal and A.~Vogt,
+  %``Differences between charged-current coefficient functions,''
+  Nucl.\ Phys.\ B {\bf 790} (2008) 317
+  % doi:10.1016/j.nuclphysb.2007.09.022
+  [arXiv:0708.3731 [hep-ph]].
+\end{itemize}
+
+Finally, when evaluating the non-factorizable NNLO corrections, the following
+paper should be cited
+\begin{itemize}
+\item T.~Liu, K.~Melnikov and A.~A.~Penin,
+  % ``Nonfactorizable QCD Effects in Higgs Boson Production via Vector Boson Fusion,''
+  Phys. Rev. Lett. \textbf{123} (2019) no.12, 122002
+  %doi:10.1103/PhysRevLett.123.122002
+  [arXiv:1906.10899 [hep-ph]].
+\end{itemize}
+\subsection{Dependencies}
+To run \provbfh, you will need an installation of the following packages:
+\begin{itemize}
+\item \texttt{hoppet/struct-func-devel}:
+  \url{http://hoppet.hepforge.org/}.  Note that it is specifically the
+  struct-func-devel branch of \hoppet that is required.  It can be
+  downloaded using:
+\begin{verbatim}
+ svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
+\end{verbatim}
+\item \texttt{LHAPDF}: \url{http://lhapdf.hepforge.org/}.
+\item \texttt{FastJet}: \url{http://fastjet.fr/}.
+\item \texttt{gfortran} version 4.6 or later.
+\end{itemize}
+%
+The corresponding references for the first three of these packages
+should also be cited when using \provbfh.
+
+\section{Installation}
+With the above dependencies installed, \provbfh can be compiled by
+going to the base directory and running
+\begin{verbatim}
+ ./configure [options]
+ make
+\end{verbatim}
+Available options in the \texttt{configure} script can be accessed
+through the \texttt{--help} or \texttt{-h} argument, and are also
+described in the \texttt{INSTALL} file.
+
+Along with the main \provbfh executable, a program to combine runs,
+\texttt{combine\_runs}, will be generated in the \texttt{aux} folder.
+
+%----------------------------------------------------------------------
+\section{Setting up a run}
+\provbfh is partially based on the \texttt{VBF\_HJJJ} process of the
+\texttt{POWHEG-BOX} and uses the same machinery to set up parallel
+runs.
+%
+Users familiar with the \texttt{POWHEG-BOX} will therefore find
+running \provbfh straightforward.
+%
+Given the complexity of the code it is necessary to run it in parallel
+and at the end of this section we will give some recommendations on
+how many parallel runs should be carried out.
+%
+An example configuration for running \provbfh is given in the
+\texttt{example/} folder.
+%
+The three files necessary to run the code are
+\begin{itemize}
+\item \texttt{pwgseeds.dat}: contains a list of integers to be read by
+  the program
+\item \texttt{powheg.input}: contains all the technical parameters of
+  the run. They are details below.
+\item \texttt{vbfnlo.input}: contains a number of physical
+  parameters. They are detailed below.
+\end{itemize}
+  %
+From this folder, the program can be started with
+\begin{verbatim}
+ ../proVBFH
+\end{verbatim}
+%
+The program will ask for an input corresponding to a line number in
+the file pwgseeds.dat.
+
+When running the program at either NLO or NNLO There are two stages
+(controlled by the flag \texttt{parallelstage} in
+\texttt{powheg.input}) that one has to go through in order to compute
+the cross section.
+%
+During the first stage the program will generate adaptive grids to be
+used during stage 2, where the cross section is computed.
+%
+It is possible to run stage 1 through several iterations.
+%
+The program reads the flag \texttt{xgriditeration}.
+%
+If this is set equal to '1' the program will run starting from uniform
+grids.
+%
+If it is set to '$n$' the program will look for grids generated during
+iteration '$n-1$' and use them as the initial grids.
+%
+When stage 2 is then invoked the program looks for the most recent
+grids.
+%
+The output of stage 2 is a file with histograms called
+\texttt{pwg-XXXX-(N)NLO.top} where \texttt{XXXX} is the integer which
+was used to invoke the program.
+
+At LO and N$^3$LO (inclusive) the program only runs in one stage since
+the generation of grids is very fast for Born kinematics.
+%
+In this case the two flags described above are therefore not used by
+the program.
+
+\subsection{The Analysis}
+In the event where differential distributions are requested, the
+analysis will be taken from the file
+\texttt{analysis/user\_analysis.f}.
+%
+This file can be modified to remove or add any histograms from the
+output files.
+%
+There is an intricate relationship between the analysis used for
+generating histograms and for the analysis used to impose phase space
+cuts.
+%
+Therefore, while a user can freely add or remove histograms, one
+should be careful with changing the cuts.
+%
+In \texttt{user\_analysis.f} there are three routines which are also
+used by the phase space analysis.
+%
+They are \texttt{setup\_vbf\_cuts}, \texttt{buildjets} and
+\texttt{vbfcuts}.
+
+\begin{itemize}
+  \item \texttt{setup\_vbf\_cuts}: This routine reads the cuts from
+    \texttt{powheg.input}
+  \item \texttt{buildjets}: builds an array of up to 4 jets using $R$
+    from the input card and anti-$k_t$. If one wants to define jets in
+    a different way this routine can be modified.
+  \item \texttt{vbfcuts}: takes the jets of the above built and
+    decides whether or not they will pass the VBF cuts defined in
+    \texttt{setup\_vbf\_cuts}. If they are not passed the analysis
+    exits. Otherwise it proceeds to fill the histograms.
+\end{itemize}
+
+If one wants to create an analysis with multiple sets of cuts (for
+instance to have a set of loose/tight cuts or a central jet veto) these
+cuts have to be applied \emph{after} the three routines.
+
+\subsection{A few recommendations}
+\provbfh requires a significant amount of computer power to produce
+smooth distributions at NNLO.
+%
+Under typical VBF cuts we suggest the following technical input
+parameters:
+
+\begin{itemize}
+\item \texttt{ncall1 500000}
+\item \texttt{ncall2 5000000}
+\item \texttt{itmx2 3}
+\end{itemize}
+
+Stage 1 should go through $3$ iterations on $200$ machines.
+%
+On a typical machine in $2017$ each iteration should take $2-3$ hours.
+%
+Stage 2 should be carried out on $2500$ machines and will take $1-2$
+days depending on how complicated the analysis is and how loose the
+VBF cuts are.
+%
+Due to the way the combination of each run is carried out it is better
+to have a high number of independent runs rather than few runs with a
+very high \texttt{ncall2}.
+
+With these settings the fiducial cross section will be computed with a
+permille statistical uncertainty and distributions will have percent
+level uncertainties.
+
+\subsection{Scale variations}
+One can vary the renormalisation and factorisation scales used in
+the program to estimate the residual theoretical uncertainties.
+%
+We recommend a $3$ point scale variation $\mu_R=\mu_F$ with
+$\mu_{R,F}=\{1/2,1,2\}\mu_0$.
+%
+A seven point scale variation, where the scales are varied
+independently, does not lead to significantly larger uncertainty
+estimates.
+
+\subsection{Combining runs}
+We provide a script to combine independent runs.
+%
+The script will automatically look for outliers in each bin and remove
+them.
+%
+It can be invoked by
+%
+\begin{verbatim}
+../aux/combine_runs <list of files>
+\end{verbatim}
+%
+where the list of files can be given using wildcards, eg
+\texttt{*NNLO*top}.
+%
+This will produce a file called \texttt{total\_distrib.top} containing
+the combined result.
+
+
+% ----------------------------------------------------------------------
+\section{Input parameters}
+\subsection{\texttt{powheg.input} card}
+Most parameters are changed in the \texttt{powheg.input} file.
+%
+Available options:
+\begin{itemize}
+\item \texttt{qcd\_order}: 1: LO, 2: NLO, 3:NNLO, 4:N3LO (only for
+  inclusive results).
+
+\item \texttt{inclusive\_only}: 0: Computes the cross section fully
+  differentially in the jets. 1: computes only the inclusive VBF cross
+  section differentially in the Higgs momentum. (default: 0)
+
+\item\texttt{ebeam1}: energy of beam 1 in GeV.
+  
+\item\texttt{ebeam2}: energy of beam 2 in GeV.
+
+\item\texttt{lhans1}: pdf set for hadron 1 (LHA numbering).
+
+\item\texttt{lhans2}: pdf set for hadron 2 (LHA numbering).
+
+\item\texttt{renscfact}: renormalisation scale factor: muren = muref *
+  renscfact.
+  
+\item\texttt{facscfact}: factorisation scale factor: mufact = muref *
+  facscfact.
+  
+\item\texttt{nonfact}: 0: compute factorisable cross-section, 1: compute
+  non-factorisable coefficient. (Requires qcd\_order=1)
+  
+\item\texttt{higgsbreitwigner}: 0: Narrow width, 1: Breit Wigner for Higgs.
+  
+\item\texttt{higgsmasswindow}: How many widths we integrate around the
+  Breit Wigner peak.
+  
+\item\texttt{runningscales}: 0: $m_h$. 1: scale of 1506.02660. 2: $Q_1$
+  on the upper line and $Q_2$ on the lower line. (default: 0, i.e. no
+  running scales)
+                  
+\item\texttt{ncall1}: number of calls for initializing the integration grid.
+  
+\item\texttt{ncall2}: number of calls for computing the integral.
+  
+\item\texttt{itmx1}: number of iterations for initializing the
+  integration grid.
+  
+\item\texttt{itmx2}: number of iterations for computing the integral .
+  
+\item\texttt{xgriditeration}: identifier for grid generation.
+  
+\item\texttt{parallelstage}: 1: generate grids. 2: compute integral.
+
+\item\texttt{fakevirt}: Useful for generating stage 1 grids faster as
+  it uses the Born instead of the virt which is faster.
+
+\item\texttt{phspcuts}: (1:on ; 0: off (default)) Turns on/off analysis
+  cuts at the phasespace generation stage. Significantly reduces run
+  time. Turning these off will make the integration unstable.
+\end{itemize}
+
+\subsubsection{Analysis cuts}
+\begin{itemize}
+\item\texttt{ptalljetmin}: Minimum $p_t$ for all jets.
+
+\item\texttt{yjetmax}: Rapidity acceptance for all jets.
+
+\item\texttt{Rsep\_jjmin}: $R$ to be used in jet algorithm.
+
+\item\texttt{ptjetmin}: Minimum $p_t$ for the two tagging jets.
+
+\item\texttt{mjjmin}: Minimum invariant mass for the tagging jets.
+
+\item\texttt{deltay\_jjmin}: Rapidity separation between tagging jets.
+
+\item\texttt{jet\_opphem}: (0/1) require the tagging jets in opposite
+  detector hemispheres.
+\end{itemize}
+
+\subsubsection{Advanced settings}
+Several additional options are present in the code and are required by
+the \texttt{POWHEG-BOX}.
+%
+In principle, the user should not modify these settings as doing so
+can risk producing useless results.
+%
+We detail the most important ones here, additional settings can be
+found in the \texttt{POWHEG-BOX} documentation.
+\begin{itemize}  
+\item\texttt{iseed}: initialize random number sequence.
+  
+\item\texttt{ih1}: hadron 1 (1 for protons, -1 for antiprotons).
+  
+\item\texttt{ih2}: hadron 2 (1 for protons, -1 for antiprotons).
+
+\item\texttt{maxseeds}: Maximum number of seeds that powheg can run
+  with.
+
+\item\texttt{manyseeds}: Used to perform multiple runs with different
+  random seeds in the same directory.  If set to 1, the program asks
+  for an integer j; The file pwgseeds.dat at line j is read, and the
+  integer at line j is used to initialize the random sequence for the
+  generation of the event.
+                 
+\end{itemize}
+
+\subsection{\texttt{vbfnlo.input} card}
+\begin{itemize}
+\item\texttt{HMASS}: Higgs mass.
+  
+\item\texttt{TOPMASS}: Top mass.
+  
+\item\texttt{TAU\_MASS}: Tau mass.
+  
+\item\texttt{BOTTOMMASS}: Bottom Pole mass.
+  
+\item\texttt{CHARMMASS}: Charm Pole mass.
+  
+\item\texttt{FERMI\_CONST}: Fermi Constant.
+  
+\item\texttt{WMASS}: W mass.
+  
+\item\texttt{ZMASS}: Z mass.
+  
+\item\texttt{WWIDTH}: W width.
+  
+\item\texttt{ZWIDTH}: Z width.
+  
+\item\texttt{NFLAVOUR}: Number of quark flavours.
+  
+\item\texttt{HWIDTH}: Higgs width.
+
+\end{itemize}
+\end{document}

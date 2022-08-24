@@ -1,0 +1,23 @@
+2019-08-12  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* src/inclusive/{constants.f90|helpers.f90|nonfact.f90}:
+	Added framework to evaluate non-factorisable corrections.
+
+	* src/inclusive/{incl_parameters.f90|matrix_element.f90}:
+	* Makefile:
+	Updated to include as option non-factorisable corrections.
+
+2019-03-28  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* INSTALL|README|docs/provbfhh-doc.tex:
+	Updated command for checkout of hoppet svn.
+
+2018-02-07  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* src/powheg-files/hjjj-files/vbfnlo-files/hjjj_amp_aux_corrected.F:
+	Added new amplitudes for the virtual Hjjj contribution to fix a bug in VBFNLO.
+
+2017-06-28  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	First public version of proVBFH.
+

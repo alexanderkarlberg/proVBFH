@@ -1,0 +1,23 @@
+proVBFH-inclusive was written by
+
+* Matteo Cacciari,    cacciari@lpthe.jussieu.fr 
+* Frederic Dreyer,    frederic.dreyer@physics.ox.ac.uk
+* Alexander Karlberg, karlberg@physik.uzh.ch
+* Gavin Salam,        gavin.salam@cern.ch
+* Giulia Zanderighi,  g.zanderighi1@physics.ox.ac.uk
+
+and is based on 
+* Phys.Rev.Lett. 115 (2015) no.8, 082002
+  [arXiv:1506.02660]
+* Phys.Rev.Lett. 117 (2016) no.7, 072001
+  [arXiv:1606.00840]
+
+the di-Higgs process is based on
+* [arXiv:1811.07918], submitted to Phys.Rev.Lett.
+* [arXiv:1811.07906], submitted to Phys.Rev.D 
+
+This program also uses code from POWHEG-BOX-V2/VBF_H for the phase
+space generation, which was written by Paolo Nason and Carlo Oleari,
+JHEP 1002 (2010) 037 [arXiv:0911.5299].
+For the di-Higgs process, the phase space is based on VBFNLO, written
+by Baglio et al. [arXiv:1107.4038]

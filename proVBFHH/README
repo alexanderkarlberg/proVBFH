@@ -1,0 +1,65 @@
+======================================================================
+----------------------------------------------------------------------
+ proVBFHH v.1.2.0
+ http://provbfh.hepforge.org/
+----------------------------------------------------------------------
+======================================================================
+
+proVBFHH (projection-to-Born Vector Boson-Fusion Higgs Higgs
+production) is a computer program written to calculate QCD corrections
+to VBFHH in the structure function approach.
+
+This package contains the full computer code, with the possibility to
+compute fully inclusive cross sections up to next-to-next-to-next-to
+leading order (N3LO) in QCD, as well as to evaluate fully differential
+distributions up to NNLO.
+
+For users mainly interested in inclusive cross sections, it is
+recommended to use instead the separate code proVBFH-inclusive
+(http://provbfh.hepforge.org) which provides a lighter interface.
+
+
+----------------------------------------------------------------------
+Installation
+---
+
+To compile proVBFHH, you will need
+* hoppet, the struct-func-devel branch (http://hoppet.hepforge.org/)
+* LHAPDF (http://lhapdf.hepforge.org/)
+* FastJet (http://fastjet.fr/)
+
+The struct-func-devel branch of hoppet can be downloaded using
+
+  svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
+
+Once all dependencies are installed on your machine, proVBFHH can be
+compiled using:
+
+  ./configure [--with-lhapdf=/path/to/lhapdf-config]
+  	      [--with-hoppet=/path/to/hoppet-config]
+	      [--with-fastjet=/path/to/fastjet-config]
+  make
+
+in the main directory. This will create an executable "proVBFHH".
+
+To compile proVBFHH with a local installation of hoppet, fastjet or
+LHAPDF, change the "DIR" above in the configure step to the folder
+containing the hoppet-config, fastjet-config and lhapdf-config
+executables respectively.
+
+
+----------------------------------------------------------------------
+Usage
+---
+
+To run proVBFHH, use the proVBFHH executable from a subfolder containing
+a powheg.input and vbfnlo.input file.
+
+An example is given in the example/ directory, which can be run using
+
+  ../proVBFHH
+
+from the subfolder. To combine several runs, a combine_runs program is
+provided in the aux/ folder. A list of options and more information on
+setting up runs is given in the documentation for this program, in
+docs/.

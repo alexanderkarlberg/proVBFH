@@ -1,0 +1,35 @@
+proVBFHH was written by
+
+* Matteo Cacciari,    cacciari@lpthe.jussieu.fr 
+* Frederic Dreyer,    frederic.dreyer@physics.ox.ac.uk
+* Alexander Karlberg, karlberg@physik.uzh.ch
+* Gavin Salam,        gavin.salam@cern.ch
+* Giulia Zanderighi,  g.zanderighi1@physics.ox.ac.uk
+
+with contributions from Lorenzo Tancredi
+
+and is based on 
+* Phys.Rev.Lett. 115 (2015) no.8, 082002 [arXiv:1506.02660]
+  Cacciari, Dreyer, Karlberg, Salam & Zanderighi
+* [arXiv:1811.07918], submitted to Phys.Rev.Lett.
+  Dreyer & Karlberg
+
+as well as, for the N3LO calculation
+* [arXiv:1811.07906], submitted to Phys.Rev.D 
+  Dreyer & Karlberg
+* Phys.Rev.Lett. 117 (2016) no.7, 072001 [arXiv:1606.00840]
+  Dreyer & Karlberg
+
+The non-factorisable corrections are based on
+
+* [arXiv:2005.11334] Dreyer, Karlberg & Tancredi
+
+This program also contains code from:
+* the POWHEG BOX, JHEP 1006 (2010) 043 [arXiv:arXiv:1002.2581].
+  written by Alioli, Nason, Oleari and Re.
+* POWHEG-BOX-V2/VBF_HJJJ, JHEP 1407 (2014) 125 [arXiv:1405.6950].
+  for the real emissions at higher orders, which was written by
+  Jäger, Schissler and Zeppenfeld
+* VBFNLO di-Higgs process, [arXiv:1107.4038],
+  by Baglio et al, for the phase space generation in inclusive
+  cross sections.

@@ -1,0 +1,40 @@
+2019-11-26  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* src/provbfh_incl.f90:
+	* src/provbfhh_incl.f90:
+	Added the W and Z mass used in hoppet initialization.
+
+2019-03-28  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* INSTALL|README|docs/provbfhh-doc.tex:
+	Updated command for checkout of hoppet svn.
+
+2018-10-15  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* src/matrix_element_dihiggs.f90:
+	* src/tensor.f90:
+	* src/phase_space_dihiggs.f:
+	* src/provbfhh_incl.f90:
+	* src/ME_expressions.f
+	added code required to compute VBF dihiggs production
+
+	* src/integration.f:
+	* src/parameters.f90:
+	* Makefile:
+	updated to be compatible with dihiggs functionality
+
+2018-07-26  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* src/{provbfh_incl.f90|parameters.f90}:
+	added scale and pdf uncertainties, along with the
+	"-pdfuncert,-3scaleuncert,-7scaleuncert" options
+
+2017-06-25  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	* src/parameters.f90:
+	Added the "-lo/-nlo/-nnlo/-n3lo" command line options to overwrite
+	the order_min and order_max parameters.
+
+2017-06-24  Frédéric Dreyer  <frederic.dreyer@gmail.com>
+
+	First version of proVBFH-inclusive.
