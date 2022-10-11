@@ -33,8 +33,7 @@ phspcuts 1	 ! (1:on ; 0: off (default)) Turns on/off analysis
                  ! cuts at the phasespace generation stage. 
                  ! Significantly reduces run time. 
 nonfact 0        ! Compute the non-factorisable QCD corrections. If set to 1, one
-                 ! has to set also 'qcd_order 1' above as this is technically an LO
-		 ! computation
+                 ! has to set also 'qcd_order 1' above 
 
 !!!!!!!!!!!!!!! CUTS USED FOR ANALYSIS and PHASE SPACE: !!!!!!!!!!!!!!!!!!!!!!!
 ptalljetmin    25d0 ! Minimum pt for all jets

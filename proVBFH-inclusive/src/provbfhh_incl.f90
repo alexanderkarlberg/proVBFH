@@ -8,7 +8,7 @@
 !  Written by
 !  Matteo Cacciari cacciari@lpthe.jussieu.fr 
 !  Frederic Dreyer, frederic.dreyer@physics.ox.ac.uk
-!  Alexander Karlberg, karlberg@physik.uzh.ch
+!  Alexander Karlberg, alexander.karlberg@cern.ch
 !  Gavin Salam, gavin.salam@cern.ch
 !  Giulia Zanderighi, g.zanderighi1@physics.ox.ac.uk
 !
@@ -21,7 +21,7 @@
 !  as well as the phase space from VBFNLO
 !
 !  First version: 10/02/2015
-!  Last edited: 21/11/2018
+!  Last edited: 10/10/2022
 !     
 !------------------------------------------------------------
 !------------------------------------------------------------
@@ -41,7 +41,7 @@ program provbfh_incl
   integer  :: nmempdf_start, nmempdf_end, imempdf
   real(dp) :: integ, error_int, proba, tini, tfin
   real(dp) :: sigma_tot, error_tot, region(1:2*ndim)
-  real(dp) :: res(0:nmempdfMAX), central, errminus, errplus, errsymm
+  real(dp) :: res(0:nmempdfMAX), central, errminus, errplus, errsymm, respdf(0:nmempdfMAX),resas(0:nmempdfMAX), central_dummy
   real(dp) :: res_scales(1:7),maxscale,minscale
   integer :: iscales,Nscales
   character * 30 :: analysis_name
@@ -96,8 +96,10 @@ program provbfh_incl
      ! !! ==== END DEBUGGING
      do iscales = 1,Nscales
         ! initialise hoppet
-        call StartStrFct(sqrts, order_max, nflav, xmur*scales_mur(iscales), &
-             & xmuf*scales_muf(iscales), scale_choice, mh, .true., Qmin, mw, mz)
+        xmur = scales_mur(iscales)
+        xmuf = scales_muf(iscales)
+        call StartStrFct(sqrts, order_max, nflav, xmur, &
+             & xmuf, scale_choice, mh, .true., Qmin, mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
         call InitStrFct(order_max, separate_orders = .true.)
         
@@ -229,6 +231,16 @@ program provbfh_incl
           & ' (', ((minscale-central)/central)*100.0_dp, ' %)'
      write(11,'(a,f10.3,a)') '# MC integration uncertainty =', sqrt(error_tot)/central*100.0_dp, ' %'
      write(11,'(a,f10.3,a)') '# PDF symmetric uncertainty* =', errsymm/central*100.0_dp, ' %'
+     if(alphasuncert) then
+     respdf = 0d0
+     resas = 0d0
+     respdf(0:nmempdf_end-2) = res(0:nmempdf_end-2)
+     resas(nmempdf_end-1:nmempdf_end) = res(nmempdf_end-1:nmempdf_end)
+        call getpdfuncertainty(respdf(nmempdf_start:nmempdf_end),central_dummy,errplus,errminus,errsymm)
+        write(11,'(a,f10.3,a)') '# Pure PDF symmetric uncertainty =', errsymm/central*100.0_dp, ' %'
+        call getpdfuncertainty(resas(nmempdf_start:nmempdf_end),central_dummy,errplus,errminus,errsymm)
+        write(11,'(a,f10.3,a)') '# Pure αS symmetric uncertainty =', errsymm/central*100.0_dp, ' %'
+     endif
      write(11,'(a)') '# (*PDF uncertainty contains alphas uncertainty if using a'
      write(11,'(a)') '#   PDF set that supports it (eg PDF4LHC15_nnlo_100_pdfas))'
   endif

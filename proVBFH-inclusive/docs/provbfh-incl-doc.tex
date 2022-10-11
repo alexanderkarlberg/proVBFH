@@ -24,9 +24,61 @@
 \maketitle
 
 This document provides a short documentation for the \provbfhincl code.
+%---------------------------------------------------------------------
+\section{Credits}
+The \provbfh program was developed by Matteo Cacciari, Fr\'ed\'eric
+Dreyer, Alexander Karlberg, Gavin Salam and Giulia Zanderighi and is
+based on
+\begin{itemize}
+  \item M.~Cacciari, F.~A.~Dreyer, A.~Karlberg, G.~P.~Salam and G.~Zanderighi,
+  %``Fully Differential Vector-Boson-Fusion Higgs Production at Next-to-Next-to-Leading Order,''
+  Phys.\ Rev.\ Lett.\  {\bf 115} (2015) no.8,  082002
+  % doi:10.1103/PhysRevLett.115.082002
+  [arXiv:1506.02660 [hep-ph]],
+\item F.~A.~Dreyer and A.~Karlberg,
+  %``Vector-Boson Fusion Higgs Production at Three Loops in QCD,''
+  Phys.\ Rev.\ Lett.\  {\bf 117} (2016) no.7,  072001
+  % doi:10.1103/Phys\-RevLett.117.072001
+  [arXiv:1606.00840 [hep-ph]].
+\end{itemize}
 
+When using results at next-to-next-to-next-to-leading order (N$^3$LO), the
+original references on third order coefficient functions should be
+cited as well
+\begin{itemize}
+\item A.~Vogt, S.~Moch and J.~A.~M.~Vermaseren,
+  %``The Three-loop splitting functions in QCD: The Singlet case,''
+  Nucl.\ Phys.\ B {\bf 691} (2004) 129
+  % doi:10.1016/j.nuclphysb.2004.04.024
+  [hep-ph/0404111].
+\item S.~Moch, J.~A.~M.~Vermaseren and A.~Vogt,
+  %``The Longitudinal structure function at the third order,''
+  Phys.\ Lett.\ B {\bf 606} (2005) 123
+  % doi:10.1016/j.physletb.2004.11.063
+  [hep-ph/041.2.1].
+\item J.~A.~M.~Vermaseren, A.~Vogt and S.~Moch,
+  %``The Third-order QCD corrections to deep-inelastic scattering by photon exchange,''
+  Nucl.\ Phys.\ B {\bf 724} (2005) 3
+  % doi:10.1016/j.nuclphysb.2005.06.020
+  [hep-ph/0504242].
+\item S.~Moch, M.~Rogal and A.~Vogt,
+  %``Differences between charged-current coefficient functions,''
+  Nucl.\ Phys.\ B {\bf 790} (2008) 317
+  % doi:10.1016/j.nuclphysb.2007.09.022
+  [arXiv:0708.3731 [hep-ph]].
+\end{itemize}
+
+Finally, when evaluating cross sections for di-Higgs production the following reference should be cited
+\begin{itemize}
+\item F.~A.~Dreyer and A.~Karlberg,
+%``Vector-Boson Fusion Higgs Pair Production at N$^3$LO,''
+Phys. Rev. D \textbf{98} (2018) no.11, 114016
+%doi:10.1103/PhysRevD.98.114016
+[arXiv:1811.07906 [hep-ph]].
+%83 citations counted in INSPIRE as of 10 Oct 2022
+\end{itemize}
 %----------------------------------------------------------------------
-\section{Installation}
+\section{Installation/dependencies}
 To run \provbfhincl, you will need an installation of the following packages:
 \begin{itemize}
 \item \texttt{hoppet/struct-func-devel}:
@@ -47,6 +99,9 @@ directory and running
 Available options in the \texttt{configure} script can be accessed
 through the \texttt{--help} or \texttt{-h} argument, as well as being
 described in the \texttt{INSTALL} text file.
+
+We suggest that the references for \texttt{hoppet} and \texttt{LHAPDF}
+are also cited when using our program.
 
 %----------------------------------------------------------------------
 \section{Setting up a run}
@@ -90,7 +145,7 @@ The available options, and their default value (in {\bf bold}), are:
 \begin{itemize}
 \item\texttt{-lo, -nlo, -nnlo, {\bf -n3lo}}: Order in $\alpha_s$.
   
-\item\texttt{-sqrts} {\bf 13000}: Center-of-mass energy in GeV.
+\item\texttt{-sqrts} {\bf 13600}: Center-of-mass energy in GeV.
 
 \item\texttt{-scale-choice} {\bf 1}: Scale choice to use, with the options
   \begin{itemize}
@@ -99,7 +154,7 @@ The available options, and their default value (in {\bf bold}), are:
   \item 2: Common scale given by $\mu_0^2(Q_1, Q_2)=Q_1 Q_2$.
   \item 3: 
     $\mu_0^2(p_{t,H}) = \frac{m_H}{2} \sqrt{\left(\frac{m_H}{2}\right)^2
-      + p_{t,H}^2}$ from \cite{Cacciari:2015jma}.
+      + p_{t,H}^2}$ from 1506.02660.
   \end{itemize}
 
 \item\texttt{-xmuf} {\bf 1.0}: Factor $x_{\mu_F}$ multiplying the
@@ -108,7 +163,7 @@ The available options, and their default value (in {\bf bold}), are:
 \item\texttt{-xmur} {\bf 1.0}: Factor $x_{\mu_R}$ multiplying the
   renormalisation scale $\mu_R = x_{\mu_R} \mu_0$.
 
-\item\texttt{-pdf} {\bf PDF4LHC15\_nnlo\_mc}: Choice of PDF set (by name).
+\item\texttt{-pdf} {\bf PDF4LHC21\_40}: Choice of PDF set (by name).
 
 \item\texttt{-nmempdf} {\bf 0}: Member of the PDF.
 
@@ -138,15 +193,17 @@ The available options, and their default value (in {\bf bold}), are:
   
 \item\texttt{-ncall1} {\bf 100000}: Number of calls for the initialisation of the integration grid.
 
-\item\texttt{-itmx1} {\bf 12}: Number of iterations for the grid initialisation.
+\item\texttt{-itmx1} {\bf 3}: Number of iterations for the grid initialisation.
   
 \item\texttt{-ncall2} {\bf 100000}: Number of calls for evaluating the integral.
 
-\item\texttt{-itmx2} {\bf 12}: Number of iterations for the integration.
+\item\texttt{-itmx2} {\bf 3}: Number of iterations for the integration.
 
 \item\texttt{-iseed} {\bf 10}: Random seed.
 
-\item\texttt{-pdfuncert}: Compute PDF uncertainties on the fly. Significantly increases computation time (scales linearly with the number of PDF members). Also computes alphas uncertainty if this is included in the PDF.
+\item\texttt{-pdfuncert}: Compute PDF uncertainties on the fly. Significantly increases computation time (scales linearly with the number of PDF members). Also computes $\alpha_S$ uncertainty if this is included in the PDF.
+
+\item\texttt{-alphasuncert}: Separates the PDF and $\alpha_S$ uncertainty on the printout.
 
 \item\texttt{-3scaleuncert}: Compute 3 point (ie symmetric) scale variation.
 

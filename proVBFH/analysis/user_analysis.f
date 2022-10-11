@@ -128,16 +128,7 @@ c     Check if jets satisfy VBF cuts
       call vbfcuts(pj,njets,ptj,yj,passed_cuts)
 !      call jetcuts(pj,njets,ptj,yj,passed_cuts_jet)
 c     Always fill inclusive cross section
-      s = 2d0 * (phep(4,1)*phep(4,2) - phep(3,1)*phep(3,2))
-      if(sqrt((max(phep(1,4)**2+phep(2,4)**2,phep(1,5)**2+phep(2,5)**2))
-     $     /s).gt.ptjsqrtsmax) return
-!      print*, 'ptjsqrtsmax', ptjsqrtsmax
-!      stop
-      if(ptjsqrtsrwgt) dsig = dsig * sqrt((max(phep(1,4)**2+phep(2,4)**2
-     $     ,phep(1,5)**2+phep(2,5)**2))/s)
       call filld('sig incl cuts',0.5d0, dsig)
-c     Return already here if VBF cuts are not passed. 
-!      if(.not.passed_cuts) return
 
 c     Higgs momentum
       do mu=1,3
@@ -148,7 +139,12 @@ c     Higgs momentum
       ptH = sqrt(pH(1)**2+pH(2)**2)
       call getrapidity(phep(1,3),yH)
       call getinvmass(phep(1,3),inv_mH)
+
+      call filld('ptH-incl',ptH, dsig)
+      call filld('yH-incl',yH,dsig)
       
+c     Return already here if VBF cuts are not passed. 
+      if(.not.passed_cuts) return
 c     Now compute some jet variables
       if(njets.ge.2) then
          invmjj        = mjj(pj(0,1),pj(0,2)) !Invariant dijet mass
@@ -156,16 +152,7 @@ c     Now compute some jet variables
          Rsepj1j2      = rsepn(pj(0,1),pj(0,2)) !R-separation between tagging jets
          delphi_jj     = getdelphiv4(pj(:,1),pj(:,2))
       endif
-!     Fill inclusive distributions
-!      s = 2d0 * (phep(4,1)*phep(4,2) - phep(3,1)*phep(3,2))
-!      s = (2d0 * kn_sborn)**2
-!      if(s.gt.(2d0*kn_sborn)**2) print*, 'kn_sborn,s', (2d0*kn_sborn)**2,s
-!      call filld('ptj/mjj-incl',log(ptj(1)**2/s),dsig)
-!      call filld('ptj/mjj-incl',log(sqrt((max(phep(1,4)**2+phep(2,4)**2
-!     $     ,phep(1,5)**2+phep(2,5)**2))/s)),dsig)
 
-      call filld('ptH-incl',ptH, dsig)
-      call filld('yH-incl',yH,dsig)
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CCCCCCCCAPPLY CUTS
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC

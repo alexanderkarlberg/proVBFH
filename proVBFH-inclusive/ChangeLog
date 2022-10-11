@@ -1,3 +1,13 @@
+2022-10-10  Alexander Karlberg <alexander.karlberg@cern.ch>
+
+	* src/provbfh_incl.f90:
+	* src/provbfhh_incl.f90:
+	* src/parameters.f90:
+	* obj (created):
+	Updated code to handle separate PDF and αS
+	uncertainties. Also fixed a bug where scale uncertainties were not
+	computed correctly. Updated documentation.
+
 2019-11-26  Frédéric Dreyer  <frederic.dreyer@gmail.com>
 
 	* src/provbfh_incl.f90:

@@ -8,7 +8,7 @@ module parameters
   implicit none
 
   private
-  real(dp), parameter, public :: gfermi = 1.16637e-5_dp
+  real(dp), parameter, public :: gfermi = 1.16638e-5_dp
   real(dp), parameter, public :: gev2pb = 389379660.0_dp
   real(dp), parameter, public :: eps    = 1.0e-14_dp
   real(dp), parameter, public :: scales_mur(1:7) = &
@@ -27,7 +27,7 @@ module parameters
   character * 4, public :: seedstr
   character(len=50), public :: pdfname
   integer, public :: nmempdf
-  logical, public :: pdfuncert, scaleuncert3, scaleuncert7
+  logical, public :: pdfuncert, scaleuncert3, scaleuncert7, alphasuncert
   real(dp), public :: toy_Q0, test_Q0, muR_PDF
   public :: set_parameters
 
@@ -63,16 +63,17 @@ contains
        order_min = 1
        order_max = 4
     endif    
-    sqrts        = dble_val_opt("-sqrts",13000.0_dp)
-    scale_choice = int_val_opt ('-scale-choice',1)
+    sqrts        = dble_val_opt("-sqrts",13600.0_dp)
+    scale_choice = int_val_opt ('-scale-choice',3)
     readin       = log_val_opt ("-readingrid")
     higgs_use_BW = log_val_opt ("-higgsbreitwigner")
     hmasswindow  = dble_val_opt("-higgsmasswindow",30.0_dp)
     xmuf         = dble_val_opt("-xmuf",1.0_dp)
     xmur         = dble_val_opt("-xmur",1.0_dp)
-    pdfname      = string_val_opt("-pdf", "PDF4LHC15_nnlo_mc")
+    pdfname      = string_val_opt("-pdf", "PDF4LHC21_40")
     nmempdf      = int_val_opt ("-nmempdf",0)
     pdfuncert    = log_val_opt ("-pdfuncert")
+    alphasuncert    = log_val_opt ("-alphasuncert")
     scaleuncert3 = log_val_opt ("-3scaleuncert")
     scaleuncert7 = log_val_opt ("-7scaleuncert")
     if(scaleuncert3.and.scaleuncert7) then
@@ -82,8 +83,8 @@ contains
     endif
     ncall1       = int_val_opt ("-ncall1",100000)
     ncall2       = int_val_opt ("-ncall2",100000)
-    itmx1        = int_val_opt ("-itmx1",12)
-    itmx2        = int_val_opt ("-itmx2",12)
+    itmx1        = int_val_opt ("-itmx1",3)
+    itmx2        = int_val_opt ("-itmx2",3)
     iseed        = int_val_opt ("-iseed",10)
     ! for debugging only:
     toypdf       = log_val_opt("-toy")  ! use a toy PDF
