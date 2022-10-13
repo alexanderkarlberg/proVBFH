@@ -1,3 +1,10 @@
+2022-10-13  Alexander Karlberg  <alexander.karlberg@cern.ch>
+
+	* src/provbfh_incl.f90:
+	* src/provbfhh_incl.f90: Change in how getpdfuncertainty from
+	LHAglue computes uncertainties that lead to wrong αS uncertainty
+	computation. Fixed. Also added correct print out when only
+	computing PDF and αS uncertainties.
 2022-10-10  Alexander Karlberg <alexander.karlberg@cern.ch>
 
 	* src/provbfh_incl.f90:

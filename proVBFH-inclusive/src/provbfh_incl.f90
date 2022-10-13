@@ -80,7 +80,6 @@ program provbfh_incl
      call InitPDF(imempdf)
      call getQ2min(0,Qmin)
      Qmin = sqrt(Qmin)
-
      ! !! === DEBUGGING ONLY
      ! ! the following is for the case where
      ! ! we want to use a toy PDF and a toy alphas
@@ -145,11 +144,11 @@ program provbfh_incl
         ! end loop over pdfs
      enddo
      if(imempdf.eq.nmempdf_start) then ! First PDF, this is where we compute scale uncertainties
-       maxscale = maxval(res_scales(1:Nscales)) 
-       minscale = minval(res_scales(1:Nscales))
-       Nscales = 1
-       res(imempdf) = res_scales(1) ! Copy central scale
-    endif
+        maxscale = maxval(res_scales(1:Nscales)) 
+        minscale = minval(res_scales(1:Nscales))
+        Nscales = 1
+        res(imempdf) = res_scales(1) ! Copy central scale
+     endif
   enddo
 
   ! print total cross section and error into file  
@@ -207,6 +206,17 @@ program provbfh_incl
      write(11,'(a,f10.5,a)') '# sigma =', central,' pb'
      write(11,'(a,f10.3,a)') '# MC integration uncertainty =', sqrt(error_tot)/central*100.0_dp, ' %'
      write(11,'(a,f10.3,a)') '# PDF symmetric uncertainty* =', errsymm/central*100.0_dp, ' %'
+     if(alphasuncert) then
+        central_dummy = central
+        respdf = central
+        resas = central
+        respdf(0:nmempdf_end-2) = res(0:nmempdf_end-2)
+        resas(nmempdf_end-1:nmempdf_end) = res(nmempdf_end-1:nmempdf_end)
+        call getpdfuncertainty(respdf(nmempdf_start:nmempdf_end),central_dummy,errplus,errminus,errsymm)
+        write(11,'(a,f10.3,a)') '# Pure PDF symmetric uncertainty =', errsymm/central*100.0_dp, ' %'
+        call getpdfuncertainty(resas(nmempdf_start:nmempdf_end),central_dummy,errplus,errminus,errsymm)
+        write(11,'(a,f10.3,a)') '# Pure αS symmetric uncertainty =', errsymm/central*100.0_dp, ' %'
+     endif
      write(11,'(a)') '# (*PDF uncertainty contains alphas uncertainty if using a'
      write(11,'(a)') '#   PDF set that supports it (eg PDF4LHC15_nnlo_100_pdfas))'
   else
@@ -224,10 +234,11 @@ program provbfh_incl
      write(11,'(a,f10.3,a)') '# MC integration uncertainty =', sqrt(error_tot)/central*100.0_dp, ' %'
      write(11,'(a,f10.3,a)') '# PDF symmetric uncertainty* =', errsymm/central*100.0_dp, ' %'
      if(alphasuncert) then
-     respdf = 0d0
-     resas = 0d0
-     respdf(0:nmempdf_end-2) = res(0:nmempdf_end-2)
-     resas(nmempdf_end-1:nmempdf_end) = res(nmempdf_end-1:nmempdf_end)
+        central_dummy = central
+        respdf = central
+        resas = central
+        respdf(0:nmempdf_end-2) = res(0:nmempdf_end-2)
+        resas(nmempdf_end-1:nmempdf_end) = res(nmempdf_end-1:nmempdf_end)
         call getpdfuncertainty(respdf(nmempdf_start:nmempdf_end),central_dummy,errplus,errminus,errsymm)
         write(11,'(a,f10.3,a)') '# Pure PDF symmetric uncertainty =', errsymm/central*100.0_dp, ' %'
         call getpdfuncertainty(resas(nmempdf_start:nmempdf_end),central_dummy,errplus,errminus,errsymm)
