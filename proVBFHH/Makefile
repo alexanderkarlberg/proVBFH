@@ -29,7 +29,7 @@ ifeq ("$(COMPILER)","gfortran")
   # fortran and f90 compiler
   FC = gfortran
   # debugging with gfortran
-  FFLAGS = -O3 -fno-automatic -ffixed-line-length-132 
+  FFLAGS = -O3 -fno-automatic -ffixed-line-length-132 -std=legacy
 #  FFLAGS += -g -ffpe-trap=invalid,zero,overflow
 #  FFLAGS = -fno-automatic -ffixed-line-length-none -m32 -cpp   -O3
 
