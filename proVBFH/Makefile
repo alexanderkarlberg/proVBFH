@@ -29,7 +29,7 @@ ifeq ("$(COMPILER)","gfortran")
   # fortran and f90 compiler
   FC = gfortran
   # debugging with gfortran
-  FFLAGS = -O3 -fno-automatic -ffixed-line-length-132 
+  FFLAGS = -O3 -fno-automatic -ffixed-line-length-132 -std=legacy
 #  FFLAGS += -g -ffpe-trap=invalid,zero,overflow
 #  FFLAGS = -fno-automatic -ffixed-line-length-none -m32 -cpp   -O3
 
@@ -102,7 +102,7 @@ VPATH= ./:$(SRC)/:$(EXCLUSIVE)/:$(INCLUSIVE)/:$(PWGPATH)/:$(EXCLUSIVE)/vbfnlo-fi
 VPATH+=:$(ANALYSIS)/:$(VBFHJJJ)/:$(VBFHJJJ)/dhelas:$(VBFHJJJ)/vbfnlo-files/:$(OBJ)/
 
 # analysis files
-ANALYSIS_FILE=user_analysis.o phspcuts.o
+ANALYSIS_FILE=incl_analysis.o phspcuts.o
 #ANALYSIS_FILE=heat_map.o phspcuts.o
 #ANALYSIS_FILE=highpt-analysis.o phspcuts.o
 
