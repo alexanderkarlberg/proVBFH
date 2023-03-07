@@ -30,7 +30,7 @@ cat powheg.input-save | sed 's/parallelstage.*/parallelstage 2/ ; s/fakevirt.*/f
 (echo -n st2 ' ' ; date ) >> Timings.txt
 for i in $(seq 1 $NCORES)
 do
-    echo $i | ../EXEC > run-st2-$i.log 2>&1 &
+    echo $i | $EXEC > run-st2-$i.log 2>&1 &
 done
 wait
 (echo -n end ' ' ; date ) >> Timings.txt
