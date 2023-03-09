@@ -57,7 +57,7 @@ ih2   1           ! hadron 2 (1 for protons)
 
 iseed       20    ! initialize random number sequence 
 
-itmx1    9      ! number of iterations for initializing the integration grid
+itmx1    3      ! number of iterations for initializing the integration grid
 ! Parameters to allow or not the use of stored data
 numevts 1
 use-old-grid    1 ! if 1 use old grid if file pwggrids.dat is present (<> 1 regenerate)
