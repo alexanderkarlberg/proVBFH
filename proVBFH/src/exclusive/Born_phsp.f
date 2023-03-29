@@ -989,7 +989,6 @@ c     default is Born kinematics:
      $        + ( ph_Hmass * ptH * 0.5d0 ) ** 2d0 
      $        ) ** 0.25d0
          
-         muref = ph_Wmass ! FOR YR4 and STXS runs
       else
 !         muref=ph_Hmass
          muref=ph_Wmass
