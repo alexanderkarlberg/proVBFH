@@ -34,10 +34,14 @@ c init_processes.
          call exit(-1)
       endif
 c
-      par_isrtinycsi = 1d-6
-      par_isrtinyy = 1d-6
-      par_fsrtinycsi = 1d-5
-      par_fsrtinyy = 1d-6
+      par_isrtinycsi = powheginput("#par_isrtinycsi")
+      par_isrtinyy   = powheginput("#par_isrtinyy")
+      par_fsrtinycsi = powheginput("#par_fsrtinycsi")
+      par_fsrtinyy   = powheginput("#par_fsrtinyy")
+      if(par_isrtinycsi.lt.0d0) par_isrtinycsi = 1d-6
+      if(par_isrtinyy.lt.0d0)   par_isrtinyy   = 1d-6
+      if(par_fsrtinycsi.lt.0d0) par_fsrtinycsi = 1d-5
+      if(par_fsrtinyy.lt.0d0)   par_fsrtinyy   = 1d-6
 c
       rad_branching=1
 c this is set to true in processes where the FSR jacobian

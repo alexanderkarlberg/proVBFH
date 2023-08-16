@@ -94,28 +94,28 @@ contains
 
     ! Compute the LO structure funtion by adding all the pieces
     ! from tables
-    Fx1(:,1) = F_LO(y1, Q1val, muR1val, muF1val)
-    Fx2(:,1) = F_LO(y2, Q2val, muR2val, muF2val)
+    Fx1(:,1) = two*F_LO(y1, Q1val, muR1val, muF1val)
+    Fx2(:,1) = two*F_LO(y2, Q2val, muR2val, muF2val)
 
     if (order_stop.ge.2) then
        ! Compute the NLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,2) = F_NLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,2) = F_NLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,2) = two*F_NLO(y1, Q1val, muR1val, muF1val)
+       Fx2(:,2) = two*F_NLO(y2, Q2val, muR2val, muF2val)
     endif
 
     if (order_stop.ge.3) then
        ! Compute the NNLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,3) = F_NNLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,3) = F_NNLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,3) = two*F_NNLO(y1, Q1val, muR1val, muF1val)
+       Fx2(:,3) = two*F_NNLO(y2, Q2val, muR2val, muF2val)
     endif
 
     if (order_stop.ge.4) then
        ! Compute the N3LO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,4) = F_N3LO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,4) = F_N3LO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,4) = two*F_N3LO(y1, Q1val, muR1val, muF1val)
+       Fx2(:,4) = two*F_N3LO(y2, Q2val, muR2val, muF2val)
     endif
 
     do iorder = order_start,order_stop
