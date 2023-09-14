@@ -23,6 +23,8 @@ module incl_parameters
   character * 5, public :: seedstr
   real(dp), public :: test_Q0, muR_PDF
   integer,  public :: niter
+  real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
+  integer, public :: nloop, order
   public :: set_parameters
 
 contains
@@ -171,6 +173,17 @@ contains
     S = sqrts**2
     ! compute sin(\theta_w) from W/Z mass
     sin_thw = 1.0_dp - (mw/mz)**2
+
+    ! For hoppetStartExtended. Could think of putting on commandline...
+    ! Streamlined initialization
+    ! including  parameters for x-grid
+    order = -6 
+    ymax  = 16.0_dp
+    dy    = 0.05_dp  ! dble_val_opt("-dy",0.1_dp)
+    dlnlnQ = dy/4.0_dp
+    nloop = 3 
+    minQval = min(xmuF*Qmin, Qmin)
+    maxQval = max(xmuF*sqrts, sqrts)
 
     param_initialised = .true.
   end subroutine set_parameters

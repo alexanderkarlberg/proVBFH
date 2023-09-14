@@ -41,7 +41,10 @@ contains
     ! !! ==== END DEBUGGING
 
     ! initialise hoppet
-    call StartStrFct(sqrts, order_max, nflav, xmur, xmuf, scale_choice, mh, .true., Qmin)
+    call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
+         &         order,factscheme_MSbar)
+    call StartStrFct(sqrts, order_max, nflav, xmur, xmuf,&
+         & scale_choice, mh, .true., Qmin)
     call read_PDF()
     call InitStrFct(order_max, separate_orders = .true.)
 
