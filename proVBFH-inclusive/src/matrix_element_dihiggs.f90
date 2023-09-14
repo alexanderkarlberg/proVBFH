@@ -59,7 +59,7 @@ contains
     real(dp), intent(in) :: pH1(0:3), pH2(0:3), ptH1H2
     real(dp)             :: res
     !----------------------------------------------------------------------
-    real(dp) :: y1, y2, Q1sq, Q2sq, Q1val, Q2val
+    real(dp) :: Q1sq, Q2sq, Q1val, Q2val
     real(dp) :: muR1val, muR2val, muF1val, muF2val
     real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4)
     real(dp) :: F1F1_AA, F1F2_AA, F2F1_AA, F2F2_AA, F3F3_AA
@@ -76,9 +76,6 @@ contains
     logical, parameter :: WpWm = .true., WmWp = .true., ZZ = .true.
     integer :: iorder
     real(dp) :: res2
-
-    y1 = -log(x1)
-    y2 = -log(x2)
 
     Q1sq = -(q1.dot.q1)
     Q2sq = -(q2.dot.q2)
@@ -179,28 +176,28 @@ contains
 
     ! Compute the LO structure funtion by adding all the pieces
     ! from tables
-    Fx1(:,1) = two*F_LO(y1, Q1val, muR1val, muF1val)
-    Fx2(:,1) = two*F_LO(y2, Q2val, muR2val, muF2val)
+    Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
+    Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
 
     if (order_stop.ge.2) then
        ! Compute the NLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,2) = two*F_NLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,2) = two*F_NLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,2) = two*F_NLO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,2) = two*F_NLO(x2, Q2val, muR2val, muF2val)
     endif
 
     if (order_stop.ge.3) then
        ! Compute the NNLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,3) = two*F_NNLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,3) = two*F_NNLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,3) = two*F_NNLO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,3) = two*F_NNLO(x2, Q2val, muR2val, muF2val)
     endif
 
     if (order_stop.ge.4) then
        ! Compute the N3LO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,4) = two*F_N3LO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,4) = two*F_N3LO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,4) = two*F_N3LO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,4) = two*F_N3LO(x2, Q2val, muR2val, muF2val)
     endif
 
     do iorder = order_start,order_stop
@@ -370,7 +367,7 @@ contains
     real(dp), intent(in) :: ptH1H2,pH1(0:3),pH2(0:3)
     real(dp)             :: res
     !----------------------------------------------------------------------
-    real(dp) :: y1, y2, Q1sq, Q2sq, Q1val, Q2val
+    real(dp) :: Q1sq, Q2sq, Q1val, Q2val
     real(dp) :: muR1val, muR2val, muF1val, muF2val
     real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4), F1(-6:7), F2(-6:7)
     real(dp) :: WW_norm, ZZ_norm, overall_norm
@@ -552,9 +549,6 @@ contains
     T3(1)%values(:,:) = complex(zero,one) * T3(1)%values(:,:)
     T3(2)%values(:,:) = complex(zero,one) * T3(2)%values(:,:)
     
-    y1 = -log(x1)
-    y2 = -log(x2)
-
     Q1sq = -q1q1
     Q2sq = -q2q2
     Q1val = sqrt(Q1sq)
@@ -578,16 +572,16 @@ contains
 
     ! Compute the LO structure funtion by adding all the pieces
     ! from tables
-    Fx1(:,1) = two*F_LO(y1, Q1val, muR1val, muF1val)
-    Fx2(:,1) = two*F_LO(y2, Q2val, muR2val, muF2val)
+    Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
+    Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
     F1(:) = Fx1(:,1)
     F2(:) = Fx2(:,1)
 
     if (order_stop.ge.2) then
        ! Compute the NLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,2) = two*F_NLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,2) = two*F_NLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,2) = two*F_NLO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,2) = two*F_NLO(x2, Q2val, muR2val, muF2val)
        F1(:) = F1(:) + Fx1(:,2)
        F2(:) = F2(:) + Fx2(:,2)
     endif
@@ -595,8 +589,8 @@ contains
     if (order_stop.ge.3) then
        ! Compute the NNLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,3) = two*F_NNLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,3) = two*F_NNLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,3) = two*F_NNLO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,3) = two*F_NNLO(x2, Q2val, muR2val, muF2val)
        F1(:) = F1(:) + Fx1(:,3)
        F2(:) = F2(:) + Fx2(:,3)
     endif
@@ -604,8 +598,8 @@ contains
     if (order_stop.ge.4) then
        ! Compute the N3LO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,4) = two*F_N3LO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,4) = two*F_N3LO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,4) = two*F_N3LO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,4) = two*F_N3LO(x2, Q2val, muR2val, muF2val)
        F1(:) = F1(:) + Fx1(:,4)
        F2(:) = F2(:) + Fx2(:,4)
     endif

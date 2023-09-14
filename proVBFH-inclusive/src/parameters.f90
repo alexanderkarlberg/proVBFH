@@ -29,6 +29,8 @@ module parameters
   integer, public :: nmempdf
   logical, public :: pdfuncert, scaleuncert3, scaleuncert7, alphasuncert
   real(dp), public :: toy_Q0, test_Q0, muR_PDF
+  real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
+  integer, public :: nloop, order
   public :: set_parameters
 
 contains
@@ -107,6 +109,16 @@ contains
     ! compute sin(\theta_w) from W/Z mass
     sin_thw = 1.0_dp - (mw/mz)**2
 
+    ! For hoppetStartExtended. Could think of putting on commandline...
+    ! Streamlined initialization
+    ! including  parameters for x-grid
+    order = -6 
+    ymax  = 16.0_dp
+    dy    = 0.05_dp  ! dble_val_opt("-dy",0.1_dp)
+    dlnlnQ = dy/4.0_dp
+    nloop = 3 
+    minQval = min(xmuF*Qmin, Qmin)
+    maxQval = max(xmuF*sqrts, sqrts)
     if (.not.CheckAllArgsUsed(0)) call exit()
   end subroutine set_parameters
   

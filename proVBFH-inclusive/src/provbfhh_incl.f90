@@ -98,6 +98,8 @@ program provbfh_incl
         ! initialise hoppet
         xmur = scales_mur(iscales)
         xmuf = scales_muf(iscales)
+        call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
+             &         order,factscheme_MSbar)
         call StartStrFct(sqrts, order_max, nflav, xmur, &
              & xmuf, scale_choice, mh, .true., Qmin, mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)

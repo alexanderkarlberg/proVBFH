@@ -54,7 +54,7 @@ contains
     real(dp), intent(in) :: x1, x2, P1(0:3), P2(0:3), q1(0:3), q2(0:3), ptH
     real(dp)             :: res
     !----------------------------------------------------------------------
-    real(dp) :: y1, y2, Q1sq, Q2sq, Q1val, Q2val
+    real(dp) :: Q1sq, Q2sq, Q1val, Q2val
     real(dp) :: muR1val, muR2val, muF1val, muF2val
     real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4)
     real(dp) :: F1F1, F1F2, F2F1, F2F2, F3F3
@@ -63,9 +63,6 @@ contains
     integer  :: i, j
     logical, parameter :: WpWm = .true., WmWp = .true., ZZ = .true.
     integer :: iorder
-
-    y1 = -log(x1)
-    y2 = -log(x2)
 
     Q1sq = -(q1.dot.q1)
     Q2sq = -(q2.dot.q2)
@@ -94,28 +91,28 @@ contains
 
     ! Compute the LO structure funtion by adding all the pieces
     ! from tables
-    Fx1(:,1) = two*F_LO(y1, Q1val, muR1val, muF1val)
-    Fx2(:,1) = two*F_LO(y2, Q2val, muR2val, muF2val)
+    Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
+    Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
 
     if (order_stop.ge.2) then
        ! Compute the NLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,2) = two*F_NLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,2) = two*F_NLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,2) = two*F_NLO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,2) = two*F_NLO(x2, Q2val, muR2val, muF2val)
     endif
 
     if (order_stop.ge.3) then
        ! Compute the NNLO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,3) = two*F_NNLO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,3) = two*F_NNLO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,3) = two*F_NNLO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,3) = two*F_NNLO(x2, Q2val, muR2val, muF2val)
     endif
 
     if (order_stop.ge.4) then
        ! Compute the N3LO structure funtion by adding all the pieces
        ! from tables
-       Fx1(:,4) = two*F_N3LO(y1, Q1val, muR1val, muF1val)
-       Fx2(:,4) = two*F_N3LO(y2, Q2val, muR2val, muF2val)
+       Fx1(:,4) = two*F_N3LO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,4) = two*F_N3LO(x2, Q2val, muR2val, muF2val)
     endif
 
     do iorder = order_start,order_stop
