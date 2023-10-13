@@ -1093,12 +1093,12 @@ contains
     muR1 = zero
     if (scale_choice.le.1) then
        ! if scale_choice = 0,1 then muR1(Q1,Q2) = muR(Q1)
-       muR1 = muR(Q1)
+       muR1 = sf_muR(Q1)
     elseif (scale_choice.eq.2) then
        ! else if scale_choice=2, use sqrt(Q1*Q2)
        muR1 = xmur * sqrt(Q1 * Q2)
     elseif (scale_choice.eq.3) then
-       ! else if scale_choice=3, use mixed scale
+       ! else if scale_choice=3, use mixedscale
        muR1 = xmur * mixed_scale(Q1, Q2, ptH1H2)
     endif
   end function muR1
@@ -1110,7 +1110,7 @@ contains
     muR2 = zero
     if (scale_choice.le.1) then
        ! if scale_choice = 0,1 then muR1(Q1,Q2) = muR(Q1)
-       muR2 = muR(Q2)
+       muR2 = sf_muR(Q2)
     elseif (scale_choice.eq.2) then
        ! else if scale_choice=2, use sqrt(Q1*Q2)
        muR2 = xmur * sqrt(Q1 * Q2)
@@ -1146,7 +1146,7 @@ contains
     muF1 = zero
     if (scale_choice.le.1) then
        ! if scale_choice = 0,1 then muF1(Q1,Q2) = muF(Q1)
-       muF1 = muF(Q1)
+       muF1 = sf_muF(Q1)
     elseif (scale_choice.eq.2) then
        ! else if scale_choice=2, use sqrt(Q1*Q2)
        muF1 = xmuf * sqrt(Q1 * Q2)
@@ -1165,7 +1165,7 @@ contains
     muF2 = zero
     if (scale_choice.le.1) then
        ! if scale_choice = 0,1 then muF1(Q1,Q2) = muF(Q1)
-       muF2 = muF(Q2)
+       muF2 = sf_muF(Q2)
     elseif (scale_choice.eq.2) then
        ! else if scale_choice=2, use sqrt(Q1*Q2)
        muF2 = xmuf * sqrt(Q1 * Q2)
