@@ -232,117 +232,117 @@ contains
        do i = 1, iorder
           j = 1 + iorder - i
           if (WpWm) then
-             F1F1_AA = F1F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1_AA = F2F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2_AA = F1F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2_AA = F2F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3_AA = F3F3_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1_AA = F1F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1_AA = F2F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2_AA = F1F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2_AA = F2F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3_AA = F3F3_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
 
-             F1F1_AB = F1F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1_AB = F2F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2_AB = F1F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2_AB = F2F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3_AB = F3F3_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1_AB = F1F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1_AB = F2F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2_AB = F1F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2_AB = F2F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3_AB = F3F3_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
 
-             F1F1_AC = F1F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1_AC = F2F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2_AC = F1F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2_AC = F2F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3_AC = F3F3_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1_AC = F1F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1_AC = F2F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2_AC = F1F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2_AC = F2F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3_AC = F3F3_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
 
-             F1F1_BB = F1F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1_BB = F2F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2_BB = F1F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2_BB = F2F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3_BB = F3F3_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1_BB = F1F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1_BB = F2F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2_BB = F1F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2_BB = F2F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3_BB = F3F3_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
 
-             F1F1_BC = F1F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1_BC = F2F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2_BC = F1F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2_BC = F2F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3_BC = F3F3_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1_BC = F1F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1_BC = F2F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2_BC = F1F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2_BC = F2F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3_BC = F3F3_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
              
-             F1F1_CC = F1F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1_CC = F2F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2_CC = F1F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2_CC = F2F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3_CC = F3F3_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1_CC = F1F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1_CC = F2F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2_CC = F1F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2_CC = F2F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3_CC = F3F3_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
           end if
 
           if (WmWp) then
-             F1F1_AA = F1F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1_AA = F2F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2_AA = F1F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2_AA = F2F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3_AA = F3F3_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1_AA = F1F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1_AA = F2F1_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2_AA = F1F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2_AA = F2F2_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3_AA = F3F3_AA + WW_norm * real( WW_A * conjg(WW_A) ) * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
 
-             F1F1_AB = F1F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1_AB = F2F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2_AB = F1F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2_AB = F2F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3_AB = F3F3_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1_AB = F1F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1_AB = F2F1_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2_AB = F1F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2_AB = F2F2_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3_AB = F3F3_AB + WW_norm * real( WW_A * conjg(WW_B) ) * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
 
-             F1F1_AC = F1F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1_AC = F2F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2_AC = F1F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2_AC = F2F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3_AC = F3F3_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1_AC = F1F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1_AC = F2F1_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2_AC = F1F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2_AC = F2F2_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3_AC = F3F3_AC + WW_norm * real( WW_A * conjg(WW_C) ) * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
 
-             F1F1_BB = F1F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1_BB = F2F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2_BB = F1F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2_BB = F2F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3_BB = F3F3_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1_BB = F1F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1_BB = F2F1_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2_BB = F1F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2_BB = F2F2_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3_BB = F3F3_BB + WW_norm * real( WW_B * conjg(WW_B) ) * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
 
-             F1F1_BC = F1F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1_BC = F2F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2_BC = F1F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2_BC = F2F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3_BC = F3F3_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1_BC = F1F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1_BC = F2F1_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2_BC = F1F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2_BC = F2F2_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3_BC = F3F3_BC + WW_norm * real( WW_B * conjg(WW_C) ) * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
 
-             F1F1_CC = F1F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1_CC = F2F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2_CC = F1F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2_CC = F2F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3_CC = F3F3_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1_CC = F1F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1_CC = F2F1_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2_CC = F1F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2_CC = F2F2_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3_CC = F3F3_CC + WW_norm * real( WW_C * conjg(WW_C) ) * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
           end if
 
           if (ZZ) then
-             F1F1_AA = F1F1_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1_AA = F2F1_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2_AA = F1F2_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2_AA = F2F2_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3_AA = F3F3_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1_AA = F1F1_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1_AA = F2F1_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2_AA = F1F2_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2_AA = F2F2_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3_AA = F3F3_AA + ZZ_norm * real( ZZ_A * conjg(ZZ_A) ) * Fx1(iF3Z,i)*Fx2(iF3Z,j)
 
-             F1F1_AB = F1F1_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1_AB = F2F1_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2_AB = F1F2_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2_AB = F2F2_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3_AB = F3F3_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1_AB = F1F1_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1_AB = F2F1_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2_AB = F1F2_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2_AB = F2F2_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3_AB = F3F3_AB + ZZ_norm * real( ZZ_A * conjg(ZZ_B) ) * Fx1(iF3Z,i)*Fx2(iF3Z,j)
 
-             F1F1_AC = F1F1_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1_AC = F2F1_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2_AC = F1F2_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2_AC = F2F2_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3_AC = F3F3_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1_AC = F1F1_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1_AC = F2F1_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2_AC = F1F2_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2_AC = F2F2_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3_AC = F3F3_AC + ZZ_norm * real( ZZ_A * conjg(ZZ_C) ) * Fx1(iF3Z,i)*Fx2(iF3Z,j)
 
-             F1F1_BB = F1F1_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1_BB = F2F1_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2_BB = F1F2_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2_BB = F2F2_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3_BB = F3F3_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1_BB = F1F1_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1_BB = F2F1_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2_BB = F1F2_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2_BB = F2F2_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3_BB = F3F3_BB + ZZ_norm * real( ZZ_B * conjg(ZZ_B) ) * Fx1(iF3Z,i)*Fx2(iF3Z,j)
 
-             F1F1_BC = F1F1_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1_BC = F2F1_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2_BC = F1F2_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2_BC = F2F2_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3_BC = F3F3_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1_BC = F1F1_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1_BC = F2F1_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2_BC = F1F2_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2_BC = F2F2_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3_BC = F3F3_BC + ZZ_norm * real( ZZ_B * conjg(ZZ_C) ) * Fx1(iF3Z,i)*Fx2(iF3Z,j)
 
-             F1F1_CC = F1F1_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1_CC = F2F1_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2_CC = F1F2_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2_CC = F2F2_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3_CC = F3F3_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1_CC = F1F1_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1_CC = F2F1_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2_CC = F1F2_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2_CC = F2F2_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3_CC = F3F3_CC + ZZ_norm * real( ZZ_C * conjg(ZZ_C) ) * Fx1(iF3Z,i)*Fx2(iF3Z,j)
           end if
        end do
     end do
@@ -675,29 +675,29 @@ contains
     endif
 
     ! Compute hadronic tensors
-    Wx1(Wp) = F1sum(F1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1sum(F2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1sum(F3Wp)*(one/(two*P1q1))*T3(1)
+    Wx1(Wp) = F1sum(iF1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1sum(iF2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1sum(iF3Wp)*(one/(two*P1q1))*T3(1)
 
-    Wx1(Wm) = F1sum(F1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1sum(F2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1sum(F3Wm)*(one/(two*P1q1))*T3(1)
+    Wx1(Wm) = F1sum(iF1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1sum(iF2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1sum(iF3Wm)*(one/(two*P1q1))*T3(1)
 
-    Wx1(Z) = F1sum(F1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1sum(F2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1sum(F3Z)*(one/(two*P1q1))*T3(1)
+    Wx1(Z) = F1sum(iF1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1sum(iF2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1sum(iF3Z)*(one/(two*P1q1))*T3(1)
 
-    Wx2(Wp) = F2sum(F1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2sum(F2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2sum(F3Wp)*(one/(two*P2q2))*T3(2)
+    Wx2(Wp) = F2sum(iF1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2sum(iF2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2sum(iF3Wp)*(one/(two*P2q2))*T3(2)
 
-    Wx2(Wm) = F2sum(F1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2sum(F2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2sum(F3Wm)*(one/(two*P2q2))*T3(2)
+    Wx2(Wm) = F2sum(iF1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2sum(iF2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2sum(iF3Wm)*(one/(two*P2q2))*T3(2)
 
-    Wx2(Z) = F2sum(F1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2sum(F2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2sum(F3Z)*(one/(two*P2q2))*T3(2)
+    Wx2(Z) = F2sum(iF1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2sum(iF2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2sum(iF3Z)*(one/(two*P2q2))*T3(2)
 
     if(.not.non_fact) then
        ! Do first contraction between a hadronic tensor and a matrix element.
@@ -1495,29 +1495,29 @@ contains
     endif
 
     ! Compute hadronic tensors
-    Wx1(Wp) = F1(F1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1(F2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1(F3Wp)*(one/(two*P1q1))*T3(1)
+    Wx1(Wp) = F1(iF1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1(iF2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1(iF3Wp)*(one/(two*P1q1))*T3(1)
 
-    Wx1(Wm) = F1(F1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1(F2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1(F3Wm)*(one/(two*P1q1))*T3(1)
+    Wx1(Wm) = F1(iF1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1(iF2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1(iF3Wm)*(one/(two*P1q1))*T3(1)
 
-    Wx1(Z) = F1(F1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1(F2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1(F3Z)*(one/(two*P1q1))*T3(1)
+    Wx1(Z) = F1(iF1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1(iF2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1(iF3Z)*(one/(two*P1q1))*T3(1)
 
-    Wx2(Wp) = F2(F1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2(F2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2(F3Wp)*(one/(two*P2q2))*T3(2)
+    Wx2(Wp) = F2(iF1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2(iF2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2(iF3Wp)*(one/(two*P2q2))*T3(2)
 
-    Wx2(Wm) = F2(F1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2(F2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2(F3Wm)*(one/(two*P2q2))*T3(2)
+    Wx2(Wm) = F2(iF1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2(iF2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2(iF3Wm)*(one/(two*P2q2))*T3(2)
 
-    Wx2(Z) = F2(F1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2(F2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2(F3Z)*(one/(two*P2q2))*T3(2)
+    Wx2(Z) = F2(iF1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2(iF2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2(iF3Z)*(one/(two*P2q2))*T3(2)
 
     ! Do first contraction between a hadronic tensor and a matrix element.
     call ContractTensors(Wx1(Wp),1,M(Wp),1,MWx1(Wp))

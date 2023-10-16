@@ -152,27 +152,27 @@ contains
        do i = 1, iorder
           j = 1 + iorder - i
           if (WpWm) then
-             F1F1 = F1F1 + WW_norm * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1 = F2F1 + WW_norm * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2 = F1F2 + WW_norm * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2 = F2F2 + WW_norm * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3 = F3F3 + WW_norm * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1 = F1F1 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1 = F2F1 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2 = F1F2 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2 = F2F2 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3 = F3F3 + WW_norm * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
           end if
           
           if (WmWp) then
-             F1F1 = F1F1 + WW_norm * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1 = F2F1 + WW_norm * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2 = F1F2 + WW_norm * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2 = F2F2 + WW_norm * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3 = F3F3 + WW_norm * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1 = F1F1 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1 = F2F1 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2 = F1F2 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2 = F2F2 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3 = F3F3 + WW_norm * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
           end if
           
           if (ZZ) then
-             F1F1 = F1F1 + ZZ_norm * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1 = F2F1 + ZZ_norm * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2 = F1F2 + ZZ_norm * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2 = F2F2 + ZZ_norm * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3 = F3F3 + ZZ_norm * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1 = F1F1 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1 = F2F1 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2 = F1F2 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2 = F2F2 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3 = F3F3 + ZZ_norm * Fx1(iF3Z,i)*Fx2(iF3Z,j)
           end if
        end do
     end do
@@ -394,29 +394,29 @@ contains
     endif
 
     ! Compute hadronic tensors
-    Wx1(Wp) = F1(F1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1(F2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1(F3Wp)*(one/(two*P1q1))*T3(1)
+    Wx1(Wp) = F1(iF1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1(iF2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1(iF3Wp)*(one/(two*P1q1))*T3(1)
 
-    Wx1(Wm) = F1(F1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1(F2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1(F3Wm)*(one/(two*P1q1))*T3(1)
+    Wx1(Wm) = F1(iF1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1(iF2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1(iF3Wm)*(one/(two*P1q1))*T3(1)
 
-    Wx1(Z) = F1(F1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1(F2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1(F3Z)*(one/(two*P1q1))*T3(1)
+    Wx1(Z) = F1(iF1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+         & + F1(iF2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+         & + F1(iF3Z)*(one/(two*P1q1))*T3(1)
 
-    Wx2(Wp) = F2(F1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2(F2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2(F3Wp)*(one/(two*P2q2))*T3(2)
+    Wx2(Wp) = F2(iF1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2(iF2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2(iF3Wp)*(one/(two*P2q2))*T3(2)
 
-    Wx2(Wm) = F2(F1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2(F2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2(F3Wm)*(one/(two*P2q2))*T3(2)
+    Wx2(Wm) = F2(iF1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2(iF2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2(iF3Wm)*(one/(two*P2q2))*T3(2)
 
-    Wx2(Z) = F2(F1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2(F2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2(F3Z)*(one/(two*P2q2))*T3(2)
+    Wx2(Z) = F2(iF1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
+         & + F2(iF2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
+         & + F2(iF3Z)*(one/(two*P2q2))*T3(2)
 
     ! Do first contraction between a hadronic tensor and a matrix element.
     call ContractTensors(Wx1(Wp),1,M,1,MWx1(Wp))

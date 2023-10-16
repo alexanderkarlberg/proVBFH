@@ -119,27 +119,27 @@ contains
        do i = 1, iorder
           j = 1 + iorder - i
           if (WpWm) then
-             F1F1 = F1F1 + WW_norm * Fx1(F1Wp,i)*Fx2(F1Wm,j)
-             F2F1 = F2F1 + WW_norm * Fx1(F2Wp,i)*Fx2(F1Wm,j)
-             F1F2 = F1F2 + WW_norm * Fx1(F1Wp,i)*Fx2(F2Wm,j)
-             F2F2 = F2F2 + WW_norm * Fx1(F2Wp,i)*Fx2(F2Wm,j)
-             F3F3 = F3F3 + WW_norm * Fx1(F3Wp,i)*Fx2(F3Wm,j)
+             F1F1 = F1F1 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+             F2F1 = F2F1 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+             F1F2 = F1F2 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+             F2F2 = F2F2 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+             F3F3 = F3F3 + WW_norm * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
           end if
           
           if (WmWp) then
-             F1F1 = F1F1 + WW_norm * Fx1(F1Wm,i)*Fx2(F1Wp,j)
-             F2F1 = F2F1 + WW_norm * Fx1(F2Wm,i)*Fx2(F1Wp,j)
-             F1F2 = F1F2 + WW_norm * Fx1(F1Wm,i)*Fx2(F2Wp,j)
-             F2F2 = F2F2 + WW_norm * Fx1(F2Wm,i)*Fx2(F2Wp,j)
-             F3F3 = F3F3 + WW_norm * Fx1(F3Wm,i)*Fx2(F3Wp,j)
+             F1F1 = F1F1 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+             F2F1 = F2F1 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+             F1F2 = F1F2 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+             F2F2 = F2F2 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+             F3F3 = F3F3 + WW_norm * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
           end if
           
           if (ZZ) then
-             F1F1 = F1F1 + ZZ_norm * Fx1(F1Z,i)*Fx2(F1Z,j)
-             F2F1 = F2F1 + ZZ_norm * Fx1(F2Z,i)*Fx2(F1Z,j)
-             F1F2 = F1F2 + ZZ_norm * Fx1(F1Z,i)*Fx2(F2Z,j)
-             F2F2 = F2F2 + ZZ_norm * Fx1(F2Z,i)*Fx2(F2Z,j)
-             F3F3 = F3F3 + ZZ_norm * Fx1(F3Z,i)*Fx2(F3Z,j)
+             F1F1 = F1F1 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+             F2F1 = F2F1 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+             F1F2 = F1F2 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+             F2F2 = F2F2 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+             F3F3 = F3F3 + ZZ_norm * Fx1(iF3Z,i)*Fx2(iF3Z,j)
           end if
        end do
     end do

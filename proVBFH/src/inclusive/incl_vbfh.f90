@@ -268,7 +268,7 @@ contains
        write(6,*) "WARNING: Using internal HOPPET DGLAP evolution"
        call InitPDF_LHAPDF(grid, pdf_at_Q0, EvolvePDF, Q0pdf)
        call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , 4,&
-            & -1000000045, quark_masses_sf(4:6), .true.)
+            & -1000000045, sf_quark_masses(4:6), .true.)
        call EvolvePdfTable(tables(0), Q0pdf, pdf_at_Q0, dh, coupling, &
             &  muR_Q=xmuR_PDF, nloop=3)
 
@@ -276,7 +276,7 @@ contains
        ! InitRunningCoupling has to be called for the HOPPET coupling to be initialised 
        ! Default is to ask for 4 loop running and threshold corrections at quark masses.  
        call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , 4,&
-            & -1000000045, quark_masses_sf(4:6), .true.)
+            & -1000000045, sf_quark_masses(4:6), .true.)
        ! fixnf can be set to a positive number for
        ! fixed nf. -1000000045 gives variable nf
        ! and threshold corrections at quarkmasses.
