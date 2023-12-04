@@ -98,7 +98,7 @@ program provbfh_incl
         call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
              &         order,factscheme_MSbar)
         call StartStrFct(order_max, nflav, xmur, xmuf, scale_choice,&
-             & mh, .true., Qmin, mw, mz)
+             & mh, .true., mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
         call InitStrFct(order_max, separate_orders = .true.)
         ! !! === DEBUGGING ONLY
