@@ -43,10 +43,10 @@ contains
     ! initialise hoppet
     call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
              &         order,factscheme_MSbar)
-    call StartStrFct(order_max, nflav, xmur, xmuf, scale_choice, mh,&
-         & .true., mw, mz)
+    call StartStrFct(order_max, nflav, scale_choice_hoppet, mh, .true., mw,&
+         & mz)
     call read_PDF()
-    call InitStrFct(order_max, separate_orders = .true.)
+    call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
 
     ! !! === DEBUGGING ONLY
     ! ! write the structure functions to file, for debugging purposes

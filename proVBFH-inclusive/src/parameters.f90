@@ -21,7 +21,7 @@ module parameters
   real(dp), public :: v_H, lambda_HHH
   real(dp), public :: sqrts, S, pi, Q0_cut_sq
   real(dp), public :: hmasswindow, toyas
-  integer,  public :: order_min, order_max, scale_choice, iseed
+  integer,  public :: order_min, order_max, scale_choice, scale_choice_hoppet, iseed
   integer,  public :: nflav, ipdf, itmx1, itmx2, ncall1, ncall2
   logical,  public :: higgs_use_BW, higgsfixwdth, toypdf
   character * 4, public :: seedstr
@@ -119,6 +119,7 @@ contains
     nloop = 3 
     minQval = min(xmuF*Qmin, Qmin)
     maxQval = max(xmuF*sqrts, sqrts)
+    scale_choice_hoppet = min(scale_choice,2)
     if (.not.CheckAllArgsUsed(0)) call exit()
   end subroutine set_parameters
   

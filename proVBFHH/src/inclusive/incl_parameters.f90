@@ -17,7 +17,7 @@ module incl_parameters
   real(dp), public :: v_H, lambda_HHH, lambdafact
   real(dp), public :: sqrts, S, pi, Q0_cut_sq
   real(dp), public :: hmasswindow, toyas
-  integer,  public :: order_min, order_max, scale_choice, iwhichseed
+  integer,  public :: order_min, order_max, scale_choice, scale_choice_hoppet, iwhichseed
   integer,  public :: nflav, ipdf, itmx1, itmx2, ncall1, ncall2
   logical,  public :: do_analysis_call, manyseeds, non_fact
   logical,  public :: higgs_use_BW, higgsfixwdth, complexpole, toypdf
@@ -233,7 +233,7 @@ contains
     nloop = 3 
     minQval = min(xmuF*Qmin, Qmin)
     maxQval = max(xmuF*sqrts, sqrts)
-
+    scale_choice_hoppet = min(scale_choice,2)
     param_initialised = .true.
   end subroutine set_parameters
 
