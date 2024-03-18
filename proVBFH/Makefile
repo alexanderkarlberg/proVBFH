@@ -102,7 +102,7 @@ VPATH= ./:$(SRC)/:$(EXCLUSIVE)/:$(INCLUSIVE)/:$(PWGPATH)/:$(EXCLUSIVE)/vbfnlo-fi
 VPATH+=:$(ANALYSIS)/:$(VBFHJJJ)/:$(VBFHJJJ)/dhelas:$(VBFHJJJ)/vbfnlo-files/:$(OBJ)/
 
 # analysis files
-ANALYSIS_FILE=incl_analysis.o phspcuts.o
+ANALYSIS_FILE=user_analysis.o phspcuts.o
 #ANALYSIS_FILE=heat_map.o phspcuts.o
 #ANALYSIS_FILE=highpt-analysis.o phspcuts.o
 
