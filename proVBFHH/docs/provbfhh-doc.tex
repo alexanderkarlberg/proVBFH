@@ -1,5 +1,5 @@
 \documentclass[12pt,a4]{article}
-usepackage{a4wide}
+\usepackage{a4wide}
 \usepackage{xspace}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -114,25 +114,20 @@ cited as well
   [arXiv:0708.3731 [hep-ph]].
 \end{itemize}
 
-Finally, when evaluating the non-factorizable NNLO corrections, the following
-paper should be cited
-\begin{itemize}
-\item T.~Liu, K.~Melnikov and A.~A.~Penin,
-  % ``Nonfactorizable QCD Effects in Higgs Boson Production via Vector Boson Fusion,''
-  Phys. Rev. Lett. \textbf{123} (2019) no.12, 122002
-  %doi:10.1103/PhysRevLett.123.122002
-  [arXiv:1906.10899 [hep-ph]].
-\end{itemize}
+%Finally, when evaluating the non-factorizable NNLO corrections, the following
+%paper should be cited
+%\begin{itemize}
+%\item T.~Liu, K.~Melnikov and A.~A.~Penin,
+%  % ``Nonfactorizable QCD Effects in Higgs Boson Production via Vector Boson Fusion,''
+%  Phys. Rev. Lett. \textbf{123} (2019) no.12, 122002
+%  %doi:10.1103/PhysRevLett.123.122002
+%  [arXiv:1906.10899 [hep-ph]].
+%\end{itemize}
 \subsection{Dependencies}
 To run \provbfhh, you will need an installation of the following packages:
 \begin{itemize}
-\item \texttt{hoppet/struct-func-devel}:
-  \url{http://hoppet.hepforge.org/}.  Note that it is specifically the
-  struct-func-devel branch of \hoppet that is required.  It can be
-  downloaded using:
-\begin{verbatim}
- svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
-\end{verbatim}
+\item \texttt{hoppet}:
+  \url{https://github.com/hoppet-code/hoppet}. At least v.1.3.0.
 \item \texttt{LHAPDF}: \url{http://lhapdf.hepforge.org/}.
 \item \texttt{FastJet}: \url{http://fastjet.fr/}.
 \item \texttt{gfortran} version 4.6 or later.
