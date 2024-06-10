@@ -9,4 +9,4 @@ Both programs provide predictions up to NNLO, but can also be run in an inclusiv
 
 A lightweight program, [proVBFH-inclusive](https://github.com/alexanderkarlberg/proVBFH/tree/main/proVBFH-inclusive), is also provided. It contains the inclsuvie part of the above twos codes with no analysis framework.
 
-In all cases a README.md is provided and more documentation can be found in the 'docs' folders. 
+In all cases a README.md is provided and more documentation can be found in the `docs` folders. 
