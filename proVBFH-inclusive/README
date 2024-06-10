@@ -20,12 +20,8 @@ Installation
 ---
 
 To compile proVBFH-inclusive, you will need
-* hoppet, the struct-func-devel branch (http://hoppet.hepforge.org/)
+* hoppet (https://github.com/hoppet-code/hoppet)
 * LHAPDF (http://lhapdf.hepforge.org/)
-
-The struct-func-devel branch of hoppet can be downloaded using
-
-  svn checkout https://svn.hepforge.org/hoppetsvn/branches/struct-func-devel/
 
 Once all dependencies are installed on your machine, proVBFH-inclusive
 can be compiled using:
