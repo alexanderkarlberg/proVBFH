@@ -7,6 +7,6 @@ For double Higgs production look in [proVBFHH](https://github.com/alexanderkarlb
 
 Both programs provide predictions up to NNLO, but can also be run in an inclusive mode up to N3LO. 
 
-A lightweight program, [proVBFH-inclusive](https://github.com/alexanderkarlberg/proVBFH/tree/main/proVBFH-inclusive), is also provided. It contains the inclsuvie part of the above twos codes with no analysis framework.
+A lightweight program, [proVBFH-inclusive](https://github.com/alexanderkarlberg/proVBFH/tree/main/proVBFH-inclusive), is also provided. It contains the inclusvie part of the above two codes with no analysis framework.
 
 In all cases a README.md is provided and more documentation can be found in the `docs` folders. 
