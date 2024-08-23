@@ -18,7 +18,7 @@ module parameters
   real(dp), public :: xmuf, xmur, Qmin
   real(dp), public :: mh, mh_sq, hwidth
   real(dp), public :: sin_thw, mw, mz, w_width, z_width
-  real(dp), public :: v_H, lambda_HHH
+  real(dp), public :: v_H, lambda_HHH, lambdafact, cVVHHfact, cVVHfact
   real(dp), public :: sqrts, S, pi, Q0_cut_sq
   real(dp), public :: hmasswindow, toyas
   integer,  public :: order_min, order_max, scale_choice, scale_choice_hoppet, iseed
@@ -104,8 +104,11 @@ contains
     mh_sq = mh**2
     S = sqrts**2
     ! compute couplings needed for dihiggs
+    lambdafact = dble_val_opt("-lambdafact",1.0_dp)
+    cVVHHfact  = dble_val_opt("-cVVHHfact",1.0_dp)
+    cVVHfact   = dble_val_opt("-cVVHfact",1.0_dp)
     v_H = 1.0_dp / (sqrt(sqrt(2.0_dp)*gfermi)) ! v = 246 GeV
-    lambda_HHH = mh_sq / (2.0_dp * v_H) ! SM trilinear Higgs self-coupling
+    lambda_HHH = lambdafact * mh_sq / (2.0_dp * v_H) ! SM trilinear Higgs self-coupling
     ! compute sin(\theta_w) from W/Z mass
     sin_thw = 1.0_dp - (mw/mz)**2
 

@@ -182,20 +182,20 @@ contains
     ! the first single-Higgs like piece, labelled A
     ! A = 2 Mv^4/((q1 + pH1)^2 - Mv^2) + 2 Mv^4/((q1 + pH2)^2 - Mv^2)
     !     + 6 v lambda Mv^2/((pH1 + pH2)^2 - Mh^2) + Mv^2
-    WW_A = two*MW**4/cmplx(q1pH1sq - MWsq,MW*W_WIDTH) + two*MW**4/cmplx(q1pH2sq - MWsq,MW*W_WIDTH) &
+    WW_A = cVVHHfact*two*MW**4/cmplx(q1pH1sq - MWsq,MW*W_WIDTH) + two*MW**4/cmplx(q1pH2sq - MWsq,MW*W_WIDTH) &
          & + 6.0_dp * v_H * lambda_HHH * (MWsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + MWsq
-    ZZ_A = two*MZ**4/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH) + two*MZ**4/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH) &
+    ZZ_A = cVVHHfact*two*MZ**4/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH) + two*MZ**4/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH) &
          & + 6.0_dp * v_H * lambda_HHH * (MZsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + MZsq
 
     
     ! the two new terms, B and C
-    WW_B = (MWsq/cmplx(q1pH1sq - MWsq,MW*W_WIDTH))/two &
+    WW_B = cVVHfact**2*(MWsq/cmplx(q1pH1sq - MWsq,MW*W_WIDTH))/two &
          &           *MWsq/cmplx(MWsq,-MW*W_WIDTH)
-    ZZ_B = (MZsq/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH))/two &
+    ZZ_B = cVVHfact**2*(MZsq/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH))/two &
          &           *MZsq/cmplx(MZsq,-MZ*Z_WIDTH)
-    WW_C = (MWsq/cmplx(q1pH2sq - MWsq,MW*W_WIDTH))/two &
+    WW_C = cVVHfact**2*(MWsq/cmplx(q1pH2sq - MWsq,MW*W_WIDTH))/two &
          &           *MWsq/cmplx(MWsq,-MW*W_WIDTH)
-    ZZ_C = (MZsq/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH))/two &
+    ZZ_C = cVVHfact**2*(MZsq/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH))/two &
          &           *MZsq/cmplx(MZsq,-MZ*Z_WIDTH)
     
     ! Below is a narrow-width propagator; This was used in earlier versions of the code
@@ -864,7 +864,7 @@ contains
        VV_H_HH = 6.0_dp * lambdafact * MH**2/cmplx(k1k2sq - MH**2,MH*HWIDTH)*g_mu_nu
        
        ! Quartic vertex part
-       VVHH = two * g_mu_nu 
+       VVHH = two * cVVHHfact * g_mu_nu 
     else
        VV_H_HH%values = (zero,zero)
        VVHH%values = (zero,zero)
@@ -874,7 +874,8 @@ contains
        VHVHVt = two*((two*MVsq)/cmplx(q1k1sq-MVsq,MV*V_WIDTH))*g_mu_nu &
             & + (one/cmplx(q1k1sq -MVsq,MV*V_WIDTH)) &
             &         *MVsq/cmplx(MVsq,-MV*V_WIDTH) &
-            &         *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu)) 
+            &         *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
+       VHVHVt = cVVHfact**2 * VHVHVt
     else
        VHVHVt%values = (zero,zero)
     endif
@@ -883,6 +884,7 @@ contains
             & + (one/cmplx(q1k2sq -MVsq,MV*V_WIDTH)) &
             &         *MVsq/cmplx(MVsq,-MV*V_WIDTH) &
             &         *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
+       VHVHVu = cVVHfact**2 * VHVHVu
     else
        VHVHVu%values = (zero,zero)
     endif

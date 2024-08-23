@@ -154,20 +154,20 @@ contains
     ! the first single-Higgs like piece, labelled A
     ! A = 2 Mv^4/((q1 + pH1)^2 - Mv^2) + 2 Mv^4/((q1 + pH2)^2 - Mv^2)
     !     + 6 v lambda Mv^2/((pH1 + pH2)^2 - Mh^2) + Mv^2
-    WW_A = two*MW**4/complex(q1pH1sq - MW**2,MW*W_WIDTH) + two*MW**4/complex(q1pH2sq - MW**2,MW*W_WIDTH) &
+    WW_A = cVVHHfact * two*MW**4/complex(q1pH1sq - MW**2,MW*W_WIDTH) + two*MW**4/complex(q1pH2sq - MW**2,MW*W_WIDTH) &
          & + 6.0_dp * v_H * lambda_HHH * (MW**2) /complex(pH1pH2sq - mh_sq,MH*HWIDTH) + MW**2
-    ZZ_A = two*MZ**4/complex(q1pH1sq - MZ**2,MZ*Z_WIDTH) + two*MZ**4/complex(q1pH2sq - MZ**2,MZ*Z_WIDTH) &
+    ZZ_A = cVVHHfact * two*MZ**4/complex(q1pH1sq - MZ**2,MZ*Z_WIDTH) + two*MZ**4/complex(q1pH2sq - MZ**2,MZ*Z_WIDTH) &
          & + 6.0_dp * v_H * lambda_HHH * (MZ**2) /complex(pH1pH2sq - mh_sq,MH*HWIDTH) + MZ**2
 
     
     ! the two new terms, B and C
-    WW_B = (MW**2/complex(q1pH1sq - MW**2,MW*W_WIDTH))/two &
+    WW_B = cVVHfact**2*(MW**2/complex(q1pH1sq - MW**2,MW*W_WIDTH))/two &
          &           *MW**2/complex(MW**2,-MW*W_WIDTH)
-    ZZ_B = (MZ**2/complex(q1pH1sq - MZ**2,MZ*Z_WIDTH))/two &
+    ZZ_B = cVVHfact**2*(MZ**2/complex(q1pH1sq - MZ**2,MZ*Z_WIDTH))/two &
          &           *MZ**2/complex(MZ**2,-MZ*Z_WIDTH)
-    WW_C = (MW**2/complex(q1pH2sq - MW**2,MW*W_WIDTH))/two &
+    WW_C = cVVHfact**2*(MW**2/complex(q1pH2sq - MW**2,MW*W_WIDTH))/two &
          &           *MW**2/complex(MW**2,-MW*W_WIDTH)
-    ZZ_C = (MZ**2/complex(q1pH2sq - MZ**2,MZ*Z_WIDTH))/two &
+    ZZ_C = cVVHfact**2*(MZ**2/complex(q1pH2sq - MZ**2,MZ*Z_WIDTH))/two &
          &           *MZ**2/complex(MZ**2,-MZ*Z_WIDTH)
     
     ! Below is a narrow-width propagator; This was used in earlier versions of the code
