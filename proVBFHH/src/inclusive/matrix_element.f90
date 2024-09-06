@@ -183,9 +183,9 @@ contains
     ! A = 2 Mv^4/((q1 + pH1)^2 - Mv^2) + 2 Mv^4/((q1 + pH2)^2 - Mv^2)
     !     + 6 v lambda Mv^2/((pH1 + pH2)^2 - Mh^2) + Mv^2
     WW_A = cVVHHfact*two*MW**4/cmplx(q1pH1sq - MWsq,MW*W_WIDTH) + two*MW**4/cmplx(q1pH2sq - MWsq,MW*W_WIDTH) &
-         & + 6.0_dp * v_H * lambda_HHH * (MWsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + MWsq
+         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MWsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + MWsq
     ZZ_A = cVVHHfact*two*MZ**4/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH) + two*MZ**4/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH) &
-         & + 6.0_dp * v_H * lambda_HHH * (MZsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + MZsq
+         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MZsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + MZsq
 
     
     ! the two new terms, B and C
@@ -861,7 +861,7 @@ contains
 
     if(tri_on) then
        ! VV -> H -> HH part
-       VV_H_HH = 6.0_dp * lambdafact * MH**2/cmplx(k1k2sq - MH**2,MH*HWIDTH)*g_mu_nu
+       VV_H_HH = 6.0_dp * cVVHfact * lambdafact * MH**2/cmplx(k1k2sq - MH**2,MH*HWIDTH)*g_mu_nu
        
        ! Quartic vertex part
        VVHH = two * cVVHHfact * g_mu_nu 
