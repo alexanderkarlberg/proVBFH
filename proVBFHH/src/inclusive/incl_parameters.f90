@@ -220,9 +220,9 @@ contains
     lambdafact = 1.0_dp
     cVVHHfact  = 1.0_dp
     cVVHfact   = 1.0_dp
-    if(powheginput("#lambdafact").gt.0d0) lambdafact = powheginput("#lambdafact")
-    if(powheginput("#cVVHHfact").gt.0d0) cVVHHfact = powheginput("#cVVHHfact")
-    if(powheginput("#cVVHfact").gt.0d0) cVVHfact = powheginput("#cVVHfact")
+    if(powheginput("#lambdafact").gt.-1d5) lambdafact = powheginput("#lambdafact")
+    if(powheginput("#cVVHHfact").gt.-1d5) cVVHHfact = powheginput("#cVVHHfact")
+    if(powheginput("#cVVHfact").gt.-1d5) cVVHfact = powheginput("#cVVHfact")
     lambda_HHH = lambdafact * mh_sq / (2.0_dp * v_H) ! SM trilinear Higgs self-coupling
     ! compute sin(\theta_w) from W/Z mass
     sin_thw = 1.0_dp - (mw/mz)**2
