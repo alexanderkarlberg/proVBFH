@@ -100,11 +100,10 @@ program provbfh_incl
         xmuf = scales_muf(iscales)
         call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
              &         order,factscheme_MSbar)
-        call StartStrFct(order_max, nflav, scale_choice, mh, .true., &
+        call StartStrFct(order_max, nflav, scale_choice_hoppet, mh, .true., &
              & mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
         call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
-        
         ! !! === DEBUGGING ONLY
         ! ! write the structure functions to file, for debugging purposes
         ! call debugging(100.0_dp, 1,1)

@@ -154,10 +154,16 @@ contains
     ! the first single-Higgs like piece, labelled A
     ! A = 2 Mv^4/((q1 + pH1)^2 - Mv^2) + 2 Mv^4/((q1 + pH2)^2 - Mv^2)
     !     + 6 v lambda Mv^2/((pH1 + pH2)^2 - Mh^2) + Mv^2
-    WW_A = cVVHHfact * two*MW**4/complex(q1pH1sq - MW**2,MW*W_WIDTH) + two*MW**4/complex(q1pH2sq - MW**2,MW*W_WIDTH) &
-         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MW**2) /complex(pH1pH2sq - mh_sq,MH*HWIDTH) + MW**2
-    ZZ_A = cVVHHfact * two*MZ**4/complex(q1pH1sq - MZ**2,MZ*Z_WIDTH) + two*MZ**4/complex(q1pH2sq - MZ**2,MZ*Z_WIDTH) &
-         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MZ**2) /complex(pH1pH2sq - mh_sq,MH*HWIDTH) + MZ**2
+    WW_A = cVVHfact**2 * two*MW**4/complex(q1pH1sq - MW**2,MW&
+         &*W_WIDTH) + cVVHfact**2 * two*MW**4/complex(q1pH2sq - MW**2&
+         &,MW*W_WIDTH) + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MW&
+         &**2) /complex(pH1pH2sq - mh_sq,MH*HWIDTH) + cVVHHfact * MW&
+         &**2
+    ZZ_A = cVVHfact**2 * two*MZ**4/complex(q1pH1sq - MZ**2,MZ&
+         &*Z_WIDTH) + cVVHfact**2 * two*MZ**4/complex(q1pH2sq - MZ**2&
+         &,MZ*Z_WIDTH) + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MZ&
+         &**2) /complex(pH1pH2sq - mh_sq,MH*HWIDTH) + cVVHHfact * MZ&
+         &**2
 
     
     ! the two new terms, B and C

@@ -72,11 +72,16 @@ C     compute dsigma using the squared hadronic tensor
             dsigma = eval_matrix_element_tensor(order_min,order_max, x1, x2,
      $           kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
          else
-!            dsigma = eval_matrix_element_tensor(order_min,order_max, x1, x2,
-!     $           kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
+            if(tensorME) then
+               dsigma = eval_matrix_element_tensor(order_min,order_max,
+     $              x1, x2,kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1,
+     $              pH2, ptH1H2)
 !            print*, 'tensor', dsigma
-            dsigma = eval_matrix_element(order_min,order_max, x1, x2,
-     $           kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
+            else
+               dsigma = eval_matrix_element(order_min,order_max, x1, x2,
+     $              kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2,
+     $              ptH1H2)
+            endif
 !            print*, 'default', dsigma
 !            stop
          endif

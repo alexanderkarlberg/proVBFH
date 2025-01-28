@@ -27,7 +27,7 @@ module parameters
   character * 4, public :: seedstr
   character(len=50), public :: pdfname
   integer, public :: nmempdf
-  logical, public :: pdfuncert, scaleuncert3, scaleuncert7, alphasuncert
+  logical, public :: pdfuncert, scaleuncert3, scaleuncert7, alphasuncert, tensorME
   real(dp), public :: toy_Q0, test_Q0, muR_PDF
   real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
   integer, public :: nloop, order
@@ -104,6 +104,7 @@ contains
     mh_sq = mh**2
     S = sqrts**2
     ! compute couplings needed for dihiggs
+    tensorME = log_val_opt ("-tensorME")
     lambdafact = dble_val_opt("-lambdafact",1.0_dp)
     cVVHHfact  = dble_val_opt("-cVVHHfact",1.0_dp)
     cVVHfact   = dble_val_opt("-cVVHfact",1.0_dp)

@@ -21,7 +21,7 @@ module incl_parameters
   integer,  public :: nflav, ipdf, itmx1, itmx2, ncall1, ncall2
   logical,  public :: do_analysis_call, manyseeds, non_fact
   logical,  public :: higgs_use_BW, higgsfixwdth, complexpole, toypdf
-  logical,  public :: tri_on, box_t_on, box_u_on, tri1_on, tri2_on, box1_on, box2_on
+  logical,  public :: tri_on, box_t_on, box_u_on, tri1_on, tri2_on, box1_on, box2_on, tensorME
 !  logical, public :: small_qt_limit
   character * 5, public :: seedstr
   real(dp), public :: test_Q0, muR_PDF
@@ -105,6 +105,9 @@ contains
     box_u_on = .true.
     box1_on = .true.
     box2_on = .true.
+
+    tensorME = .false.
+    if(powheginput('#tensorME').gt.0d0) tensorME = .true.
 
     if(powheginput('#tri_off').gt.0d0) then
        tri_on = .false.

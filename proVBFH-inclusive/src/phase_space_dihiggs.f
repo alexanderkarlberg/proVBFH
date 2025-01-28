@@ -55,13 +55,16 @@ C     Hence ptH1H2 = ptH1 + ptH2 is given by
 C     compute dsigma using the squared hadronic tensor
 C         dsigma = eval_matrix_element_vbfnlo(order_min,order_max, x1, x2,
 C     $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
-C         print*, 'vbfnlo', dsigma
-C         dsigma = eval_matrix_element_tensor(order_min,order_max, x1, x2,
-C     $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
-C         print*, 'tensor', dsigma
-         dsigma = eval_matrix_element(order_min,order_max, x1, x2,
-     $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
-!     write(*,*) dsigma, dsig_temp, dsigma/dsig_temp
+C     print*, 'vbfnlo', dsigma
+         if(tensorME) then
+            dsigma = eval_matrix_element_tensor(order_min,order_max, x1, x2,
+     $           kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
+!     print*, 'tensor', dsigma
+         else
+            dsigma = eval_matrix_element(order_min,order_max, x1, x2,
+     $           kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
+         endif
+!     print*, 'default', dsigma
 !         stop
 C     convert to [pb] and add in jacobian
          dsigma = dsigma * gev2pb * jacobian
