@@ -120,7 +120,7 @@ contains
     ymax  = 16.0_dp
     dy    = 0.05_dp  ! dble_val_opt("-dy",0.1_dp)
     dlnlnQ = dy/4.0_dp
-    nloop = 3 
+    nloop = int_val_opt('-nloop-hoppet',3) 
     minQval = min(xmuF*Qmin, Qmin)
     maxQval = max(xmuF*sqrts, sqrts)
     scale_choice_hoppet = min(scale_choice,2)
