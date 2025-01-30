@@ -15,7 +15,7 @@ module parameters
        & (/1.0_dp, 2.0_dp, 0.5_dp, 1.0_dp, 1.0_dp, 2.0_dp, 0.5_dp/)
   real(dp), parameter, public :: scales_muf(1:7) = &
        & (/1.0_dp, 2.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 1.0_dp/)
-  real(dp), public :: xmuf, xmur, Qmin
+  real(dp), public :: xmuf, xmur, Qmin, Q2minPDF
   real(dp), public :: mh, mh_sq, hwidth
   real(dp), public :: sin_thw, mw, mz, w_width, z_width
   real(dp), public :: v_H, lambda_HHH, lambdafact, cVVHHfact, cVVHfact
@@ -74,6 +74,8 @@ contains
     xmur         = dble_val_opt("-xmur",1.0_dp)
     pdfname      = string_val_opt("-pdf", "PDF4LHC21_40")
     nmempdf      = int_val_opt ("-nmempdf",0)
+    call initPDFSetByName(pdfname)
+    call getQ2min(0,Q2minPDF)
     pdfuncert    = log_val_opt ("-pdfuncert")
     alphasuncert    = log_val_opt ("-alphasuncert")
     scaleuncert3 = log_val_opt ("-3scaleuncert")
@@ -98,7 +100,7 @@ contains
     ! various setup
     write(seedstr,"(I4.4)") iseed
     idum = -iseed
-    Qmin = 1.0_dp
+    Qmin = max(sqrt(2.0_dp), sqrt(Q2minPDF))
     pi   = 4.0_dp*atan(1.0_dp)
     Q0_cut_sq = 4.0_dp
     mh_sq = mh**2
@@ -118,11 +120,15 @@ contains
     ! including  parameters for x-grid
     order = -6 
     ymax  = 16.0_dp
-    dy    = 0.05_dp  ! dble_val_opt("-dy",0.1_dp)
+    dy    = dble_val_opt("-dy",0.05_dp)
     dlnlnQ = dy/4.0_dp
-    nloop = 3 
+    nloop = 3
     minQval = min(xmuF*Qmin, Qmin)
     maxQval = max(xmuF*sqrts, sqrts)
+    if(scaleuncert3.or.scaleuncert7) then
+       minQval = 0.5d0 * Qmin
+       maxQval = 2.0d0 * sqrts
+    endif
     scale_choice_hoppet = min(scale_choice,2)
     if (.not.CheckAllArgsUsed(0)) call exit()
   end subroutine set_parameters

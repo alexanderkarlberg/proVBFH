@@ -42,7 +42,7 @@ program provbfh_incl
   real(dp) :: integ, error_int, proba, tini, tfin
   real(dp) :: sigma_tot, error_tot, region(1:2*ndim)
   real(dp) :: res(0:nmempdfMAX), central, errminus, errplus, errsymm, respdf(0:nmempdfMAX),resas(0:nmempdfMAX), central_dummy
-  real(dp) :: res_scales(1:7),maxscale,minscale
+  real(dp) :: res_scales(1:7),maxscale,minscale, mur, muf
   integer :: iscales,Nscales
   character * 30 :: analysis_name
   character * 6 WHCPRG
@@ -81,8 +81,8 @@ program provbfh_incl
   do imempdf = nmempdf_start,nmempdf_end
      write(6,*) "PDF member:",imempdf
      call InitPDF(imempdf)
-     call getQ2min(0,Qmin)
-     Qmin = sqrt(Qmin)
+!     call getQ2min(0,Qmin)
+!     Qmin = sqrt(Qmin)
 
      ! !! === DEBUGGING ONLY
      ! ! the following is for the case where
@@ -96,17 +96,18 @@ program provbfh_incl
      ! !! ==== END DEBUGGING
      do iscales = 1,Nscales
         ! initialise hoppet
-        xmur = scales_mur(iscales)
-        xmuf = scales_muf(iscales)
+        mur = scales_mur(iscales) * xmur
+        muf = scales_muf(iscales) * xmuf
+        print*, 'Doing xmuR = ', mur, 'and xmuF = ', muf
         call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
              &         order,factscheme_MSbar)
         call StartStrFct(order_max, nflav, scale_choice_hoppet, mh, .true., &
              & mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
-        call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
+        call InitStrFct(order_max, separate_orders = .true., xR = mur, xF = muf)
         ! !! === DEBUGGING ONLY
         ! ! write the structure functions to file, for debugging purposes
-        ! call debugging(100.0_dp, 1,1)
+        ! call debugging(1.1978_dp, 1,1)
         ! stop
         ! !! === END DEBUGGING
         
