@@ -122,7 +122,7 @@ contains
     ymax  = 16.0_dp
     dy    = dble_val_opt("-dy",0.05_dp)
     dlnlnQ = dy/4.0_dp
-    nloop = 3
+    nloop = int_val_opt('-nloop-hoppet',3) 
     minQval = min(xmuF*Qmin, Qmin)
     maxQval = max(xmuF*sqrts, sqrts)
     if(scaleuncert3.or.scaleuncert7) then

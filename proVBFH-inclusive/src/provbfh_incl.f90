@@ -368,16 +368,20 @@ contains
        write(6,*) "WARNING: Using toy PDF"
        toy_pdf_at_Q0 = unpolarized_dummy_pdf(xValues(grid))
        call InitRunningCoupling(toy_coupling, alfas=toy_alphas_Q0, &
-            &                   nloop = 3, Q = toy_Q0, fixnf=nf_int)
-       call EvolvePdfTable(tables(0), toy_Q0, toy_pdf_at_Q0, dh, toy_coupling, nloop=3)
+            &                   nloop = nloop, Q = toy_Q0, fixnf=nf_int)
+       call EvolvePdfTable(tables(0), toy_Q0, toy_pdf_at_Q0, dh, toy_coupling, nloop = nloop)
+       setup_done(0)  = .true. ! This signals to HOPPET that we have set up the PDFs (since we don't use the streamlined interface)
     elseif (Q0pdf > zero) then
 
        write(6,*) "WARNING: Using internal HOPPET DGLAP evolution"
        call InitPDF_LHAPDF(grid, pdf_at_Q0, EvolvePDF, Q0pdf)
-       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , 4,&
-            & -1000000045, masses(4:6), .true.)
+!       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , nloop,&
+!            & -1000000045, masses(4:6), .true.)
+       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , nloop,&
+            & 5, masses(4:6), .true.)
        call EvolvePdfTable(tables(0), Q0pdf, pdf_at_Q0, dh, coupling, &
-            &  muR_Q=muR_PDF, nloop=3)
+            &  muR_Q=muR_PDF, nloop = nloop)
+       setup_done(0)  = .true. ! This signals to HOPPET that we have set up the PDFs (since we don't use the streamlined interface)
 
     else
        ! InitRunningCoupling has to be called for the HOPPET coupling to be initialised 
