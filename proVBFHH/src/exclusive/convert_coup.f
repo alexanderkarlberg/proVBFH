@@ -1534,6 +1534,9 @@ c FFB, BBB, and Higgs couplings (but not in form needed by HELAS):
       COMMON /BKOPOU/ CLR(4,5,-1:1),XM2(6),XMG(6),B(6,6,6),V(4,5),A(4,5)
       double precision vbfnloinput
       external vbfnloinput
+      double precision powheginput
+      external powheginput
+      double precision kappa_2v, kappa_v, kappa_lambda
 
 
       if (linit.eq.0) then
@@ -1622,11 +1625,22 @@ c  	vector boson couplings:
 	
 c	gauge - higgs boson couplings:
 
-	gwwh  = dcmplx(b(3,4,6)*wmass)	
-	gzzh  = dcmplx(b(2,2,6)*wmass)	
-	ghhh  = dcmplx(-hmass**2/vv*3d0)
-	gwwhh = dcmplx( ee2/sin2w*0.5d0 )
-        gzzhh = dcmplx( ee2/sc2*0.5d0)
+        kappa_2v=powheginput("#cVVHHfact")
+        kappa_v=powheginput("#cVVHfact")
+        kappa_lambda=powheginput("#lambdafact")
+c     gauge-higgs boson couplings:
+        gwwh  = kappa_v*dcmplx(b(3,4,6)*wmass)	
+        gzzh  = kappa_v*dcmplx(b(2,2,6)*wmass)
+        ghhh  = kappa_lambda*dcmplx(-hmass**2/vv*3d0)
+        gwwhh = kappa_2v*dcmplx( ee2/sin2w*0.5d0 )
+        gzzhh = kappa_2v*dcmplx( ee2/sc2*0.5d0)
+        
+!       gwwh  = dcmplx(b(3,4,6)*wmass)	
+!	gzzh  = dcmplx(b(2,2,6)*wmass)
+!	ghhh  = dcmplx(-hmass**2/vv*3d0)
+!	gwwhh = dcmplx( ee2/sin2w*0.5d0 )
+!       gzzhh = dcmplx( ee2/sc2*0.5d0)
+        
         ghhhh = ghhh/vv
 	
 
