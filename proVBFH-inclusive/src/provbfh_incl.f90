@@ -78,8 +78,8 @@ program provbfh_incl
   do imempdf = nmempdf_start,nmempdf_end
      write(6,*) "PDF member:",imempdf
      call InitPDF(imempdf)
-     call getQ2min(0,Qmin)
-     Qmin = sqrt(Qmin)
+     !call getQ2min(0,Qmin)
+     !Qmin = sqrt(Qmin)
      ! !! === DEBUGGING ONLY
      ! ! the following is for the case where
      ! ! we want to use a toy PDF and a toy alphas
@@ -92,13 +92,14 @@ program provbfh_incl
      ! !! ==== END DEBUGGING
      do iscales = 1,Nscales
         ! initialise hoppet
-        xmur = scales_mur(iscales)
-        xmuf = scales_muf(iscales)
+        xmur = scales_mur(iscales) * xmur_save
+        xmuf = scales_muf(iscales) * xmuf_save
+        print*, 'Doing μR = ', xmur, ', and μF = ', xmuf
         ! initialise the grid and dglap holder
-        call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
-             &         order,factscheme_MSbar)
+        call hoppetStartExtended(ymax,dy,minQval,max(xmuf,one)*maxQval&
+             &,dlnlnQ,nloop, order,factscheme_MSbar)
         call StartStrFct(order_max, nflav, scale_choice_hoppet, mh,&
-             & .true., mw, mz)
+             & .not.exact_coeff, mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
         call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
         ! !! === DEBUGGING ONLY
@@ -395,13 +396,13 @@ contains
     end if
 
     ! quickly test that we have read in the PDFs correctly
-    write(6,*) "Quick test that PDFs have been read in correctly"
-    x = 0.08_dp
-    Q = 17.0_dp
-    call EvolvePDF(x, Q, res_lhapdf)
-    call EvalPdfTable_xQ(tables(0), x, Q, res_hoppet)
-    write(6,*) 'lhapdf: ', res_lhapdf
-    write(6,*) 'hoppet: ', res_hoppet
+    !write(6,*) "Quick test that PDFs have been read in correctly"
+    !x = 0.08_dp
+    !Q = 17.0_dp
+    !call EvolvePDF(x, Q, res_lhapdf)
+    !call EvalPdfTable_xQ(tables(0), x, Q, res_hoppet)
+    !write(6,*) 'lhapdf: ', res_lhapdf
+    !write(6,*) 'hoppet: ', res_hoppet
     
   end subroutine read_PDF
 

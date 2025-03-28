@@ -15,7 +15,7 @@ module parameters
        & (/1.0_dp, 2.0_dp, 0.5_dp, 1.0_dp, 1.0_dp, 2.0_dp, 0.5_dp/)
   real(dp), parameter, public :: scales_muf(1:7) = &
        & (/1.0_dp, 2.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 1.0_dp/)
-  real(dp), public :: xmuf, xmur, Qmin, Q2minPDF
+  real(dp), public :: xmuf, xmur, Qmin, Q2minPDF, xmuf_save, xmur_save
   real(dp), public :: mh, mh_sq, hwidth
   real(dp), public :: sin_thw, mw, mz, w_width, z_width
   real(dp), public :: v_H, lambda_HHH, lambdafact, cVVHHfact, cVVHfact
@@ -27,7 +27,8 @@ module parameters
   character * 4, public :: seedstr
   character(len=50), public :: pdfname
   integer, public :: nmempdf
-  logical, public :: pdfuncert, scaleuncert3, scaleuncert7, alphasuncert, tensorME
+  logical, public :: pdfuncert, scaleuncert3, scaleuncert7,&
+       & alphasuncert, tensorME, exact_coeff
   real(dp), public :: toy_Q0, test_Q0, muR_PDF
   real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
   integer, public :: nloop, order
@@ -70,8 +71,8 @@ contains
     readin       = log_val_opt ("-readingrid")
     higgs_use_BW = log_val_opt ("-higgsbreitwigner")
     hmasswindow  = dble_val_opt("-higgsmasswindow",30.0_dp)
-    xmuf         = dble_val_opt("-xmuf",1.0_dp)
-    xmur         = dble_val_opt("-xmur",1.0_dp)
+    xmuf_save    = dble_val_opt("-xmuf",1.0_dp)
+    xmur_save    = dble_val_opt("-xmur",1.0_dp)
     pdfname      = string_val_opt("-pdf", "PDF4LHC21_40")
     nmempdf      = int_val_opt ("-nmempdf",0)
     call initPDFSetByName(pdfname)
@@ -119,17 +120,24 @@ contains
     ! Streamlined initialization
     ! including  parameters for x-grid
     order = -6 
-    ymax  = 16.0_dp
+    ymax  =  ceiling(-2*log(mh/sqrts)) ! Upper limit of
+                                       ! -2*log(mh/sqrts). We take
+                                       ! ceiling to make sure that the
+                                       ! number is nice
     dy    = dble_val_opt("-dy",0.05_dp)
     dlnlnQ = dy/4.0_dp
     nloop = int_val_opt('-nloop-hoppet',3) 
-    minQval = min(xmuF*Qmin, Qmin)
-    maxQval = max(xmuF*sqrts, sqrts)
-    if(scaleuncert3.or.scaleuncert7) then
-       minQval = 0.5d0 * Qmin
-       maxQval = 2.0d0 * sqrts
-    endif
+    minQval = min(xmuf_save*Qmin, Qmin)
+    maxQval = max(xmuf_save*sqrts, sqrts)
+    !if(scaleuncert3.or.scaleuncert7) then
+    !   minQval = 0.5d0 * Qmin
+    !   maxQval = 2.0d0 * sqrts
+    !endif
     scale_choice_hoppet = min(scale_choice,2)
+    exact_coeff = log_val_opt("-enable-exact-coeff")
+    ! Use exact mass thresholds always but not splitting functions
+    ! unless we use exact coeffcient functions as well
+    call hoppetSetExactDGLAP(.true., exact_coeff)
     if (.not.CheckAllArgsUsed(0)) call exit()
   end subroutine set_parameters
   

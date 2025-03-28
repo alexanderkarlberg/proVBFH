@@ -33,6 +33,8 @@ C     POWHEG-BOX/VBF_H/Born_phsp.f and matrix element computed with Hoppet
 C     xrand contains a vector of random numbers in [0,1]
       double precision xrand(7), vegas_weight
       double precision ptH
+      double precision, save :: max_dsigma
+      data max_dsigma/0.0D0/
       integer vegas_ncall
       common/vegas_ncall/vegas_ncall
 
@@ -59,6 +61,12 @@ C     convert to [pb] and add in jacobian
          dsigma = dsigma * gev2pb * jacobian
 
       endif
+      
+      !if(abs(dsigma).gt.max_dsigma) then
+      !   print*, 'dsigma = ', dsigma, jacobian, sqrt(Q1_sq), sqrt(Q2_sq)
+      !$        , Qmin
+      !   max_dsigma = abs(dsigma)
+      !endif
       
 C     map to powheg variables for use by analysis
       call set_phep()
