@@ -27,7 +27,7 @@
 !------------------------------------------------------------
 
 program provbfh_incl
-  use hoppet_v1, EvolvePDF_hoppet => EvolvePDF, InitPDF_hoppet => InitPDF
+  use hoppet, EvolvePDF_hoppet => EvolvePDF, InitPDF_hoppet => InitPDF
   use sub_defs_io
   use dummy_pdfs
   use matrix_element_dihiggs
@@ -271,7 +271,7 @@ contains
   ! (xmur,xmuf) = (1,1),(1,4),(4,1),(4,3)
   subroutine debugging (Qtest, sc_min, sc_max)
     use parameters
-    use hoppet_v1
+    use hoppet
     real(dp), intent(in) :: Qtest
     integer,  intent(in) :: sc_min, sc_max
     integer  :: ihopf1,ihopf2,ihopf3, ix, ny, sc

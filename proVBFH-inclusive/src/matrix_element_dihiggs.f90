@@ -36,7 +36,7 @@
 !       (q_j+qbar_j) * C_{i,ns}^+ + q_s * C_{i,ps}
 !
 module matrix_element_dihiggs
-  use hoppet_v1
+  use hoppet
   use parameters
   use tensor
   implicit none

@@ -11,7 +11,25 @@
 #############################################################################
 
 include Makefile.inc
+# Get the version
+HOPPET_VERSION := $(shell hoppet-config --version 2>/dev/null || echo "not-found")
 
+# Check if hoppet-config exists
+ifeq ($(HOPPET_VERSION),not-found)
+$(error hoppet-config not found. Please install hoppet or add it to PATH)
+endif
+
+# Extract major version (first number before the dot)
+HOPPET_MAJOR := $(shell echo $(HOPPET_VERSION) | cut -d. -f1)
+
+# Check if major version is at least 2
+HOPPET_MAJOR_OK := $(shell [ $(HOPPET_MAJOR) -ge 2 ] && echo yes || echo no)
+
+ifeq ($(HOPPET_MAJOR_OK),no)
+$(error hoppet version $(HOPPET_VERSION) is too old. Required: 2.0.0 or newer. Please clone the newest version of hoppet from the git repository.)
+endif
+
+$(info Found hoppet version: $(HOPPET_VERSION))
 ########### changes below should normally not be needed ###############
 
 # libraries

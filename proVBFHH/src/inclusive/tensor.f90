@@ -3,7 +3,7 @@
 ! modifying gmunu. The maximum rank of a tensor is currently 2.
 
 module tensor
-  use hoppet_v1
+  use hoppet
   implicit none
 
   private :: CheckInitialised
