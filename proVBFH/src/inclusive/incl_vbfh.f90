@@ -243,7 +243,7 @@ contains
        end subroutine EvolvePDF
     end interface
     !----------------
-    real(dp) :: toy_Q0, Q0pdf, xmuR_PDF
+    real(dp) :: toy_Q0, Q0pdf, xmuR_PDF, mc, mb, mt
     real(dp) :: res_lhapdf(-6:6), x, Q
     real(dp) :: res_hoppet(-6:6)
     real(dp) :: toy_pdf_at_Q0(0:grid%ny,ncompmin:ncompmax)
@@ -273,14 +273,16 @@ contains
             &  muR_Q=xmuR_PDF, nloop=3)
 
     else
-       ! InitRunningCoupling has to be called for the HOPPET coupling to be initialised 
-       ! Default is to ask for 4 loop running and threshold corrections at quark masses.  
-       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , 4,&
-            & -1000000045, masses(4:6), .true.)
-       ! fixnf can be set to a positive number for
-       ! fixed nf. -1000000045 gives variable nf
-       ! and threshold corrections at quarkmasses.
+       call getthreshold(4,mc) ! From LHAPDF
+       call getthreshold(5,mb)
+       call getthreshold(6,mt)
+
+       call hoppetSetVFN(mc, mb, mt)
+       
+       call hoppetSetCoupling(alphasPDF(MZ), MZ, nloop)
+
        call hoppetAssign(EvolvePDF)
+
     end if
 
     ! quickly test that we have read in the PDFs correctly
