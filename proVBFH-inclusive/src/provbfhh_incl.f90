@@ -42,7 +42,7 @@ program provbfh_incl
   real(dp) :: integ, error_int, proba, tini, tfin
   real(dp) :: sigma_tot, error_tot, region(1:2*ndim)
   real(dp) :: res(0:nmempdfMAX), central, errminus, errplus, errsymm, respdf(0:nmempdfMAX),resas(0:nmempdfMAX), central_dummy
-  real(dp) :: res_scales(1:7),maxscale,minscale, mur, muf
+  real(dp) :: res_scales(1:7),maxscale,minscale
   integer :: iscales,Nscales
   character * 30 :: analysis_name
   character * 6 WHCPRG
@@ -81,9 +81,8 @@ program provbfh_incl
   do imempdf = nmempdf_start,nmempdf_end
      write(6,*) "PDF member:",imempdf
      call InitPDF(imempdf)
-!     call getQ2min(0,Qmin)
-!     Qmin = sqrt(Qmin)
-
+     !call getQ2min(0,Qmin)
+     !Qmin = sqrt(Qmin)
      ! !! === DEBUGGING ONLY
      ! ! the following is for the case where
      ! ! we want to use a toy PDF and a toy alphas
@@ -96,18 +95,19 @@ program provbfh_incl
      ! !! ==== END DEBUGGING
      do iscales = 1,Nscales
         ! initialise hoppet
-        mur = scales_mur(iscales) * xmur
-        muf = scales_muf(iscales) * xmuf
-        print*, 'Doing xmuR = ', mur, 'and xmuF = ', muf
-        call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
-             &         order,factscheme_MSbar)
-        call StartStrFct(order_max, nflav, scale_choice_hoppet, mh, .true., &
-             & mw, mz)
+        xmur = scales_mur(iscales) * xmur_save
+        xmuf = scales_muf(iscales) * xmuf_save
+        print*, 'Doing μR = ', xmur, ', and μF = ', xmuf
+        ! initialise the grid and dglap holder
+        call hoppetStartExtended(ymax,dy,minQval,max(xmuf,one)*maxQval&
+             &,dlnlnQ,nloop, order,factscheme_MSbar)
+        call StartStrFct(order_max, nflav, scale_choice_hoppet, mh,&
+             & .not.exact_coeff, mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
-        call InitStrFct(order_max, separate_orders = .true., xR = mur, xF = muf)
+        call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
         ! !! === DEBUGGING ONLY
         ! ! write the structure functions to file, for debugging purposes
-        ! call debugging(1.1978_dp, 1,1)
+        ! call debugging(100.0_dp, 1,1)
         ! stop
         ! !! === END DEBUGGING
         
@@ -374,16 +374,20 @@ contains
        write(6,*) "WARNING: Using toy PDF"
        toy_pdf_at_Q0 = unpolarized_dummy_pdf(xValues(grid))
        call InitRunningCoupling(toy_coupling, alfas=toy_alphas_Q0, &
-            &                   nloop = 3, Q = toy_Q0, fixnf=nf_int)
-       call EvolvePdfTable(tables(0), toy_Q0, toy_pdf_at_Q0, dh, toy_coupling, nloop=3)
+            &                   nloop = nloop, Q = toy_Q0, fixnf=nf_int)
+       call EvolvePdfTable(tables(0), toy_Q0, toy_pdf_at_Q0, dh, toy_coupling, nloop = nloop)
+       setup_done(0)  = .true. ! This signals to HOPPET that we have set up the PDFs (since we don't use the streamlined interface)
     elseif (Q0pdf > zero) then
 
        write(6,*) "WARNING: Using internal HOPPET DGLAP evolution"
        call InitPDF_LHAPDF(grid, pdf_at_Q0, EvolvePDF, Q0pdf)
-       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , 4,&
-            & -1000000045, masses(4:6), .true.)
+!       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , nloop,&
+!            & -1000000045, masses(4:6), .true.)
+       call InitRunningCoupling(coupling, alphasPDF(MZ) , MZ , nloop,&
+            & 5, masses(4:6), .true.)
        call EvolvePdfTable(tables(0), Q0pdf, pdf_at_Q0, dh, coupling, &
-            &  muR_Q=muR_PDF, nloop=3)
+            &  muR_Q=muR_PDF, nloop = nloop)
+       setup_done(0)  = .true. ! This signals to HOPPET that we have set up the PDFs (since we don't use the streamlined interface)
 
     else
        call getthreshold(4,mc) ! From LHAPDF
@@ -392,19 +396,20 @@ contains
 
        call hoppetSetVFN(mc, mb, mt)
        
-       call hoppetSetCoupling(alphasPDF(MZ), MZ, nloop)
+       call hoppetSetCoupling(alphasPDF(MZ), MZ, 4)
 
        call hoppetAssign(EvolvePDF)
     end if
 
     ! quickly test that we have read in the PDFs correctly
-    write(6,*) "Quick test that PDFs have been read in correctly"
-    x = 0.08_dp
-    Q = 17.0_dp
-    call EvolvePDF(x, Q, res_lhapdf)
-    call EvalPdfTable_xQ(tables(0), x, Q, res_hoppet)
-    write(6,*) 'lhapdf: ', res_lhapdf
-    write(6,*) 'hoppet: ', res_hoppet
+    !write(6,*) "Quick test that PDFs have been read in correctly"
+    !x = 0.08_dp
+    !Q = 17.0_dp
+    !call EvolvePDF(x, Q, res_lhapdf)
+    !call EvalPdfTable_xQ(tables(0), x, Q, res_hoppet)
+    !write(6,*) 'lhapdf: ', res_lhapdf
+    !write(6,*) 'hoppet: ', res_hoppet
+    
   end subroutine read_PDF
 
   end program provbfh_incl

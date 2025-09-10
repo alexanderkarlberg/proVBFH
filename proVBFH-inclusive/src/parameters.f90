@@ -31,7 +31,7 @@ module parameters
        & alphasuncert, tensorME, exact_coeff
   real(dp), public :: toy_Q0, test_Q0, muR_PDF
   real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
-  integer, public :: nloop, order
+  integer, public :: nloop, order, yorder, lnlnQorder ! Interpolation orders
   public :: set_parameters
 
 contains
@@ -67,7 +67,7 @@ contains
        order_max = 4
     endif    
     sqrts        = dble_val_opt("-sqrts",13600.0_dp)
-    scale_choice = int_val_opt ('-scale-choice',3)
+    scale_choice = int_val_opt ('-scale-choice',1)
     readin       = log_val_opt ("-readingrid")
     higgs_use_BW = log_val_opt ("-higgsbreitwigner")
     hmasswindow  = dble_val_opt("-higgsmasswindow",30.0_dp)
@@ -119,7 +119,11 @@ contains
     ! For hoppetStartExtended. Could think of putting on commandline...
     ! Streamlined initialization
     ! including  parameters for x-grid
-    order = -6 
+    order = -6
+    ! Set some faster interpolation than hoppet standard.
+    yorder = 2
+    lnlnQorder = 2
+    call hoppetSetYLnlnQInterpOrders(yorder, lnlnQorder)
     ymax  =  ceiling(-2*log(mh/sqrts)) ! Upper limit of
                                        ! -2*log(mh/sqrts). We take
                                        ! ceiling to make sure that the
