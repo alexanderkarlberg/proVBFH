@@ -367,7 +367,7 @@ contains
 
     if (toy_Q0 > zero) then
        write(6,*) "WARNING: Using toy PDF"
-       toy_pdf_at_Q0 = unpolarized_dummy_pdf(xValues(grid))
+       toy_pdf_at_Q0 = benchmark_pdf_unpolarized(xValues(grid))
        call InitRunningCoupling(toy_coupling, alfas=toy_alphas_Q0, &
             &                   nloop = nloop, Q = toy_Q0, fixnf=nf_int)
        call EvolvePdfTable(tables(0), toy_Q0, toy_pdf_at_Q0, dh, toy_coupling, nloop = nloop)
