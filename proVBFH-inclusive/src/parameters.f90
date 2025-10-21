@@ -8,30 +8,42 @@ module parameters
   implicit none
 
   private
+    ! Some physical parameters
   real(dp), parameter, public :: gfermi = 1.16638e-5_dp
-  real(dp), parameter, public :: gev2pb = 389379660.0_dp
+  !real(dp), parameter, public :: gev2pb = 389379660.0_dp
+  ! More recent value
+  real(dp), parameter, public :: gev2pb = 389379372.1_dp
   real(dp), parameter, public :: eps    = 1.0e-14_dp
+
+  ! Everything to do with scale and PDF variations
+  integer, parameter, public :: maxscales = 7
   real(dp), parameter, public :: scales_mur(1:7) = &
        & (/1.0_dp, 2.0_dp, 0.5_dp, 1.0_dp, 1.0_dp, 2.0_dp, 0.5_dp/)
   real(dp), parameter, public :: scales_muf(1:7) = &
        & (/1.0_dp, 2.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 1.0_dp/)
-  real(dp), public :: xmuf, xmur, Qmin, Q2minPDF, xmuf_save, xmur_save
-  real(dp), public :: mh, mh_sq, hwidth
-  real(dp), public :: sin_thw, mw, mz, w_width, z_width
+  integer,  public :: Nscales, scale_choice, scale_choice_hoppet
+  logical, public :: scaleuncert, scaleuncert3, scaleuncert7,&
+       & alphasuncert, pdfuncert, scaleuncert_save
+  real(dp), public :: xmuf, xmur, xmuf_save, xmur_save,&
+       & sigma_all_scales(maxscales)
+
+  ! Higgs couplings, masses, vev etc 
   real(dp), public :: v_H, lambda_HHH, lambdafact, cVVHHfact, cVVHfact
+  real(dp), public :: mh, mh_sq, hwidth, sin_thw, mw, mz, w_width, z_width
+
+  real(dp), public :: Qmin, Q2minPDF
   real(dp), public :: sqrts, S, pi, Q0_cut_sq
   real(dp), public :: hmasswindow, toyas
-  integer,  public :: order_min, order_max, scale_choice, scale_choice_hoppet, iseed
+  integer,  public :: order_min, order_max, iseed
   integer,  public :: nflav, ipdf, itmx1, itmx2, ncall1, ncall2
   logical,  public :: higgs_use_BW, higgsfixwdth, toypdf
   character * 4, public :: seedstr
   character(len=50), public :: pdfname
   integer, public :: nmempdf
-  logical, public :: pdfuncert, scaleuncert3, scaleuncert7,&
-       & alphasuncert, tensorME, exact_coeff
+  logical, public :: tensorME, exact_coeff
   real(dp), public :: toy_Q0, test_Q0, muR_PDF
   real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
-  integer, public :: nloop, order, yorder, lnlnQorder ! Interpolation orders
+  integer, public :: nloop, order_hoppet, yorder, lnlnQorder ! Interpolation orders
   public :: set_parameters
 
 contains
@@ -79,12 +91,15 @@ contains
     call getQ2min(0,Q2minPDF)
     pdfuncert    = log_val_opt ("-pdfuncert")
     alphasuncert    = log_val_opt ("-alphasuncert")
+    if(alphasuncert.and..not.pdfuncert) stop "Need -pdfuncert to run with -alphasuncert"
     scaleuncert3 = log_val_opt ("-3scaleuncert")
     scaleuncert7 = log_val_opt ("-7scaleuncert")
+    scaleuncert = scaleuncert3 .or. scaleuncert7
+    Nscales = 1
+    if(scaleuncert3) Nscales = 3
+    if(scaleuncert7) Nscales = 7
     if(scaleuncert3.and.scaleuncert7) then
-       write(*,*) 'WARNING: Have to do either 3 or 7 scales. Cannot do both. Doing none.'
-       scaleuncert3 = .false.
-       scaleuncert7 = .false.
+       stop 'WARNING: Have to do either 3 or 7 scales. Cannot do both. Doing none.'
     endif
     ncall1       = int_val_opt ("-ncall1",100000)
     ncall2       = int_val_opt ("-ncall2",100000)
@@ -119,7 +134,7 @@ contains
     ! For hoppetStartExtended. Could think of putting on commandline...
     ! Streamlined initialization
     ! including  parameters for x-grid
-    order = -6
+    order_hoppet = -6
     ! Set some faster interpolation than hoppet standard.
     yorder = 2
     lnlnQorder = 2

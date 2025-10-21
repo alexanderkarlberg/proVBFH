@@ -40,7 +40,7 @@ program provbfh_incl
   real(dp) :: sigma_tot, error_tot, region(1:2*ndim)
   real(dp) :: res(0:nmempdfMAX), central, errminus, errplus, errsymm, respdf(0:nmempdfMAX),resas(0:nmempdfMAX), central_dummy
   real(dp) :: res_scales(1:7),maxscale,minscale
-  integer :: iscales,Nscales
+  integer :: iscales
   character * 30 :: analysis_name
   character * 6 WHCPRG
   common/cWHCPRG/WHCPRG
@@ -53,9 +53,20 @@ program provbfh_incl
   ! set up all constants and parameters from command line arguments
   call set_parameters()
 
+  ! Need to start hoppet
+  call hoppetStartExtended(ymax,dy,minQval,maxQval,dlnlnQ,nloop,&
+       & order_hoppet,factscheme_MSbar)
+  call StartStrFct(order_max = order_max, nflav = nflav,&
+       & scale_choice = scale_choice_hoppet, constant_mu = mz,&
+       & param_coefs = .not.exact_coeff, wmass = mw, zmass = mz)
+
+  Nscales =1
+  if(scaleuncert3) Nscales = 3
+  if(scaleuncert7) Nscales = 7
+
   ! initialize PDF set
   ! call PDFSET('DEFAULT', dble(ipdf))
-  call initPDFSetByName(pdfname)
+  ! call initPDFSetByName(pdfname)
   
   if (pdfuncert) then
      nmempdf_start = 0
@@ -66,14 +77,6 @@ program provbfh_incl
   endif
 
   if (nmempdf_end .gt. nmempdfMAX) stop "ERROR: increase nmempdfMAX"
-
-  if(.not.scaleuncert3.and..not.scaleuncert7) then
-     Nscales = 1
-  elseif(scaleuncert3) then
-     Nscales = 3
-  elseif(scaleuncert7) then
-     Nscales = 7
-  endif
 
   do imempdf = nmempdf_start,nmempdf_end
      write(6,*) "PDF member:",imempdf
@@ -97,7 +100,7 @@ program provbfh_incl
         print*, 'Doing μR = ', xmur, ', and μF = ', xmuf
         ! initialise the grid and dglap holder
         call hoppetStartExtended(ymax,dy,minQval,max(xmuf,one)*maxQval&
-             &,dlnlnQ,nloop, order,factscheme_MSbar)
+             &,dlnlnQ,nloop, order_hoppet,factscheme_MSbar)
         call StartStrFct(order_max, nflav, scale_choice_hoppet, mh,&
              & .not.exact_coeff, mw, mz)
         call read_PDF(toy_Q0, test_Q0, mur_PDF)
@@ -259,6 +262,66 @@ program provbfh_incl
   write(6,'(a)')
 contains
 
+  !subroutine initialise_run_structure_functions
+  ! implicit none
+  ! real(dp) :: rts
+  ! 
+  ! if(toy_Q0 < 0d0) then
+  !    write(6,*) "PDF member:",imempdf
+  !    call InitPDF(imempdf)
+  !    call getQ2min(0,Qmin)
+  !    Qmin = sqrt(Qmin)
+  ! endif
+  !
+  ! scaleuncert_save = scaleuncert
+  ! 
+  ! call read_PDF()
+  ! call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF&
+  !      & = xmuf)
+  ! 
+  ! region(1:ndim)        = zero
+  ! region(ndim+1:2*ndim) = one
+  ! sigma_tot = zero
+  ! error_tot = zero
+  !
+  ! ! vegas warmup call
+  ! if(ncall1.gt.0.and.itmx1.gt.0) then 
+  !    ! Skip grid generation if grid is being read from file
+  !    writeout=.true.
+  !    scaleuncert = .false.
+  !    call vegas(region,ndim,dsigma,0,ncall1,itmx1,0,integ,error_int,proba)
+  !    sigma_all_scales = zero ! Reset for the production run below
+  !    scaleuncert = scaleuncert_save
+  !    writeout=.false.
+  !    ! set random seed to current idum value
+  !    saveseed = idum
+  ! elseif (imempdf.eq.nmempdf_start) then
+  !    ! if reading in grids from first loop iteration, make sure
+  !    ! saveseed is initialized to correct value
+  !    saveseed = iseed
+  ! endif
+  !
+  ! if(ncall2.lt.1) return
+  ! if(itmx2.lt.1) return
+  ! ! vegas main call
+  ! ! set random seed to saved value 
+  ! idum     = -saveseed
+  ! call vegas(region,ndim,dsigma,1,ncall2,itmx2,0,integ,error_int,proba)
+  ! readin = .true.
+  ! ! add integral to the total cross section
+  ! sigma_tot = sigma_tot + integ
+  ! error_tot = error_tot + error_int**2
+  !
+  ! res(imempdf) = integ
+  ! res_scales(1:nscales) = sigma_all_scales(1:nscales)
+  !
+  ! if(imempdf.eq.nmempdf_start) then ! First PDF, this is where we compute scale uncertainties
+  !    maxscale = maxval(res_scales(1:Nscales)) 
+  !    minscale = minval(res_scales(1:Nscales))
+  !    res(imempdf) = res_scales(1) ! Copy central scale
+  ! endif
+ !end subroutine initialise_run_structure_functions
+
   !----------------------------------------------------------------------
   ! Debugging routine to output structure functions at
   ! (xmur,xmuf) = (1,1),(1,4),(4,1),(4,3)
@@ -385,6 +448,9 @@ contains
        setup_done(0)  = .true. ! This signals to HOPPET that we have set up the PDFs (since we don't use the streamlined interface)
 
     else
+       ! Even though the structure functions are NF=5, we set up the
+       ! coupling with VFN, so that it matches the PDF
+       ! evolution. Impact on results are tiny.
        call getthreshold(4,mc) ! From LHAPDF
        call getthreshold(5,mb)
        call getthreshold(6,mt)
