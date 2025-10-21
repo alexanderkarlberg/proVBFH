@@ -24,8 +24,7 @@ module parameters
   integer,  public :: Nscales, scale_choice, scale_choice_hoppet
   logical, public :: scaleuncert, scaleuncert3, scaleuncert7,&
        & alphasuncert, pdfuncert, scaleuncert_save
-  real(dp), public :: xmuf, xmur, xmuf_save, xmur_save,&
-       & sigma_all_scales(maxscales)
+  real(dp), public :: xmuf, xmur, sigma_all_scales(maxscales)
 
   ! Higgs couplings, masses, vev etc 
   real(dp), public :: v_H, lambda_HHH, lambdafact, cVVHHfact, cVVHfact
@@ -83,8 +82,8 @@ contains
     readin       = log_val_opt ("-readingrid")
     higgs_use_BW = log_val_opt ("-higgsbreitwigner")
     hmasswindow  = dble_val_opt("-higgsmasswindow",30.0_dp)
-    xmuf_save    = dble_val_opt("-xmuf",1.0_dp)
-    xmur_save    = dble_val_opt("-xmur",1.0_dp)
+    xmuf         = dble_val_opt("-xmuf",1.0_dp)
+    xmur         = dble_val_opt("-xmur",1.0_dp)
     pdfname      = string_val_opt("-pdf", "PDF4LHC21_40")
     nmempdf      = int_val_opt ("-nmempdf",0)
     call initPDFSetByName(pdfname)
@@ -101,6 +100,7 @@ contains
     if(scaleuncert3.and.scaleuncert7) then
        stop 'WARNING: Have to do either 3 or 7 scales. Cannot do both. Doing none.'
     endif
+    sigma_all_scales = 0.0_dp ! Initialise
     ncall1       = int_val_opt ("-ncall1",100000)
     ncall2       = int_val_opt ("-ncall2",100000)
     itmx1        = int_val_opt ("-itmx1",3)
@@ -146,13 +146,15 @@ contains
     dy    = dble_val_opt("-dy",0.05_dp)
     dlnlnQ = dy/4.0_dp
     nloop = int_val_opt('-nloop-hoppet',3) 
-    minQval = min(xmuf_save*Qmin, Qmin)
-    maxQval = max(xmuf_save*sqrts, sqrts)
+    minQval = min(xmuf*Qmin, Qmin)
+    maxQval = max(xmuf*sqrts, sqrts)
+    if(scaleuncert) maxQval = sqrt(s) * maxval(scales_muf) * xmuf
     !if(scaleuncert3.or.scaleuncert7) then
     !   minQval = 0.5d0 * Qmin
     !   maxQval = 2.0d0 * sqrts
     !endif
     scale_choice_hoppet = min(scale_choice,2)
+    if(scaleuncert) scale_choice_hoppet = 2
     exact_coeff = log_val_opt("-enable-exact-coeff")
     ! Use exact mass thresholds always but not splitting functions
     ! unless we use exact coeffcient functions as well

@@ -32,6 +32,7 @@ C     POWHEG-BOX/VBF_H/Born_phsp.f and matrix element computed with Hoppet
       include 'pwhg_kn.h'
 C     xrand contains a vector of random numbers in [0,1]
       double precision xrand(7), vegas_weight
+      double precision :: dsigma_all_scales(maxscales)
       double precision ptH
       double precision, save :: max_dsigma
       data max_dsigma/0.0D0/
@@ -39,6 +40,7 @@ C     xrand contains a vector of random numbers in [0,1]
       common/vegas_ncall/vegas_ncall
 
       dsigma = 0d0
+      dsigma_all_scales = 0d0
 C     generate phase space using phase_space module
       call gen_phsp(xrand(1:7))
 C     set phase space variables x1, x2, vq1, vq2, phi, Q1_sq,
@@ -55,11 +57,13 @@ C     Hence ptH is given by
          ptH = sqrt((q1_perp + q2_perp*cos(phi))**2
      $        + (q2_perp*sin(phi))**2)
 C     compute dsigma using the squared hadronic tensor
-         dsigma = eval_matrix_element(order_min,order_max, x1, x2, 
-     $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, ptH)
+         dsigma_all_scales = eval_matrix_element(order_min,order_max, x1
+     $        , x2,kn_beams(:,1), kn_beams(:,2), vq1, vq2, ptH)
 C     convert to [pb] and add in jacobian
-         dsigma = dsigma * gev2pb * jacobian
-
+         dsigma_all_scales = dsigma_all_scales * gev2pb * jacobian
+         dsigma = dsigma_all_scales(1)
+         dsigma_all_scales = dsigma_all_scales * vegas_weight / itmx2
+         sigma_all_scales = sigma_all_scales + dsigma_all_scales
       endif
       
       !if(abs(dsigma).gt.max_dsigma) then

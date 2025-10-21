@@ -52,34 +52,26 @@ contains
   function eval_matrix_element(order_start,order_stop, x1, x2, P1, P2, q1, q2, ptH) result(res)
     integer , intent(in) :: order_start,order_stop
     real(dp), intent(in) :: x1, x2, P1(0:3), P2(0:3), q1(0:3), q2(0:3), ptH
-    real(dp)             :: res
+    real(dp)             :: res(maxscales), sigma
     !----------------------------------------------------------------------
     real(dp) :: Q1sq, Q2sq, Q1val, Q2val
     real(dp) :: muR1val, muR2val, muF1val, muF2val
     real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4)
     real(dp) :: F1F1, F1F2, F2F1, F2F2, F3F3
+    real(dp) :: F1F1fac, F1F2fac, F2F1fac, F2F2fac, F3F3fac
     real(dp) :: WW_norm, ZZ_norm, overall_norm
     real(dp) :: q1q2, P1q1, P1q2, P2q1, P2q2, P1P2
     integer  :: i, j
     logical, parameter :: WpWm = .true., WmWp = .true., ZZ = .true.
-    integer :: iorder
+    integer :: iorder, iscale
+
+    ! First compute everything that does not depend on the scale choice
 
     Q1sq = -(q1.dot.q1)
     Q2sq = -(q2.dot.q2)
     Q1val = sqrt(Q1sq)
     Q2val = sqrt(Q2sq)
     
-    muR1val = muR1(Q1val, Q2val, ptH)
-    muR2val = muR2(Q1val, Q2val, ptH)
-    muF1val = muF1(Q1val, Q2val, ptH)
-    muF2val = muF2(Q1val, Q2val, ptH)
-
-    F1F1 = zero
-    F2F1 = zero
-    F1F2 = zero
-    F2F2 = zero
-    F3F3 = zero
-
     overall_norm = (GFermi**3)/(S) * four*sqrt(two)
     WW_norm =  MW**8 / (((Q1sq + MW**2)**2 + W_WIDTH**2 * MW**2)& 
          & * ((Q2sq + MW**2)**2 + W_WIDTH**2 * MW**2 ))
@@ -88,62 +80,7 @@ contains
     ! Below is a narrow-width propagator; This was used in earlier versions of the code
     ! ZZ_norm =  MZ**8 / ((Q1sq + MZ**2)**2 * (Q2sq + MZ**2)**2)
     ! WW_norm =  MW**8 / ((Q1sq + MW**2)**2 * (Q2sq + MW**2)**2)
-
-    ! Compute the LO structure funtion by adding all the pieces
-    ! from tables
-    Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
-    Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
-
-    if (order_stop.ge.2) then
-       ! Compute the NLO structure funtion by adding all the pieces
-       ! from tables
-       Fx1(:,2) = two*F_NLO(x1, Q1val, muR1val, muF1val)
-       Fx2(:,2) = two*F_NLO(x2, Q2val, muR2val, muF2val)
-    endif
-
-    if (order_stop.ge.3) then
-       ! Compute the NNLO structure funtion by adding all the pieces
-       ! from tables
-       Fx1(:,3) = two*F_NNLO(x1, Q1val, muR1val, muF1val)
-       Fx2(:,3) = two*F_NNLO(x2, Q2val, muR2val, muF2val)
-    endif
-
-    if (order_stop.ge.4) then
-       ! Compute the N3LO structure funtion by adding all the pieces
-       ! from tables
-       Fx1(:,4) = two*F_N3LO(x1, Q1val, muR1val, muF1val)
-       Fx2(:,4) = two*F_N3LO(x2, Q2val, muR2val, muF2val)
-    endif
-
-    do iorder = order_start,order_stop
-       do i = 1, iorder
-          j = 1 + iorder - i
-          if (WpWm) then
-             F1F1 = F1F1 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
-             F2F1 = F2F1 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
-             F1F2 = F1F2 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
-             F2F2 = F2F2 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
-             F3F3 = F3F3 + WW_norm * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
-          end if
-          
-          if (WmWp) then
-             F1F1 = F1F1 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
-             F2F1 = F2F1 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
-             F1F2 = F1F2 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
-             F2F2 = F2F2 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
-             F3F3 = F3F3 + WW_norm * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
-          end if
-          
-          if (ZZ) then
-             F1F1 = F1F1 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF1Z,j)
-             F2F1 = F2F1 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF1Z,j)
-             F1F2 = F1F2 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF2Z,j)
-             F2F2 = F2F2 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF2Z,j)
-             F3F3 = F3F3 + ZZ_norm * Fx1(iF3Z,i)*Fx2(iF3Z,j)
-          end if
-       end do
-    end do
-
+       
     q1q2 = q1 .dot. q2
     P1q1 = P1 .dot. q1
     P1q2 = P1 .dot. q2
@@ -151,15 +88,97 @@ contains
     P2q2 = P2 .dot. q2
     P1P2 = P1 .dot. P2
 
-    res = zero
-    res = res + F1F1*(two + q1q2**2/(Q1sq*Q2sq))
-    res = res + F1F2/P2q2 * (P2q2**2/(-Q2sq) + (P2q1 - P2q2*q1q2/(-Q2sq))**2/(-Q1sq))
-    res = res + F2F1/P1q1 * (P1q1**2/(-Q1sq) + (P1q2 - P1q1*q1q2/(-Q1sq))**2/(-Q2sq))
-    res = res + F2F2/(P1q1*P2q2)*(P1P2 - P1q1*P2q1/(-Q1sq) - P1q2*P2q2/(-Q2sq) + P1q1*P2q2*q1q2/(Q1sq*Q2sq))**2
-    res = res + F3F3/(two*P1q1*P2q2)*(P1P2*q1q2 - P1q2*P2q1)
-    
-    res = res * overall_norm
+    F1F1fac = (two + q1q2**2/(Q1sq*Q2sq))
+    F1F2fac = one/P2q2 * (P2q2**2/(-Q2sq) + (P2q1 - P2q2 *q1q2/(&
+         &-Q2sq))**2/(-Q1sq))
+    F2F1fac = one/P1q1 * (P1q1**2/(-Q1sq) + (P1q2 - P1q1 *q1q2/(&
+         &-Q1sq))**2/(-Q2sq))
+    F2F2fac = one/(P1q1*P2q2)*(P1P2 - P1q1*P2q1/(-Q1sq) - P1q2 *P2q2&
+         &/(-Q2sq) + P1q1*P2q2*q1q2/(Q1sq*Q2sq))**2
+    F3F3fac = one/(two*P1q1*P2q2)*(P1P2*q1q2 - P1q2*P2q1)
 
+
+    res = zero
+
+    do iscale = 1, Nscales
+       muR1val = muR1(Q1val, Q2val, ptH) * scales_mur(iscale)
+       muR2val = muR2(Q1val, Q2val, ptH) * scales_mur(iscale)
+       muF1val = muF1(Q1val, Q2val, ptH) * scales_muf(iscale)
+       muF2val = muF2(Q1val, Q2val, ptH) * scales_muf(iscale)
+              
+       F1F1 = zero
+       F2F1 = zero
+       F1F2 = zero
+       F2F2 = zero
+       F3F3 = zero
+
+       ! Compute the LO structure funtion by adding all the pieces
+       ! from tables
+       Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
+       Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
+       
+       if (order_stop.ge.2) then
+          ! Compute the NLO structure funtion by adding all the pieces
+          ! from tables
+          Fx1(:,2) = two*F_NLO(x1, Q1val, muR1val, muF1val)
+          Fx2(:,2) = two*F_NLO(x2, Q2val, muR2val, muF2val)
+       endif
+       
+       if (order_stop.ge.3) then
+          ! Compute the NNLO structure funtion by adding all the pieces
+          ! from tables
+          Fx1(:,3) = two*F_NNLO(x1, Q1val, muR1val, muF1val)
+          Fx2(:,3) = two*F_NNLO(x2, Q2val, muR2val, muF2val)
+       endif
+       
+       if (order_stop.ge.4) then
+          ! Compute the N3LO structure funtion by adding all the pieces
+          ! from tables
+          Fx1(:,4) = two*F_N3LO(x1, Q1val, muR1val, muF1val)
+          Fx2(:,4) = two*F_N3LO(x2, Q2val, muR2val, muF2val)
+       endif
+       
+       do iorder = order_start,order_stop
+          do i = 1, iorder
+             j = 1 + iorder - i
+             if (WpWm) then
+                F1F1 = F1F1 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF1Wm,j)
+                F2F1 = F2F1 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF1Wm,j)
+                F1F2 = F1F2 + WW_norm * Fx1(iF1Wp,i)*Fx2(iF2Wm,j)
+                F2F2 = F2F2 + WW_norm * Fx1(iF2Wp,i)*Fx2(iF2Wm,j)
+                F3F3 = F3F3 + WW_norm * Fx1(iF3Wp,i)*Fx2(iF3Wm,j)
+             end if
+             
+             if (WmWp) then
+                F1F1 = F1F1 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF1Wp,j)
+                F2F1 = F2F1 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF1Wp,j)
+                F1F2 = F1F2 + WW_norm * Fx1(iF1Wm,i)*Fx2(iF2Wp,j)
+                F2F2 = F2F2 + WW_norm * Fx1(iF2Wm,i)*Fx2(iF2Wp,j)
+                F3F3 = F3F3 + WW_norm * Fx1(iF3Wm,i)*Fx2(iF3Wp,j)
+             end if
+             
+             if (ZZ) then
+                F1F1 = F1F1 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF1Z,j)
+                F2F1 = F2F1 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF1Z,j)
+                F1F2 = F1F2 + ZZ_norm * Fx1(iF1Z,i)*Fx2(iF2Z,j)
+                F2F2 = F2F2 + ZZ_norm * Fx1(iF2Z,i)*Fx2(iF2Z,j)
+                F3F3 = F3F3 + ZZ_norm * Fx1(iF3Z,i)*Fx2(iF3Z,j)
+             end if
+          end do
+       end do
+       
+       sigma = zero
+       sigma = sigma + F1F1*F1F1fac
+       sigma = sigma + F1F2*F1F2fac
+       sigma = sigma + F2F1*F2F1fac
+       sigma = sigma + F2F2*F2F2fac
+       sigma = sigma + F3F3*F3F3fac
+       
+       res(iscale) = sigma 
+
+    enddo
+    res(:) = res(:) * overall_norm
+    
   end function eval_matrix_element
 
   !----------------------------------------------------------------------

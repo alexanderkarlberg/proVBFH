@@ -60,14 +60,6 @@ program provbfh_incl
        & scale_choice = scale_choice_hoppet, constant_mu = mz,&
        & param_coefs = .not.exact_coeff, wmass = mw, zmass = mz)
 
-  Nscales =1
-  if(scaleuncert3) Nscales = 3
-  if(scaleuncert7) Nscales = 7
-
-  ! initialize PDF set
-  ! call PDFSET('DEFAULT', dble(ipdf))
-  ! call initPDFSetByName(pdfname)
-  
   if (pdfuncert) then
      nmempdf_start = 0
      call numberPDF(nmempdf_end)
@@ -79,77 +71,8 @@ program provbfh_incl
   if (nmempdf_end .gt. nmempdfMAX) stop "ERROR: increase nmempdfMAX"
 
   do imempdf = nmempdf_start,nmempdf_end
-     write(6,*) "PDF member:",imempdf
-     call InitPDF(imempdf)
-     !call getQ2min(0,Qmin)
-     !Qmin = sqrt(Qmin)
-     ! !! === DEBUGGING ONLY
-     ! ! the following is for the case where
-     ! ! we want to use a toy PDF and a toy alphas
-     ! if (toypdf.gt.0) then
-     !    write(6,*) 'WARNING: Setting toy pdf values to non-default'
-     !    toy_Q0 = 100.0_dp
-     !    toy_alphas_Q0 = toyas
-     !    Qmin = 1d0
-     ! end if
-     ! !! ==== END DEBUGGING
-     do iscales = 1,Nscales
-        ! initialise hoppet
-        xmur = scales_mur(iscales) * xmur_save
-        xmuf = scales_muf(iscales) * xmuf_save
-        print*, 'Doing μR = ', xmur, ', and μF = ', xmuf
-        ! initialise the grid and dglap holder
-        call hoppetStartExtended(ymax,dy,minQval,max(xmuf,one)*maxQval&
-             &,dlnlnQ,nloop, order_hoppet,factscheme_MSbar)
-        call StartStrFct(order_max, nflav, scale_choice_hoppet, mh,&
-             & .not.exact_coeff, mw, mz)
-        call read_PDF(toy_Q0, test_Q0, mur_PDF)
-        call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
-        ! !! === DEBUGGING ONLY
-        ! ! write the structure functions to file, for debugging purposes
-        ! call debugging(100.0_dp, 1,1)
-        ! stop
-        ! !! === END DEBUGGING
-        
-        ! set beams for phase space generation
-        call set_beams(sqrts)
-        
-        region(1:ndim)        = 0.0_dp
-        region(ndim+1:2*ndim) = 1.0_dp
-        sigma_tot = 0.0_dp
-        error_tot = 0.0_dp
-        
-        outgridfile='grids_'//seedstr//'.dat'
-        outgridtopfile='grids_'//seedstr//'.top'
-        ilast=0
-        
-        ! vegas warmup call
-        if(.not.readin) then 
-           ! Skip grid generation if grid is being read from file
-           writeout=.true.
-           call vegas(region,ndim,dsigma,0,ncall1,itmx1,0,integ,error_int,proba)
-           writeout=.false.
-           ! set random seed to current idum value
-           saveseed = idum
-        elseif (imempdf.eq.nmempdf_start) then
-           ! if reading in grids from first loop iteration, make sure
-           ! saveseed is initialized to correct value
-           saveseed = iseed
-        endif
-        ! vegas main call
-        ingridfile ='grids_'//seedstr//'.dat'
-        ! set random seed to saved value 
-        idum     = -saveseed
-        call vegas(region,ndim,dsigma,1,ncall2,itmx2,0,integ,error_int,proba)
-        readin = .true.
-        ! add integral to the total cross section
-        sigma_tot = sigma_tot + integ
-        error_tot = error_tot + error_int**2
-        
-        res(imempdf) = sigma_tot
-        res_scales(iscales) = sigma_tot
-        ! end loop over pdfs
-     enddo
+     call initialise_run_structure_functions()
+     
      if(imempdf.eq.nmempdf_start) then ! First PDF, this is where we compute scale uncertainties
         maxscale = maxval(res_scales(1:Nscales)) 
         minscale = minval(res_scales(1:Nscales))
@@ -262,65 +185,75 @@ program provbfh_incl
   write(6,'(a)')
 contains
 
-  !subroutine initialise_run_structure_functions
-  ! implicit none
-  ! real(dp) :: rts
-  ! 
-  ! if(toy_Q0 < 0d0) then
-  !    write(6,*) "PDF member:",imempdf
-  !    call InitPDF(imempdf)
-  !    call getQ2min(0,Qmin)
-  !    Qmin = sqrt(Qmin)
-  ! endif
-  !
-  ! scaleuncert_save = scaleuncert
-  ! 
-  ! call read_PDF()
-  ! call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF&
-  !      & = xmuf)
-  ! 
-  ! region(1:ndim)        = zero
-  ! region(ndim+1:2*ndim) = one
-  ! sigma_tot = zero
-  ! error_tot = zero
-  !
-  ! ! vegas warmup call
-  ! if(ncall1.gt.0.and.itmx1.gt.0) then 
-  !    ! Skip grid generation if grid is being read from file
-  !    writeout=.true.
-  !    scaleuncert = .false.
-  !    call vegas(region,ndim,dsigma,0,ncall1,itmx1,0,integ,error_int,proba)
-  !    sigma_all_scales = zero ! Reset for the production run below
-  !    scaleuncert = scaleuncert_save
-  !    writeout=.false.
-  !    ! set random seed to current idum value
-  !    saveseed = idum
-  ! elseif (imempdf.eq.nmempdf_start) then
-  !    ! if reading in grids from first loop iteration, make sure
-  !    ! saveseed is initialized to correct value
-  !    saveseed = iseed
-  ! endif
-  !
-  ! if(ncall2.lt.1) return
-  ! if(itmx2.lt.1) return
-  ! ! vegas main call
-  ! ! set random seed to saved value 
-  ! idum     = -saveseed
-  ! call vegas(region,ndim,dsigma,1,ncall2,itmx2,0,integ,error_int,proba)
-  ! readin = .true.
-  ! ! add integral to the total cross section
-  ! sigma_tot = sigma_tot + integ
-  ! error_tot = error_tot + error_int**2
-  !
-  ! res(imempdf) = integ
-  ! res_scales(1:nscales) = sigma_all_scales(1:nscales)
-  !
-  ! if(imempdf.eq.nmempdf_start) then ! First PDF, this is where we compute scale uncertainties
-  !    maxscale = maxval(res_scales(1:Nscales)) 
-  !    minscale = minval(res_scales(1:Nscales))
-  !    res(imempdf) = res_scales(1) ! Copy central scale
-  ! endif
- !end subroutine initialise_run_structure_functions
+  subroutine initialise_run_structure_functions
+    implicit none
+    integer :: Nscales_save
+
+    if(toy_Q0 < 0d0) then
+       write(6,*) "PDF member:",imempdf
+       call InitPDF(imempdf)
+       call getQ2min(0,Qmin)
+       Qmin = sqrt(Qmin)
+    endif
+
+    scaleuncert_save = scaleuncert
+    Nscales_save = Nscales
+
+    call read_PDF(toy_Q0, test_Q0, mur_PDF)
+    write(6,*) 'Initialising Structure Functions'
+    call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF&
+         & = xmuf)
+
+    call set_beams(sqrts)
+    
+    outgridfile='grids_'//seedstr//'.dat'
+    outgridtopfile='grids_'//seedstr//'.top'
+
+    region(1:ndim)        = zero
+    region(ndim+1:2*ndim) = one
+    sigma_tot = zero
+    error_tot = zero
+
+    write(6,*) 'VEGAS warmup!'
+    ! vegas warmup call
+    if(ncall1.gt.0.and.itmx1.gt.0) then 
+       ! Skip grid generation if grid is being read from file
+       writeout=.true.
+       scaleuncert = .false.
+       Nscales = 1
+       call vegas(region,ndim,dsigma,0,ncall1,itmx1,0,integ,error_int,proba)
+       sigma_all_scales = zero ! Reset for the production run below
+       Nscales = Nscales_save
+       scaleuncert = scaleuncert_save
+       writeout=.false.
+       ! set random seed to current idum value
+       saveseed = idum
+    elseif (imempdf.eq.nmempdf_start) then
+       ! if reading in grids from first loop iteration, make sure
+       ! saveseed is initialized to correct value
+       saveseed = iseed
+    endif
+
+    if(ncall2.lt.1) return
+    if(itmx2.lt.1) return
+    ! vegas main call
+    ! set random seed to saved value 
+    idum     = -saveseed
+    call vegas(region,ndim,dsigma,1,ncall2,itmx2,0,integ,error_int,proba)
+    readin = .true.
+    ! add integral to the total cross section
+    sigma_tot = sigma_tot + integ
+    error_tot = error_tot + error_int**2
+
+    res(imempdf) = integ
+    res_scales(1:nscales) = sigma_all_scales(1:nscales)
+
+    if(imempdf.eq.nmempdf_start) then ! First PDF, this is where we compute scale uncertainties
+       maxscale = maxval(res_scales(1:Nscales)) 
+       minscale = minval(res_scales(1:Nscales))
+       res(imempdf) = res_scales(1) ! Copy central scale
+    endif
+  end subroutine initialise_run_structure_functions
 
   !----------------------------------------------------------------------
   ! Debugging routine to output structure functions at
