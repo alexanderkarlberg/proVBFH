@@ -9,7 +9,7 @@
 
 module incl_vbfhh
   use hoppet, EvolvePDF_hoppet => EvolvePDF, InitPDF_hoppet => InitPDF
-  use dummy_pdfs
+  use pdfs_for_benchmarks
   use matrix_element
   use incl_parameters
   use phase_space

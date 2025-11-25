@@ -30,8 +30,9 @@ $(info Found hoppet version: $(HOPPET_VERSION))
 
 # main program and modules to be compiled
 MAIN = provbfh_incl provbfhh_incl
-MODULES = integration phase_space parameters io_utils lcl_dec matrix_element \
-          matrix_element_dihiggs phase_space_dihiggs tensor ME_expressions
+MODULES = integration phase_space parameters io_utils lcl_dec		\
+          matrix_element matrix_element_dihiggs phase_space_dihiggs	\
+          tensor ME_expressions
 
 # librairies and flags needed for compilation
 #FF = ifort
@@ -39,13 +40,13 @@ SRC=$(PWD)/src
 OBJ=$(PWD)/obj
 VPATH=./:$(SRC):/$(OBJ)
 
-FFLAGS= -O3 -ffixed-line-length-132 
+FFLAGS= -O3 -ffixed-line-length-132 -flto 
 FFLAGS+= $(shell $(HPEXEC) --fflags)
 INCLUDE= -I$(SRC) $(wildcard *.h)
 FFLAGS+= $(INCLUDE) -J$(OBJ)
 LDFLAGS= $(shell $(HPEXEC) --libs) $(shell $(LHEXEC) --libs)
 
-all: provbfh_incl
+all: provbfh_incl provbfhh_incl
 
 # main program
 $(MAIN): %: %.o $(addsuffix .o,$(MODULES)) Makefile
@@ -62,8 +63,8 @@ $(MAIN): %: %.o $(addsuffix .o,$(MODULES)) Makefile
 # f90 module dependencies
 phase_space.o: matrix_element.o parameters.o
 phase_space_dihiggs.o: matrix_element_dihiggs.o parameters.o
-provbfh_incl.o: matrix_element.o parameters.o phase_space.o integration.o
-provbfhh_incl.o: matrix_element_dihiggs.o parameters.o phase_space_dihiggs.o integration.o
+provbfh_incl.o: matrix_element.o parameters.o phase_space.o integration.o 
+provbfhh_incl.o: matrix_element_dihiggs.o parameters.o phase_space_dihiggs.o integration.o 
 parameters.o: io_utils.o lcl_dec.o integration.o
 matrix_element.o: parameters.o
 matrix_element_dihiggs.o: parameters.o tensor.o ME_expressions.o

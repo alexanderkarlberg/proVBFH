@@ -26,7 +26,7 @@
 program provbfh_incl
   use hoppet, EvolvePDF_hoppet => EvolvePDF, InitPDF_hoppet => InitPDF
   use sub_defs_io
-  use dummy_pdfs
+  use pdfs_for_benchmarks
   use matrix_element
   use parameters
   use phase_space
