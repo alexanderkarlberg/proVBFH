@@ -990,8 +990,8 @@ c     default is Born kinematics:
      $        ) ** 0.25d0
          
       else
-!         muref=ph_Hmass
-         muref=ph_Wmass
+         muref=ph_Hmass ! Default fixed scale. 
+!         muref=ph_Wmass ! YR4 value
          if (ini) then
             st_mufact2= muref**2*st_facfact**2
             st_muren2 = muref**2*st_renfact**2
