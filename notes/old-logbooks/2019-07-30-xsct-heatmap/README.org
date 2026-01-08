@@ -1,0 +1,41 @@
+# Heatmap plots
+
+Heatmap plots for comparisons of fact and non-fact NNLO cross section
+
+Requires output of the heat_map.f analysis, and a replacement
+
+  sed -i 's/D/E/g' pwg-NNLO.top
+
+on the output files (here named total_distrib_formatted.top)
+
+To produce a figure, run
+
+  python heatmap.py total_distrib_formatted.top --output heatmap.pdf
+
+
+# Fiducial cross section with delta ycut=4.5, mjjcut=4.5
+
+Single Higgs [pb]
+============
+At NLO:
+cross section     : 0.87694
+
+with btildeborn 0 : 0.92983
+
+At NNLO:
+cross section     : 0.84398
+
+with btildeborn   : 0.89684
+
+
+Double Higgs [fb]
+============
+At NLO:
+cross section     : 0.60527
+
+with btildeborn 0 : 0.65520
+
+At NNLO:
+cross section     : 0.59585 (extrapolated)
+
+with btildeborn   : 0.64578

@@ -1,0 +1,27 @@
+#+TITLE: Study of the effect of missing N3LO pieces
+#+STARTUP: logdone entitiespretty latexpreview
+
+The differences of the charged-current coefficient functions are known
+only approximately.
+
+To study the impact of this approximation, one can use the two
+different approximations, and compare them with the default output
+(which is the average of both)
+
+default: IMOD = 0 ( ie. (IMOD=1 + IMOD=2)/2 )
+total xsct:    3.9284357 pb
+N3LO contrib: -0.0031744 pb
+
+A: IMOD = 1:
+total xsct:    3.9284361 pb
+N3LO contrib: -0.0031740 pb
+
+B: IMOD = 2:
+total xsct:    3.9284354 pb
+N3LO contrib: -0.0031747 pb
+
+The uncertainty on the N3LO contribution can be estimated as follows:
+(B-A)/default = 0.0000007/0.0031744 = 0.0002205
+
+Hence the uncertainty on the N3LO part of the cross section is at the
+0.3 permille level

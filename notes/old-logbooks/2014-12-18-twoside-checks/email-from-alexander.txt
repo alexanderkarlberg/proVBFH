@@ -1,0 +1,13 @@
+Hi all
+
+So Frederic and I have now finished implementing and testing the checks that we have been discussing (to Matteo: I guess that you have talked to Frederic about this). In the svn there is now a set of plots that show the agreement between the rather cumbersome implementation of Frederic and I (called AF) and the implementation which Giulia and Gavin suggested (called GG). The plots are in POWHEG_VBF_HJJJ/results/checks.ps. This makes us confident that the two methods are identical and from now on I think we will be using Giulia and Gavin's method as the implementation is much faster.
+
+Attached here are some plots of these checks for the qq initiated processes only (but all flavour channels). To also plot the two jet check we have a small generation cut on the pt of the jets and the invariant mass of the jet pair. As these checks should be identical for the 11 and 22 case (both gluons on upper line and both gluons on lower line) the plots 11-22-_* show 11 in red and 22 in green. This is also true for 12 and 21 (born gluon on upper line and real gluon on lower line or the opposite) so the plots 12-21-_* show 12 in red and 21 green. We also ran at LO - here red is gluon on upper line and green is gluon on lower line.
+
+To us everything looks good except for the 11-22-_sigtot2jetsGG_index___0.pdf plot. There is a systematic effect in the plot which is not present anywhere else, and for which we do not have any simple explanation.
+
+Did we ever write an email to Marco? And how is progress with the qg and gg-channels?
+
+Cheers,
+Alexander
+<checks_to_frederic.tgz>

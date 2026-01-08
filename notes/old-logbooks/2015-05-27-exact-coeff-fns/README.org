@@ -1,0 +1,125 @@
+#+TITLE: Try out exact coefficient functions
+#+STARTUP: logdone entitiespretty
+
+
+Switching to the exact coefficient functions (instead of parametrised
+ones) should be easy. 
+
+However it seems that there's at least one contribution in the exact
+files things are provided slightly differently with regard to the +-
+NS parts. In particular it seems there are differences between them,
+in [[file:xcdiff2e.f]], the subroutines labelled
+
+  XCiDFF2
+
+with i = 2,L,3. 
+
+*Executive summary:*
+
+- Frederic has solved this <2015-05-27 Wed>; one comparison plot is
+  for the final structure functions: [[file:compare_struct_funct_scQ.ps]]
+  It looks very good for F2 and FL, and a little wobbly (at the 0.5%
+  level) for F3Z, but F3Z involves substantial cancellations at small
+  x. 
+
+- Gavin has looked over the code to examine what he did, implemented
+  separate code with the same treatment of the various NS pieces and
+  compared the A and B pieces of the coefficient functions:
+  [[file:code/compare-coeff.ps]]; in particular there's also a check of
+  what happens if one got the wrong sign for the DIFF piece: that
+  would clearly be visible. So the sign should be OK!
+  
+
+* References
+The references given are
+ 
+ - M. Rogal, S. Moch and A. Vogt,
+   [[http://arxiv.org/abs/0708.3731][arXiv:0708.3731]] = Nucl.Phys. B790 (2008) 317-335 
+
+ - E.B. Zijlstra and W.L van Neerven, Phys. Lett. B272 (1991) 127,
+                                      Phys. Lett. B297 (1992) 377.
+   for the original expressions for F2 and F3.
+
+- and [[http://arxiv.org/hep-ph/9912355][hep-ph/9912355]] by Moch and Vermaseren
+
+The last one seems to have a modern notation and be relatively
+clear:
+
+- It gives an expression, Eq.(207), for c_{2,q}^{(2),-ns} that superficially
+  looks a bit like XC2DFF2, though there seems to be a factor of two
+  difference.
+
+- but it turns out that in our notation, that's actually probaby
+  actually (c_{2,q}^{(2),+ns} - c_{2,q}^{(2),-ns}).
+
+it gives an expression for c_{2,q}^{(2),+ns}, Eq.(206), whose delta-function
+  pieces look something like X2NP2C. On the other hand, the other
+  pieces are not so obviously the same, but that could be because of
+  the way things are split up between harmonic polylogs and explicit
+  logs? 
+
+
+* The pieces in the code
+
+*Need to watch out for constants set at run-time.* 
+(C2SOFT common block, dealt with in Frederic's version of the code). 
+
+Exact pieces (including dff)
+
+  : % for i in 2 3 l
+  : (echo component $i:; grep -i '^ *'function xc${i}ns2e.f)
+  : component 2:
+  :        FUNCTION X2NP2A (X, NF)
+  :        FUNCTION X2NS2B (Y, NF)
+  :        FUNCTION X2NS2C (Y, NF)
+  : component 3:
+  :        FUNCTION X3NM2A (X, NF)
+  :        FUNCTION X3NS2B (Y, NF)
+  :        FUNCTION X3NS2C (Y, NF)
+  : component l:
+  :        FUNCTION XLNS1A (X, NF)
+  :        FUNCTION XLNP2A (X, NF)
+  : "difference" components
+  :        FUNCTION XC2DFF2 (X)
+  :        FUNCTION XCLDFF2 (X)
+  :        FUNCTION XC3DFF2 (X)
+
+Approximate pieces:
+
+ : % for i in 2 3 l
+ : (echo component $i:; grep -i '^ *'function xc${i}ns2p.f)
+ : component 2:
+ :        FUNCTION C2NN2A (Y, NF)
+ :        FUNCTION C2NC2A (Y, NF)
+ :        FUNCTION C2NS2B (Y, NF)
+ :        FUNCTION C2NN2C (Y, NF)
+ :        FUNCTION C2NC2C (Y, NF)
+ : component 3:
+ :       FUNCTION C3NM2A (Y, NF)
+ :        FUNCTION C3NP2A (Y, NF)
+ :        FUNCTION C3NS2B (Y, NF)
+ :        FUNCTION C3NM2C (Y, NF)
+ :        FUNCTION C3NP2C (Y, NF)
+ : component l:
+ :        FUNCTION CLNN2A (Y, NF)
+ :        FUNCTION CLNC2A (Y, NF)
+ :        FUNCTION CLNN2C (Y)
+ :        FUNCTION CLNC2C (Y)
+
+* Bottom line
+
+  This is what Frederic deduced
+
+  For F2 and FL:
+
+  - exact NS+ is given
+  - NS- = NS+ - diff
+
+  For F3, the sign is not 100% trivial to get right given what's
+  written in arXiv:0708.3731, but the following was taken by Frederic:
+
+  - exact NS- is given
+  - NS+ = NS- + diff
+
+  If one changes the sign of the "diff" piece, one gets the last page
+  of [[file:code/compare-coeff.ps]], which clearly shows a discrepancy.

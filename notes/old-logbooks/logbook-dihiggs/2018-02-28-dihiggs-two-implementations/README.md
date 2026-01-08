@@ -1,0 +1,1 @@
+The file ratio.top contains the ratio between the tensor implementation (Alexander, numerator) and the amthetica implementation (Frédéric, denominator). There is a noticable difference in ptHH whereas the rest of the variables looks to be compatible at the 1% level at least.

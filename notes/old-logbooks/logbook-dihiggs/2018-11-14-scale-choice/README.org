@@ -1,0 +1,23 @@
+# Study of the scale choice
+
+We try several different scales choices:
+
+the default choice:
+mu_0 = mh^2/4 + mh ptHH/2
+
+the alternative using mHH
+mu_dyn = mHH^2/4 + mHH ptHH/2
+
+the max scale
+mu_max = mHH^2/4 + ptHH^2
+
+the alternative using 2mh in mu_0
+mu_alt = mh^2 + mh ptHH
+
+This is compared to sqrt(Q1,Q2), max(Q1,Q2), min(Q1,Q2), ptHH
+
+We want something close to sqrt(Q1,Q2)
+
+Plots are in file:test-scales.pdf
+
+Conclusion: default mu_0 choice is reasonable approx of sqrt(Q1,Q2)

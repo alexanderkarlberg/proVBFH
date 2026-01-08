@@ -1,0 +1,59 @@
+This folder contains files for testing the apparent discrepancy which
+exists when using NNPDF between HOPPET and POWHEG.
+
+All files are at LO with parameters as in our paper. Plots are done at
+14 TeV with Narrowwidth.
+
+Ratios contains HOPPET over POWHEG.
+
+- file:ratio.ps shows the ratio of the HOPPET Hjj LO results to the
+  POWHEG one (from its Hjj code). 
+
+  Alexander discovered that POWHEG sets negative PDFs to zero and this
+  causes a difference between HOPPET and POWHEG because HOPPET just
+  accepts the negative values. The difference is only there because
+  it's only NNPDF that has negative large-x PDFs. If POWHEG is
+  modified to accept the negative PDFs (without zeroing), then one
+  gets agreement
+
+For further info:
+
+- file:ptj2.ps shows the <xmin> and <xmax> values as a function of
+  ptj2.
+
+- the following table shows a subset of the PDFs as a function of x
+
+  : # /Users/gsalam/scripts/pdf.py -xmin 0.1 -xmax 1 -nx 15 -flav -2,-1,1,2 -Q 500
+  : # Q = 500.0, alphas(Q) = 0.0939686545551
+  : # Columns: x flav(-2) flav(-1) flav(1) flav(2)
+  : 0.1          0.082253     0.10722      0.33913      0.56795     
+  : 0.11788      0.064305     0.086259     0.31084      0.54974     
+  : 0.13895      0.049099     0.066759     0.27973      0.52575     
+  : 0.16379      0.036552     0.048832     0.24561      0.49397     
+  : 0.19307      0.026409     0.032893     0.20883      0.45263     
+  : 0.22758      0.01836      0.019725     0.1703       0.40095     
+  : 0.26827      0.012111     0.0097758    0.1314       0.33944     
+  : 0.31623      0.0076103    0.0030446    0.094457     0.27014     
+  : 0.37276      0.004676     -0.00071861  0.062082     0.19711     
+  : 0.4394       0.002673     -0.0023963   0.036608     0.12682     
+  : 0.51795      0.0012601    -0.0025468   0.018503     0.067968    
+  : 0.61054      0.00054939   -0.0015233   0.0079117    0.027294    
+  : 0.71969      7.3162e-05   4.1836e-06   0.0024502    0.0066704   
+  : 0.84834      0.00014809   0.0001246    0.00029573   0.00055828  
+  : 1            0            0            0            0         
+
+  See also the plot of dbar/u: [[file:NNPDF30_Q500.ps]]
+
+  So dbar goes negative around x=0.4. At In terms of
+  magnitude, the WW channel has (u+dbar)*(d+ubar); the negative dbar
+  reaches about 5% of the total at x=0.55 - 0.65. This is slightly
+  higher than the <xmax>(pt=600) for which the POWHEG/HOPPET discrepancy
+  reaches 5%. So numerically it's qualitatively consistent, though
+  still a little bit puzzling in exact quantitative terms.
+
+- file:NNPDF30_varying_Q.ps shows the NNPDF30 set at different Q values. 
+  Each Q vaule has corresponding x value: x = 0.11 + 0.00015 * Q which gives 
+  values in the range [0.11:0.9875].  
+
+However, the question is anyway settled by the fact that switching off
+the zeroing in POWHEG brings agreement. 

@@ -1,0 +1,285 @@
+Here we test the "bias" of different merging procedures. We look at
+two different methods which both throw away outliers. The first method
+works in the following way.
+
+* Sigma Method
+- For each bin 
+1) Find the median. 
+2) Take 34% statistics to each side of the median an call that
+   distance divided by 2 for one sigma. 1 sigma then corresponds to
+   68% symmetrically around the median.
+3) Go in steps of 1 sigma and remove outliers. Here we look at 1, 2,
+   3, 4 and 5 sigma. 
+   
+  As things are not Gaussian the percentage corresponding to each sigma
+  is given by:
+   
+  1 sigma: 68% (by definition)
+  2 sigma: ~87%
+  3 sigma: ~92%
+  4 sigma: ~95%
+  5 sigma: ~97%
+   
+- The number depends on what variable on is looking at. The more
+  statistics in a given bin the higher the percentage (ie in the tails
+  of distribtuions 3 sigma is in the high 80's).
+   
+* Central Method
+The second method works in the following way.
+
+For each bin
+1) Find the median.
+2) Instead of finding a fixed distance we always find the central
+   statistics. It is easiest to explain with an example. Assume one
+   wants to keep 90% of the statistics. One would then from the median
+   go 45% away from the median to each side, and hence throw away 5%
+   on each side of the median. 
+   
+So to recap, the Sigma Method throws away an assymetric amount around
+the median whereas the Central Method throws away the same amount of
+points on each side of the median.
+
+* How is a bin distributed?
+
+- file:bin_distribution.ps shows five distributions. 
+1) Index 4 corresponds to the full VBF cross section 
+2) Index 7 corresponds to the 290 - 300 GeV bin in the ptj1
+   distribution.
+3) Index 8 corresponds to the 150 - 160 GeV bin in the ptj2
+   distribution. 
+4) Index 9 corresponds to the 290 - 300 GeV bin in the ptH
+   distribution. 
+5) Index 17 corresponds to the 8.5 - 9.0 bin in the rap(j1,j2)
+   distribution. 
+
+- On the horizontal is included the confidence intervals from above. First
+  method in blue and second in green. Notice that for some of the
+  distributions the percentages quoted above are not correct. The
+  observation is of course that the wider the distribtuion the less
+  one picks up with each sigma. In particular therefore in tails
+  5 sigma can be as low as 90%. In general the distribution has a
+  wide tail and is lightly asymmetric. That's the worst possible
+  scenario...
+
+- The distribution is not a Gaussian. It seems to fit well with a
+  Cauchy. There are plots elsewhere in the logbook.
+   
+* Inspecting the cross sections as a function of % included
+
+- file:merging_distribution.ps contains a plot of the same five
+  indeces as above, but now the result of the merging is plotted
+  as a function of how many % of the statistics are
+  included. Although the numbers are always in the same ballpark it
+  also seems as if the Central Method is much more stable over a
+  large range of data. In general it is a bit unnerving that the
+  result always seem to diverge as one gets closer to 100%. 
+
+- One could worry that the fact that the Central Method is more
+  stable is because it is biased towards the median (the median always
+  being the centre of the central dataset).
+
+- If one extends the Sigma Method beyond 5 sigma, which is what is
+  plotted here, the results keeps fluctuating up and down. Although
+  in bigger and bigger steps as one includes things further and
+  further away from the tail.
+
+
+* Checking "bias"
+  We compute the integrated cross section under VBF cuts in three
+  ways. One by simply filling all values into one bin. This we will call
+  the real results. For the other three results we integrate
+  respecitvely ptj1, ptj2, and ptH. If our emthod is unbiased we should
+  expect these number to agree.
+  
+  Bias is computed as the largest difference between the three
+  integrated results divided by the real result.
+
+
+** For the first method we get:
+
+*** 5 sigma
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81873443D+00   0.98595137D-03
+    ptj1
+    0.815761317744000
+    ptj2
+    0.816684125180378
+    ptH
+    0.817885182029000
+    
+    Bias 0.26 %
+    Plots in file:method16_105.pdf
+    
+
+*** 4 sigma
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81856455D+00   0.91276280D-03
+    ptj1
+    0.815079876416000
+    ptj2
+    0.816794107766640
+    ptH
+    0.818270925456000
+    
+    Bias 0.39 %
+    Plots in file:method16_104.pdf
+    
+
+*** 3 sigma
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81759123D+00   0.82904736D-03
+    ptj1
+    0.815915369177000
+    ptj2
+    0.816301367544174
+    ptH
+    0.819015908643000
+    
+    Bias 0.38 %
+    Plots in file:method16_103.pdf
+    
+
+*** 2 sigma
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81796575D+00   0.75534733D-03
+    ptj1
+    0.817933391013000
+    ptj2
+    0.815867065123462
+    ptH
+    0.820029223597000
+    
+    Bias 0.51 %
+    Plots in file:method16_102.pdf
+    
+    
+*** 1 sigma
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81841311D+00   0.71894575D-03
+    ptj1
+    0.820028756417000
+    ptj2
+    0.817245524333773
+    ptH
+    0.821415472699000
+    
+    Bias 0.51 %
+    Plots in file:method16_101.pdf
+    
+    
+*  For the second method we get:
+
+*** 97%
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81775659D+00   0.10085628D-02
+    ptj1
+    0.816665600689000
+    ptj2
+    0.816580370297307
+    ptH
+    0.817289210632000
+    
+    Bias 0.09 %
+    Plots in file:method13_197.pdf
+    
+    
+*** 95%
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81803997D+00   0.90741046D-03
+    ptj1
+    0.816531664212001
+    ptj2
+    0.816671066479386
+    ptH
+    0.817438257935000
+    
+    Bias 0.11 %
+    Plots in file:method13_195.pdf
+    
+    
+*** 92%
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81801579D+00   0.82045281D-03
+    ptj1
+    0.816311218613000
+    ptj2
+    0.816836386607538
+    ptH
+    0.817737326469000
+    
+    Bias 0.17 %
+    Plots in file:method13_192.pdf
+    
+    
+*** 87%
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81799395D+00   0.75871654D-03
+    ptj1
+    0.816361533427000
+    ptj2
+    0.816700763761935
+    ptH
+    0.818163838933000
+    
+    Bias 0.22 %
+    Plots in file:method13_187.pdf
+    
+    
+*** 68%
+    # sig(all VBF cuts 2 jets) index   4
+    0.00000000D+00   0.10000000D+01   0.81794888D+00   0.72316841D-03
+    ptj1
+    0.817742317573000
+    ptj2
+    0.816668191261401
+    ptH
+    0.819295786891000
+    
+    Bias 0.32 %
+    Plots in file:method13_168.pdf
+    
+- It seems that the "bias" is always lower when throwing away
+  outliers in the Central Method, rather than doing it based on the
+  Sigma Method. However from the plots it looks as if using a fixed
+  distance produces fewer fluctuations WITHIN the scale variation
+  band - ie the central line is inside the envelope and not on the
+  boundary. The likely reason that the Sigma Method has a higher bias
+  could stem from the fact, that it doesn't keep the
+  same number of events for each individual bin since the distance
+  is bin dependent. For the Central Method this is not the
+  case. However this is also why there are fewer fluctuations in
+  tails as using a fixed distance automatically throws our more
+  outliers when the distribtuion is very non-Gaussian.
+  
+- Looking at plots it also seems to be the case, that one should
+  throw away fewer points than one might expect to begin with. Just
+  by inspection ~90% seems to be a good choice. Plots are
+
+- file:method16_101.pdf : Sigma Method with 1 sigma
+- file:method16_102.pdf : Sigma Method with 2 sigma
+- file:method16_103.pdf : Sigma Method with 3 sigma
+- file:method16_104.pdf : Sigma Method with 4 sigma
+- file:method16_105.pdf : Sigma Method with 5 sigma
+
+- file:method13_168.pdf : Central Method with 68%
+- file:method13_187.pdf : Central Method with 87%
+- file:method13_192.pdf : Central Method with 92%
+- file:method13_195.pdf : Central Method with 95%
+- file:method13_197.pdf : Central Method with 97%
+  
+
+* Conclusions
+
+- The plots don't seem to suggest an optimal solution. 
+- However it seems that using either method doesn't introduce too
+  much bias. 
+- The Sigma Method has the advantage that it is simple and that plots
+  look nice.
+- The Central Method seems to be less sensistive to 'bumps' and the
+  particular shape of the distribution. It is not clear if this is an
+  advantage of disadvantage. 
+- Under all circumstances one should stay clear of the tails, as
+  results tend to become a bit unstable beyond the 90% mark.
+
+
+

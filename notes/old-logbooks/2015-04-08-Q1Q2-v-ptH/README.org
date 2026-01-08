@@ -1,0 +1,20 @@
+#+TITLE: test of scales v. ptH
+
+In POWHEG it's difficult to get Q1 and Q2 (because they differ
+according to the assignment of particles to the two sides).
+
+So the only obvious option is to assign the scale based on ptH, which
+is independent of the assignment of particles to the two sides.
+
+Alexander has generated [[file:scales.ps]] which shows min(Q1,Q2) and
+max(Q1,Q2) at LO as a function of ptH. 
+
+[[file:scale-fits.gp]] is an attempt to fit the min and max scales by
+eye (without the data points). 
+
+<2015-04-21 Tue> it got adapted to try to get scales that are simpler
+formulas, while still not being too far from the true <sqrt(Q1 Q2)>.
+
+
+*Physical relevance of large ptH*: e.g. in invisible Higgs searches,
+http://cds.cern.ch/record/2007270?ln=en

@@ -1,0 +1,14 @@
+This folder contains a comparison of non-perturbative effects on VBFH
+distributions at NLO.
+
+We plot:
+* Hadronisation: hadron level (no MPI) / parton level
+* Underlying event: hadron level (with MPI) / hadron level (no MPI)
+* UE+Hadr: hadron level (with MPI) / parton level
+
+Summary of effects on fiducial cross section (with cuts as in 1506.02660):
+
+    [pb]   |  parton level    |  hadron (no MPI) |  hadron (MPI)
+ Herwig 6  |  0.826 +- 0.001  |  0.812 +- 0.001  |  0.849 +- 0.002
+ Pythia 6  |  0.835 +- 0.001  |  0.830 +- 0.001  |  0.852 +- 0.010
+ Pythia 8  |  0.818 +- 0.001  |  0.818 +- 0.001  |  0.843 +- 0.002

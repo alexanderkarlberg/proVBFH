@@ -1,0 +1,105 @@
+#+TITLE: checks for hadronisation (accord between framework and standalone runs & overall hadronisation impact)
+#+STARTUP: logdone entitiespretty 
+
+* Runs with LO events from 3 MCs
+
+  A figure with many results is at [[file:../../gavins-code/hadronisation-comparison-altcuts.ps]]
+
+  From that figure, it emerges that there are two effects:
+
+  1. as we expect, hadronisation reduces the pt of jets, which reduces
+     cross sections after pt cuts on jets
+
+  2. in addition, it seems (cf pp.34-36 for Delta y, nocut-alljets
+     curve) that hadronisation tends to increase the rapidity
+     separation between the two leading jets (or introduces extra,
+     more central jets). In the presence of rapidity cuts, this
+     increases the cross section
+
+  The overall impact of hadronisation therefore involves a partial
+  cancellation between these two effects (cf nocut-stdjets curves).
+
+  For reasons that we don't yet understand, it seems that UE always
+  goes in the opposite direction: i.e. not only does it increase the
+  jet pt (increasing the cross section), but it also brings the two
+  leading jets closer (reducing the cross section).
+
+  That helps explain why naive analytic hadronisation models
+  overestimate hadronisation: they lack the rapidity effect.
+
+  *Overall summary of impact on total cross section:*
+
+  With standard jet cuts and VBF cuts:
+
+  |                        | hadron/parton | hadrUE/parton |
+  |------------------------+---------------+---------------|
+  | Pythi6 P11             |         0.996 | 1.002         |
+  | Pythia8 4C             |         1.000 | 1.029         |
+  | Herwig6 AUET2(CTEQ6L1) |         0.986 | 1.031         |
+  |                        |               |               |
+
+  With just the pt cuts ("nocut-stdjets", which means requiring two
+  jets above the 25 GeV jet threshold and |y|<4.5, but no deltay cut):
+  
+  |                        | hadron/parton | hadrUE/parton |
+  |------------------------+---------------+---------------|
+  | Pythi6 P11             |         0.986 | 1.008         |
+  | Pythia8 4C             |         0.991 | 1.021         |
+  | Herwig6 AUET2(CTEQ6L1) |         0.975 | 1.027         |
+  
+  With the just the delta-rapidity cuts on the two leading jets but no
+  pt cuts (vbfcut-nomass-alljets):
+  
+  |                        | hadron/parton | hadrUE/parton |
+  |------------------------+---------------+---------------|
+  | Pythi6 P11             |         1.010 | 0.958         |
+  | Pythia8 4C             |         1.009 | 0.985         |
+  | Herwig6 AUET2(CTEQ6L1) |         1.014 | 0.952         |
+  
+  
+  Note: for hadronisation, take the last two tables, multiply them and
+  you roughly get the first table. *But* for the hadrUE/parton column,
+  that's not at all true... That suggests the interplay gets more
+  complicated. 
+
+  NB: ratios were calculated with [[file:ratios.sh]] and the original
+  program is [[file:../../gavins-code/vbf-study-altcuts.cc]]
+
+  NOTE: as of <2015-05-15 Fri>, a fraction of the runs with the
+  analytical shift had a bug in the code whereby the shift was not
+  being applied (vbfcut-shifted-stdjets is OK, but none of the other
+  shifted results are; Gavin's fault...). Frederic hopes to fix this
+  and update future results.
+  UPDATE <2015-05-29 Fri>: all runs should now be correct.
+
+* Runs with powheg
+
+Results for Pythia6 in pb. 
+
+Alexander ran on 195k events (except at hadron-level, where there's
+more stats). 
+
+ - Pythia 6.428. 
+
+ - Tune 378=P12M8LO. Alexander also has some  
+   results wtih the P11 tune.
+
+ - originally, photons were excluded from analysis, but Alexander then
+   updated the code to exclude only the Higgs.
+
+Frederic has results for the first 150k (except for UE case, where
+there's only about 40k events). Pythia 6.428, tune = pytune_P2011. LHE
+level has pygive = [mstp(91)=0].
+
+
+
+|                         | Frederic       | A. P12M8LO (photons excl) | A.P12M8LO (phot.incl) | A P11 (phot.excl.) | A P11(phot.incl) |
+|-------------------------+----------------+---------------------------+-----------------------+--------------------+------------------|
+| total                   | 3.891 +- 0.004 | 3.894 +- 0.004            |                       |                    |                  |
+| VBF pure LHE            | 0.897 +- 0.004 | 0.897 +- 0.004            |                       |                    |                  |
+| VBF parton-shower level | 0.835 +- 0.004 | 0.821 +- 0.004            |                       |              0.821 |                  |
+| VBF hadron level        | 0.829 +- 0.004 | 0.782 +- 0.001            | 0.809                 |                    | 0.813            |
+| VBF hadron + UE         | 0.846 +- 0.008 |                           |                       |                    |                  |
+
+Conclusion: it seems that once photons are included in the analysis,
+hadronisation is indeed small. More follow-up to come.

@@ -1,0 +1,11 @@
+The folder contains checks of scale variations for the inclusive code at LO, NLO and NNLO for different running scales
+
+Q1_Q2: Use Q1 as scale on the upper line and Q2 on the lower line
+SQRTQ1Q2 : Use one scale, the geometric mean of Q! and Q2 (sqrt(Q1*Q2))
+FXD: MH/2
+ptH: [MH/2*sqrt[(MH/2)**2+ptH**2]]**(1/2)
+
+Scale variations are done as a factor 2 up and down (mu_R=mu_F), so three scales.
+
+LO-NLO-NNLO: Show all three order.
+NLO-NNLO: Shows only comparison of the two upper scales.

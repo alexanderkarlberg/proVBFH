@@ -1,0 +1,258 @@
+#+TITLE: Checks of 7 scales
+#+STARTUP: logdone entitiespretty
+
+Code to do this is currently ../gavins-code/posterior-muR.py
+
+* Validation of code
+
+  We want to check results against inclusive part of code where it's
+  feasible to get non-equal results cheaply.
+
+  We start from 22 (xmuR=2, xmuF=2) results where we have
+
+  : LO = 0.888190981382, NLO = 0.919476466783, NNLO = 0.914825262835
+
+  from the sum of the ptH histogram. Those are to be compared to the
+  results for the total cross section without integrating over
+  histograms:
+
+  : LO = 0.88853976, NLO = 0.91987192, NNLO = 0.91523049
+
+  so the amount missing from the high end of the histogram seems small
+  (0.4 per mil)
+
+  Full validation of all scales against the inclusive gives the
+  following (LO, NLO, NNLO)
+
+  : 11 posterior: 0.94667 0.92014 0.91239
+  : 11 original : 0.94667 0.92014 0.91239
+  : 
+  : 12 posterior: 0.88819 0.92274 0.91358
+  : 12 original : 0.88817 0.92274 0.91356
+  : 
+  : 21 posterior: 0.94667 0.92269 0.91416
+  : 21 original : 0.94665 0.92270 0.91414
+  : 
+  : 22 posterior: 0.88819 0.91948 0.91483
+  : 22 original : 0.88819 0.91948 0.91483
+  : 
+  : H1 posterior: 0.94667 0.91696 0.91062
+  : H1 original : 0.94665 0.91696 0.91060
+  : 
+  : HH posterior: 1.01202 0.91355 0.90995
+  : HH original : 1.01202 0.91355 0.90995
+  : 
+  : 1H posterior: 1.01202 0.92399 0.91226
+  : 1H original : 1.01200 0.92399 0.91224
+  
+  so this looks fine 
+
+** old (no longer relevant as of <2015-05-10 Sun>)
+  Then we try to get 12 (xmuR=1, xmuF=2)
+
+   |                                         | LO      |      NLO |     NNLO |
+   |-----------------------------------------+---------+----------+----------|
+   | direct (i.e. Alexander's run)           | ???     | 0.922738 | 0.929266 |
+   | a posteriori variation from the 22 base | 0.88819 | 0.922737 | 0.913584 |
+
+   So it's working at NLO, but something's wrong NNLO. 
+
+   Now let's work through individual pieces and try to get a rough
+   idea of whether I'm making a mistake. We'll assume that we have a
+   fixed scale of xmuR*mH/2, which is probably close enough for the
+   total cross section: [[file:small-check.py]]
+
+   
+   : asOld=0.112639920858 # at 125 GeV
+   : asNew=0.125156764869 # at 62.5 GeV
+   : 
+   : # results at xmuR=xmuF=2
+   : LO=0.888190981382; NLO=0.919476466783; NNLO=0.914825262835
+   : 
+   : nloCoeff = (NLO-LO)/asOld
+   : nnloCoeff = (NNLO-NLO)/asOld**2
+   : 
+   : print nloCoeff, nnloCoeff
+   : # gives 0.277747757302 -0.36659008089
+   : 
+   : NLOnew = LO + nloCoeff*asNew
+   : print NLOnew
+   : # gives 0.922952992136
+   : 
+   : b0=0.61
+   : nnloCoeffNew = nnloCoeff - b0*log(4.0)*nloCoeff
+   : NNLOnew = NLOnew + nnloCoeffNew*asNew**2
+   : print NNLOnew
+   : # gives 0.913531521284
+
+   
+
+* Results (updated <2015-05-12 Tue>)
+
+  Full results for total cross section:
+
+  :                 LO      NLO     NNLO
+  : 11 posterior: 0.94667 0.86646 0.81555
+  : 22 posterior: 0.88819 0.87392 0.82870
+  : HH posterior: 1.01202 0.84898 0.80375
+  : 12 posterior: 0.88819 0.87236 0.81860
+  : 21 posterior: 0.94667 0.87415 0.82595
+  : H1 posterior: 0.94667 0.85688 0.80317
+  : 1H posterior: 1.01202 0.86629 0.81559
+
+  Stat error on total cross section is dominated by exclusive part and
+  is about +- 0.002, so small compared to the scale dependence.
+
+  *Conclusion:* 7 scales are almost contained inside 3 scales for the
+  total cross section (0.8032 for H1 v. 0.8038 for HH is not
+  statistically significant)
+
+  file:ptH.pdf (and the ps) shows the differential results, and there
+  too 7-scales seem to be mostly contained inside the 3 scale bands,
+  though there near peak we have H1 < HH (but is this statistically
+  significant?).
+
+
+** older results <2015-05-10 Sun> (can be ignored)
+
+   From the files as of <2015-05-10 Sun> we had the following results
+   (but the files had the wrong recombination of runs, cf below)
+
+   :                 LO      NLO     NNLO
+   : 11 posterior: 0.94667 0.86639 0.82561
+   : 22 posterior: 0.88819 0.87387 0.83903
+   : HH posterior: 1.01202 0.84908 0.81049
+   : 12 posterior: 0.88819 0.87230 0.83127
+   : 21 posterior: 0.94667 0.87408 0.83416
+   : H1 posterior: 0.94667 0.85680 0.81580
+   : 1H posterior: 1.01202 0.86638 0.82099
+   
+   Stat error on total cross section is dominated by exclusive part and
+   is about +- 0.001, so small compared to the scale dependence.
+
+
+* Issue: differential versus total <2015-05-10 Sun> (solved <2015-05-12 Tue>)
+  
+
+
+  [ <2015-05-12 Tue>: Alexander discovered he had done a weighted
+  recombination, not the fractional exclusion one... That explains why
+  the closure test doesn't work]
+
+** New results, <2015-05-12 Tue>, without the problem
+
+   Or at least much less severe. Results below take 98% of runs. 
+
+   : -----------------
+   : Piece = full
+   : -----------------
+   : scale = 11,  total = 0.8167 +- 0.0019
+   :    total from ptH  = 0.8155
+   :    total from ptj1 = 0.8154
+   :    total from ptj2 = 0.8156
+   : scale = HH,  total = 0.8052 +- 0.0024
+   :    total from ptH  = 0.8038
+   :    total from ptj1 = 0.8007
+   :    total from ptj2 = 0.8037
+   : scale = 22,  total = 0.8285 +- 0.0017
+   :    total from ptH  = 0.8287
+   :    total from ptj1 = 0.8266
+   :    total from ptj2 = 0.8267
+   : -----------------
+   : Piece = inclusive
+   : -----------------
+   : scale = 11,  total = 0.9128 +- 0.0000
+   :    total from ptH  = 0.9124
+   :    total from ptj1 = 0.9124
+   :    total from ptj2 = 0.9128
+   : scale = HH,  total = 0.9104 +- 0.0000
+   :    total from ptH  = 0.9099
+   :    total from ptj1 = 0.9100
+   :    total from ptj2 = 0.9104
+   : scale = 22,  total = 0.9152 +- 0.0000
+   :    total from ptH  = 0.9148
+   :    total from ptj1 = 0.9149
+   :    total from ptj2 = 0.9152
+   : -----------------
+   : Piece = exclusive
+   : -----------------
+   : scale = 11,  total = -0.0961 +- 0.0019
+   :    total from ptH  = -0.0968
+   :    total from ptj1 = -0.0970
+   :    total from ptj2 = -0.0972
+   : scale = HH,  total = -0.1051 +- 0.0024
+   :    total from ptH  = -0.1062
+   :    total from ptj1 = -0.1093
+   :    total from ptj2 = -0.1067
+   : scale = 22,  total = -0.0867 +- 0.0017
+   :    total from ptH  = -0.0861
+   :    total from ptj1 = -0.0882
+   :    total from ptj2 = -0.0885
+   :    
+
+** Old results, <2015-05-10 Sun>, showing the problem
+
+  The differential cross section should integrate to the total. But it
+  doesn't actually happen. Look at the results at NNLO, comparing the
+  total (from the "all VBF cuts 2 jets" entry), versus the sum from
+  various other histograms.
+
+  : -----------------
+  : Piece = full
+  : -----------------
+  : scale = 11,  total = 0.8176 +- 0.0010
+  :    total from ptH  = 0.8256
+  :    total from ptj1 = 0.8190
+  :    total from ptj2 = 0.8195
+  : scale = HH,  total = 0.8041 +- 0.0012
+  :    total from ptH  = 0.8105
+  :    total from ptj1 = 0.8045
+  :    total from ptj2 = 0.8056
+  : scale = 22,  total = 0.8317 +- 0.0008
+  :    total from ptH  = 0.8390
+  :    total from ptj1 = 0.8338
+  :    total from ptj2 = 0.8326
+
+  There's up to a 1% difference, and it seems to be systematic,
+  suggesting a genuine problem. It's separated into inclusive and
+  exclusive parts below and in file:ptH.pdf and one sees that it's
+  happening largely in the exclusive part and is almost an order of
+  magnitude larger than the quoted error on the total cross section. 
+  
+  (perhaps the combination procedures between runs is messing things up?)
+
+  : -----------------
+  : Piece = inclusive
+  : -----------------
+  : scale = 11,  total = 0.9128 +- 0.0000
+  :    total from ptH  = 0.9124
+  :    total from ptj1 = 0.9124
+  :    total from ptj2 = 0.9128
+  : scale = HH,  total = 0.9104 +- 0.0000
+  :    total from ptH  = 0.9099
+  :    total from ptj1 = 0.9100
+  :    total from ptj2 = 0.9104
+  : scale = 22,  total = 0.9152 +- 0.0000
+  :    total from ptH  = 0.9148
+  :    total from ptj1 = 0.9149
+  :    total from ptj2 = 0.9152
+  : -----------------
+  : Piece = exclusive
+  : -----------------
+  : scale = 11,  total = -0.0952 +- 0.0009
+  :    total from ptH  = -0.0868
+  :    total from ptj1 = -0.0934
+  :    total from ptj2 = -0.0933
+  : scale = HH,  total = -0.1063 +- 0.0011
+  :    total from ptH  = -0.0995
+  :    total from ptj1 = -0.1055
+  :    total from ptj2 = -0.1047
+  : scale = 22,  total = -0.0835 +- 0.0008
+  :    total from ptH  = -0.0758
+  :    total from ptj1 = -0.0811
+  :    total from ptj2 = -0.0826
+
+
+  
+
+

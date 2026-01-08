@@ -1,0 +1,99 @@
+!!!!!!!!!!!!!!! USER PARAMETERS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+qcd_order 1 	  ! 1: LO, 2: NLO, 3:NNLO, 4:N3LO (only for inclusive results)
+inclusive_only 1  ! (default: 0) 1: computes only the inclsuive VBF cross section
+                  ! differentially in the Higgs momentum. 0: Computes the cross
+                  ! section fully differentially in the jets.
+
+ebeam1 13500d0     ! energy of beam 1
+ebeam2 13500d0     ! energy of beam 2
+
+lhans1  91500        ! pdf set for hadron 1 (LHA numbering)
+lhans2  91500        ! pdf set for hadron 2 (LHA numbering)
+
+lambdafact 1.5d0 
+renscfact  2.0d0    ! (default 1d0) ren scale factor: muren  = muref * renscfact 
+facscfact  1.0d0    ! (default 1d0) fac scale factor: mufact = muref * facscfact 
+
+higgsbreitwigner 0 ! 0: Narrow width, 1: Breit Wigner for Higgs
+higgsmasswindow  30 ! How many widths we integrate around the Breit Wigner peak.
+
+runningscales 2	   ! default 0 (no running scales); 0: MH, 1: scale of 1506.02660
+                   ! if running the differential code. If running inclusive_only
+                   ! then the scale choice will be Q1 on the upper line and Q2 on
+                   ! the lower line.
+
+ncall1  800000   ! number of calls for initializing the integration grid
+ncall2  8000000   ! number of calls for computing the integral 
+itmx2    10      ! number of iterations for computing the integral
+
+xgriditeration 1   ! identifier for grid generation
+parallelstage 1    ! identifier for the stage. Stage 1 generates grids. Stage 2 is
+                   ! the main stage which produces differential distributions.
+
+fakevirt 0       ! Useful for generating stage 1 grids faster 
+
+phspcuts 1	 ! (1:on ; 0: off (default)) Turns on/off analysis 
+                 ! cuts at the phasespace generation stage. 
+                 ! Significantly reduces run time. 
+
+
+!!!!!!!!!!!!!!! CUTS USED FOR ANALYSIS and PHASE SPACE: !!!!!!!!!!!!!!!!!!!!!!!
+ptalljetmin    0d0 ! Minimum pt for all jets
+yjetmax        10000d0 ! rapidity acceptance for jets
+Rsep_jjmin     0.0d0 ! R to be used in jet algorithm
+ptjetmin       0d0 ! Minimum pt for two tagging jets
+mjjmin         0d0 ! Minimum invariant mass of dijet system
+deltay_jjmin   0d0 ! rapidity separation between tagging jets
+jet_opphem     0 ! 1: require the tagging jets in opposite detector hemispheres.
+
+!!!!!!!!!!!!!!! END USER PARAMETERS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!! DEVELOPER PARAMETERS - DON'T TOUCH !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ih1   1           ! hadron 1 (1 for protons)
+ih2   1           ! hadron 2 (1 for protons)
+
+iseed       20    ! initialize random number sequence 
+
+itmx1    9      ! number of iterations for initializing the integration grid
+! Parameters to allow or not the use of stored data
+numevts 1
+use-old-grid    1 ! if 1 use old grid if file pwggrids.dat is present (<> 1 regenerate)
+use-old-ubound  1 ! if 1 use norm of upper bounding function stored in pwgubound.dat, if present; <> 1 regenerate
+
+foldcsi   1     ! number of folds on csi integration
+foldy     1     ! number of folds on  y  integration
+foldphi   1     ! number of folds on phi integration
+nubound 0    ! number of bbarra calls to setup norm of upper bounding function
+icsimax  5      ! <= 100, number of csi subdivision when computing the upper bounds
+iymax    5      ! <= 100, number of y subdivision when computing the upper bounds
+xupbound 2d0    ! increase upper bound for radiation generation
+
+smartsig   1       ! (default 1) remember equal amplitudes (0 do not remember)
+testplots  1       ! (default 0, do not) do NLO and PWHG distributions
+
+withnegweights 1   ! default 1 allow negative weights
+
+bornsuppfact 0    ! select type of Born suppression factor (1=exp,2=mult,else=none)
+
+withfulltags 1 ! 0: Computes full matrix element. 1: Computes subtraction term. Use this setting for generation exclusive NNLO results.
+
+doublefsr 1 	 ! More stable fsr generation. Reduces the number of spikes.
+
+ckm_offdiag  0  ! (default 0): if 1, use non-diag CKM matrix at event generation level
+
+#channel_type 0 ! For debug only. 
+#qq_exclude 0 ! 1: Exclude pure quark channels for real diagrams
+
+maxseeds  9999 	  ! Maximum number of seeds that powheg can run with
+
+manyseeds  0       ! Used to perform multiple runs with different random
+                   ! seeds in the same directory.
+                   ! If set to 1, the program asks for an integer j;
+                   ! The file pwgseeds.dat at line j is read, and the
+                   ! integer at line j is used to initialize the random
+                   ! sequence for the generation of the event.

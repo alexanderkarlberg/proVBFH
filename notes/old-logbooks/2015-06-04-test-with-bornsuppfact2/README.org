@@ -1,0 +1,36 @@
+We want to see if running with bornsuppfact = 2 instead of 1 makes a difference
+in terms of outliers, as Giulia suspects.
+
+For this, we compare about 100 independent runs for the NLO exclusive
+contribution,performed with ncall1=2e5, itmx1=3, ncall2=1e6, itmx2=5
+
+We find, for the VBF 2 jets cuts case:
+
+old setup, bornsupp=1
+
+-0.096 +- 0.007      20% exclusion
+-0.098 +- 0.007      10% exclusion
+-0.106 +- 0.015       2% exclusion
+-0.091 +- 0.018       no exclusion
+
+new setup, bornsupp=2
+
+-0.096 +- 0.007      20% exclusion
+-0.097 +- 0.008      10% exclusion
+-0.097 +- 0.009       2% exclusion
+-0.093 +- 0.009       no exclusion
+
+While nothing changes when excluding as much as 20%, both the central value
+and the error are otherwise much more stable with bornsupp=2 when excluding
+less. Upon examining visually the individual results, there are no more huge
+fluctuations as in the previous case.
+
+A visual examination can be done looking at the plots excl-nlo.ps (with
+bornsupp=1) and excl-nlo-bornsupp2.ps (with bornsupp=2, obviously)
+(NB the full result and error in the  excl-nlo.ps (with bornsupp=1) plot are
+made with about 200 runs rather than 100 like in the bornsupp=2 case. Hence the
+overall smaller error.
+
+One should however look at the fluctuations of the individual results in the two
+top plots: the huge fluctuations (top-left plot) have disappeared in the
+bornsupp=2 case

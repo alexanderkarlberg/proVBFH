@@ -1,0 +1,7 @@
+# detail of the MG5_aMC_v3.0.0 HHjj NLO EW generation
+set complex_mass_scheme True
+import model loop_qcd_qed_sm_Gmu
+define p = g d d~ u u~ s s~ c c~ b b~ a
+define j = g d d~ u u~ s s~ c c~ b b~ a
+generate p p > H H j j [QED]
+output hhjjQED

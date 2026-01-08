@@ -1,0 +1,34 @@
+#+TITLE: Separation checks
+#+STARTUP: logdone entitiespretty latexpreview
+
+This folder contains plots checking the correctness of the separation
+in upper and lower sides.
+
+We plot sigma_wrong / sigma_total, where sigma_wrong is the cross
+section for wrongly assigned partons.
+
+*Summary*
+    1) all jets have |y| > DY
+    2) jets at +ve rap (-ve) come exclusively from particles 
+       at +ve (-ve) end
+
+    Work out (!2)/(1) as a function of DY
+    
+    : 
+    :  j1      |          |  j2
+    :    j3    |          |    
+    : 
+    :        Y=-DY       Y=DY     ----> Y
+                    
+
+If the internal tagging is correct, then the ratio should drop off
+rapidly as Y_cut increases.
+
+The plots contained in this folder are the following:
+
+ - checks-[0-6].ps       : NLO checks, integrated in Ycut
+ - checks-[0-6]-deriv.ps : NLO checks, differential in Ycut
+ - checks-[0-6]-LO.ps    : LO checks, differential in Ycut
+
+The plots are obtained using the corresponding top files, from the
+gnuplot scripts in the folder.

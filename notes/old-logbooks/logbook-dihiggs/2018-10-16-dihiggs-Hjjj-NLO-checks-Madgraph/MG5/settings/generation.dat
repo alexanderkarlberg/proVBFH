@@ -1,0 +1,3 @@
+# detail of the MG5_aMC_v2.6.2 instructions to generate VBF HHjjj NLO QCD
+generate p p > H H j j j $$ z w+ w- [QCD]
+output hh_3j_nlo

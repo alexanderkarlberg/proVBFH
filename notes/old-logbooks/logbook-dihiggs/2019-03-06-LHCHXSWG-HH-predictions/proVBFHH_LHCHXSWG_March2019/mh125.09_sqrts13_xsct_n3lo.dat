@@ -1,0 +1,15 @@
+# Stamped by condor_exec.exe on  6/03/2019 at 01:42:03
+# condor_exec.exe -n3lo -sqrts 13000 -pdf PDF4LHC15_nnlo_mc -ncall2 400000 -ncall1 200000 -mh 125.09 -7scaleuncert -pdfuncert -mw 80.385 -wwidth 2.085 -mz 91.1876 -zwidth 2.4952
+# Total N3LO cross-section (fb)
+# central     max          min          MC_error     PDF_err_plus PDF_err_min  PDF_err_symm
+ 1.723041E+00 1.723495E+00 1.722282E+00 1.555424E-03 3.654745E-02 3.654745E-02 3.654745E-02
+
+
+# Summary:
+# sigma =   1.72304 fb
+# QCD scale uncertainty (+) =  0.00045 fb (    0.026 %)
+# QCD scale uncertainty (-) = -0.00076 fb (   -0.044 %)
+# MC integration uncertainty =     0.090 %
+# PDF symmetric uncertainty* =     2.121 %
+# (*PDF uncertainty contains alphas uncertainty if using a
+#   PDF set that supports it (eg PDF4LHC15_nnlo_100_pdfas))

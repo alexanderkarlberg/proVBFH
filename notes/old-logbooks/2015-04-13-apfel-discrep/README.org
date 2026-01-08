@@ -1,0 +1,62 @@
+#+TITLE: comparison of hoppet structure function with APFEL
+#+STARTUP: logdone entitiespretty latexpreview
+
+Directory to compare our structure functions with the ones obtained
+from the web interface of APFEL.
+
+We have used two different PDF sets,
+ : MSTW2008nnlo90cl, evolution with LHAPDF, VFNS
+ : NNPDF30_nnlo_as_0118, evolution with LHAPDF, VFNS
+Corresponding output files are file:MSTW_*.C and file:NNPDF_*.C
+
+The files file:*.dat contain the ZMVN curve at Q=100 GeV, with the following settings
+
+*F2 Wp*
+Final scale: 100GeV
+Inelastic Coef: 0.5
+Output: F2 Proton
+Scheme: All
+Pt. Order: LO/NLO/NNLO
+Process: Charged Current
+Target: Proton
+Projectile: Electron
+file:*_F2e-*Q100.C
+
+*F2 Wm*
+Final scale: 100GeV
+Inelastic Coef: 0.5
+Output: F2 Proton
+Scheme: All
+Pt. Order: LO/NLO/NNLO
+Process: Charged Current
+Target: Proton
+Projectile: Positron
+file:*_F2e-*Q100.C
+
+*F3 Wp*
+Final scale: 100GeV
+Inelastic Coef: 0.5
+Output: F3 Proton
+Scheme: All
+Pt. Order: LO/NLO/NNLO
+Process: Charged Current
+Target: Proton
+Projectile: Electron
+file:*_F3e-*Q100.C
+
+*F3 Wm*
+Final scale: 100GeV
+Inelastic Coef: 0.5
+Output: F3 Proton
+Scheme: All
+Pt. Order: LO/NLO/NNLO
+Process: Charged Current
+Target: Proton
+Projectile: Positron
+file:*_F3e-*Q100.C
+
+The comparison plots are produced by file:comparison-mstw.gp and
+file:comparison-nnpdf.gp 
+
+They are contained in file:apfel-hoppet-comp-mstw.ps and
+file:apfle-hoppet-comp-nnpdf.ps

@@ -1,0 +1,102 @@
+1) Changing flst_cur_iborn = iborn to '= 1' in sigvirtual.f doesn't impact pwhg_checklimits
+
+2) Changing in real.f rtags = flst_alrtags(:,alr_tag) to '=1' breaks the limits completely (off by factor two or so).
+
+3) Changing in real.f rtags = flst_alrtags(:,alr_tag) to 'flst_alrtags(:,alr_tag) + 1' also breaks the limits completely (off by factor two or so).
+
+4) Born has been tested point by point. No chance a bug could have survived that.
+
+5) Changing in qqhqqj-virt.f ig = flst_borntags(6,flst_cur_iborn) to ig = 1 doesn't change pwhg_checkliimts.
+
+6) In sigcollremn-BUGGED.f a bug of the following form has been introduced:
+
+c     AK Find tag of sixth particle
+         ig=flst_borntags(6,jb)
+c         print*, rand()
+c     AK INTRODUCED BUG
+         if(rand().lt.0.05) then
+            if(ig.eq.1) then
+               ig=2
+            elseif(ig.eq.2) then
+               ig=1
+            endif
+         endif
+c     AK END OF BUG
+c     AK Save the full cross section in the zero component
+         tot(0)=tot(0)+rescoll(jb)
+c     AK: We only fill the two first component with the amplitude
+c     to not double count.
+         if(ig.ne.0) then
+            tot(ig)=tot(ig)+rescoll(jb)
+         endif
+
+7) In vbfnlo-files/qqhqqj-virt-BUGGED.f a bug of the following form has been introduced:
+
+      ig = flst_borntags(6,flst_cur_iborn) 
+C     in case of no tagging, the gluon can be in the initial state
+C     so look for a 0 in position 1:2 or 4:6 
+      if (any(flst_borntags(1:2,flst_cur_iborn) ==0)) ig = 0  
+      if (any(flst_borntags(4:6,flst_cur_iborn) ==0)) ig = 0  
+c     AK INTRODUCED BUG
+      if(rand().lt.0.05) then
+         if(ig.eq.1) then
+            ig=2
+         elseif(ig.eq.2) then
+            ig=1
+         endif
+      endif
+c     AK END OF BUG
+      if (ig .eq.1) then 
+         al43 = 0d0 
+      elseif (ig .eq.2) then 
+         al21 = 0d0 
+
+8) In sigcollsoft.f a bug of the following form has been introduced:
+
+C     AK INTRODUCED BUG                                                                                 
+      if(rand().lt.0.05d0) then
+         if(emittedtag.eq.2) then
+            if(rand().lt.0.5d0) then
+               emittedtag = 1
+            else
+               emittedtag = 0
+            endif
+         elseif(emittedtag.eq.1) then
+            if(rand().lt.0.5d0) then
+               emittedtag = 2
+            else
+               emittedtag = 0
+            endif
+         elseif(emittedtag.eq.0) then
+            if(rand().lt.0.5d0) then
+               emittedtag = 2
+            else
+               emittedtag = 1
+            endif
+         endif
+      endif
+C     AK END OF BUG     
+
+
+
+For 6) and 7) it has been checked that this does indeed change the output of histograms. At the moment not enough statistics to say anything about the magnitude of these corrections. (Obsolete)
+
+6) and 8) gives significantly different output in the btilde function, and even a 5% error would have caused huge effects. The output looks like:
+
+
+nobug/run-st2-2.log: tot:   1.62285419977366      +-  2.726061677141117E-002
+
+sigcollremn_bug/run-st2-2.log: tot:   1.62285419977366      +-  2.726061677141117E-002
+sigcollsoft_bug/run-st2-2.log: tot:   7.03796449394619      +-  0.108532972954181     
+virt_bug/run-st2-2.log: tot:   3.58748459908247      +-  3.482832958571557E-002
+
+7) Doesn't give rise to any change at all in the total cross section. There are changes to the output of our pwhg_analysis_checks.f analysis, but these changes would not be noticable unless one knew the real answer beforehand. 
+
+
+Observation 1: When changing iseed (11 works 20 doesnt for instances) the pwhg_checklimits doesn't always work. This is ALSO the case in the original VBF_HJJJ code and therefore not a problem with our implementation. Still a bit worrying, though? GZ has confirmed that this issue was know to the authors, but the limits are fine.
+
+Observation 2: In general changing the virtual part of the calculation doesn't seem to impact the limits. Changing the real part just a little hast a huge effect on the limits.
+
+
+
+

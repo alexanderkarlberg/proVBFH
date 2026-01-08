@@ -1,0 +1,3 @@
+../../../aux/makePNEW.perl compare-coeff  -remake ./mkmk\
+              -postlib "`lhapdf-config --ldflags` `hoppet-config --libs`" \
+              `lhapdf-config --cppflags` `hoppet-config --fflags`

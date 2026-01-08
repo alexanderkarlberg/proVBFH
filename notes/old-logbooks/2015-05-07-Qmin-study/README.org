@@ -1,0 +1,68 @@
+#+TITLE: Qmin study
+#+STARTUP: logdone entitiespretty latexpreview
+
+This folder contains a short study of the impact of the cutoff value Qmin
+
+*Parameters*
+ - itmx = 6
+ - ncall = 500000
+ - xmur = 1.0
+ - xmuf = 4.0
+ - pdf = MSTW2008nnlo
+ - scale choice = 1
+ 
+The default value of Qmin, obtained from the PDF, is typically 
+ : Qmin = 1 GeV
+
+The conclusion is that multiplying the alphas factors at the
+evaluation of the structure function in the matrix element is more
+stable, but both implementations give the same answer when
+implementing the cutoff correctly.
+
+* Incorrect treatment of Qmin in H+2j phase space (pre [2015-05-06])
+
+In the previous version of the phase space generation, there was no
+Qmin cutoff imposed on the momentum of the W/Z scatterer.
+
+Values after the first iteration, given in pb
+
+|      | total NLO (only) xsct | total NLO (only) xsct | total NNLO (only) xsct  | total NNLO (only) xsct  |
+| Qmin | as factor  beginning  | as2pi factor end      | as2pi factor beginning  | as2pi factor end        |
+|------+-----------------------+-----------------------+-------------------------+-------------------------|
+| 0.01 | 0.06882503 +- 0.0035  | 0.06882491 +- 0.0035  | -0.09312583 +- 0.91E-03 | -0.09312519 +- 0.91E-03 |
+|  0.1 | 0.06882506 +- 0.0035  | 0.06882476 +- 0.0035  | -0.09312575 +- 0.91E-03 | -0.09312744 +- 0.91E-03 |
+|  0.5 | 0.06882576 +- 0.0035  | 0.06880647 +- 0.0035  | -0.09310980 +- 0.91E-03 | -0.09316689 +- 0.91E-03 |
+|  1.0 | 0.06875515 +- 0.0035  | 0.06880572 +- 0.0035  | -0.09286946 +- 0.88E-03 | -0.09312765 +- 0.90E-03 |
+|  2.0 | 0.06883850 +- 0.0035  | 0.06884679 +- 0.0035  | -0.09265443 +- 0.87E-03 | -0.09310041 +- 0.89E-03 |
+|  5.0 | 0.06942470 +- 0.0035  | 0.06925106 +- 0.0035  | -0.09201155 +- 0.84E-03 | -0.09305473 +- 0.87E-03 |
+
+
+* With implementation of a Qmin cutoff in phase space (post [2015-05-06])
+
+Here we give values after changing the phase space to assign weight
+zero to events with Q1 or Q2 values below Qmin.
+
+Values after first iteration, given in pb
+
+|      | total NLO (only) xsct | total NLO (only) xsct | total NNLO (only) xsct  | total NNLO (only) xsct  |
+| Qmin | as factor  beginning  | as2pi factor end      | as2pi factor beginning  | as2pi factor end        |
+|------+-----------------------+-----------------------+-------------------------+-------------------------|
+| 0.01 | 0.06882503 +- 0.0035  | 0.06882491 +- 0.0035  | -0.09312583 +- 0.91E-03 | -0.09312519 +- 0.91E-03 |
+|  0.1 | 0.06882585 +- 0.0035  | 0.06882560 +- 0.0035  | -0.09312344 +- 0.91E-03 | -0.09312348 +- 0.91E-03 |
+|  0.5 | 0.06884711 +- 0.0035  | 0.06884693 +- 0.0035  | -0.09306080 +- 0.91E-03 | -0.09306077 +- 0.91E-03 |
+|  1.0 | 0.06864713 +- 0.0035  | 0.06864693 +- 0.0035  | -0.09263829 +- 0.87E-03 | -0.09263824 +- 0.87E-03 |
+|  2.0 | 0.06941529 +- 0.0035  | 0.06941513 +- 0.0035  | -0.09212925 +- 0.86E-03 | -0.09212920 +- 0.86E-03 |
+|  5.0 | 0.07013738 +- 0.0035  | 0.07013735 +- 0.0035  | -0.08975624 +- 0.81E-03 | -0.08975624 +- 0.81E-03 |
+
+For completeness, the impact on the LO terms of the Qmin cutoff is in
+the table below
+
+|      | total LO (only) xsct | total LO (only) xsct |
+| Qmin | as factor  beginning | as2pi factor end     |
+|------+----------------------+----------------------|
+| 0.01 | 3.901553 +- 0.018    | 3.901553 +- 0.018    |
+|  0.1 | 3.901553 +- 0.018    | 3.901553 +- 0.018    |
+|  0.5 | 3.901486 +- 0.018    | 3.901486 +- 0.018    |
+|  1.0 | 3.900600 +- 0.018    | 3.900600 +- 0.018    |
+|  2.0 | 3.896579 +- 0.018    | 3.896579 +- 0.018    |
+|  5.0 | 3.863923 +- 0.018    | 3.863923 +- 0.018    |

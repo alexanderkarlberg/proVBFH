@@ -1,0 +1,95 @@
+======================================================================
+14 TeV run:
+======================================================================
+
+Without VBF cuts:
+
+# "p p > H H j j" at LO (i.e. with s-channel):
+   --------------------------------------------------------------
+      Final results and run summary:
+      Process p p > H H j j [QCD]
+      Run at p-p collider (7000.0 + 7000.0 GeV)
+      Total cross section: 2.115e-03 +- 2.5e-06 pb
+   --------------------------------------------------------------
+
+# "p p > H H j j $$ w+ w- z" at LO (i.e. without s-channel) 
+   --------------------------------------------------------------
+      Final results and run summary:
+      Process p p > H H j j $$ z w+ w- [QCD]
+      Run at p-p collider (7000.0 + 7000.0 GeV)
+      Total cross section: 1.664e-03 +- 2.4e-06 pb
+   --------------------------------------------------------------
+
+NB: the two results above are with a generation cut of 8gev for the
+jets. But checked at 27 TeV that this has only a few permille effect
+on the ratio.
+
+# ratio of full / pure VBF:
+  *1.271*
+
+=> There is a *27%* contribution of s-channel VBF for dihiggs production
+
+
+With VBF cuts:
+
+# "p p > H H j j" at LO:
+  total vbcuts central value
+  0.681767e-03
+  
+# "p p > H H j j $$ w+ w- z" at LO (i.e. without s-channel):
+  total vbcuts central value
+  0.681042e-03
+
+# ratio of full / pure VBF:
+  *1.0011*
+
+=> There is a 1 permil contribution of s-channel after VBF cuts
+
+
+
+
+======================================================================
+27 TeV run
+======================================================================
+Without VBF cuts:
+
+# "p p > H H j j" at LO (i.e. with s-channel):
+   --------------------------------------------------------------
+      Final results and run summary:
+      Process p p > H H j j [QCD]
+      Run at p-p collider (13500.0 + 13500.0 GeV)
+      Total cross section: 8.793e-03 +- 1.2e-05 pb
+   --------------------------------------------------------------
+
+
+# "p p > H H j j $$ w+ w- z" at LO (i.e. without s-channel) 
+   --------------------------------------------------------------
+      Final results and run summary:
+      Process p p > H H j j $$ z w+ w- [QCD]
+      Run at p-p collider (13500.0 + 13500.0 GeV)
+      Total cross section: 7.569e-03 +- 1.2e-05 pb
+   --------------------------------------------------------------
+
+NB: Here used a generation cut of 0.5 GeV. (with 8 GeV the ratio is 1.158)
+
+# ratio of full / pure VBF:
+  *1.162*
+
+=> There is a *16%* contribution of s-channel VBF for dihiggs production
+
+
+With VBF cuts:
+
+# "p p > H H j j" at LO:
+  total vbcuts central value
+  0.278072e-02
+  
+# "p p > H H j j $$ w+ w- z" at LO (i.e. without s-channel):
+  total vbcuts central value
+  0.276702e-02
+
+# ratio of full / pure VBF:
+  *1.005*
+
+=> There is a 5 permil contribution of s-channel after VBF cuts
+

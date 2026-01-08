@@ -1,0 +1,51 @@
+#+TITLE: check of scale dependence
+#+STARTUP: logdone entitiespretty latexpreview
+
+Directory to check scale dependence in our structure functions, by
+examining how muF (or muR) dependence scales with alpha_s. 
+
+Basically for N^pLO, scale-dependent piece should vanish as
+\alpha_s^{p+1}. That is what is being verified in
+file:check-scale-dep-f2Z.ps , etc. at LO, NLO and NNLO.
+
+The file also includes an example showing what happens if the NNLO
+piece is wrong by 0.5%, illustrating that the scale observed is not
+the one expected.
+
+The results were generated from with
+
+  file:../../vbf_h3j_nnlo/struct_funct_anyscale.f
+
+with the file:powheg.input copied here and the following type of (zsh)
+loop: 
+
+: for as in 0.0032 0.0016 0.0008
+: (mkdir tmp-as$as; ./struct_funct_anyscale -dir tmp-as$as -toy -toy-alphas $as -ny 200)
+
+
+* plots using the original code by Zaro et al.
+
+The plots file:check-scale-dep-f2Z-originalcode.ps , etc. show cross
+checks of the scale dependence for the original VBF@NNLO code from
+Zaro et al.
+
+The files in file:tmp-as0.????/original*.dat contain the structure
+functions, using a gaussian integration with relative precision
+ : prec = 5e-8 to 1e-9
+(mostly the smallest possible before the integration fails to converge)
+
+To check the impact of the precision setting on the numerical
+integration, file:tmp-as-????-prec1e-?/ contains output files using
+different values of the precision parameters with
+ : prec = 1e-4, 1e-5, 1e-6
+For any value above 1e-5, the resulting plots start to look relatively
+stable.
+
+One observes that at large x, x> ~0.1, the scale dependent pieces fail
+to vanish as \alpha^3_s in most cases (it is only correct for muR variations,
+but not for muF)
+
+Using a toy pdf without a non-singlet part (setting
+quarks=antiquarks), given by files file:*singlet* , one can still see
+the same issue at large x. This suggests that the problem is not only
+located in the treatment of non-singlet terms.

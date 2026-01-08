@@ -1,0 +1,20 @@
+This folder contains a comparison of different Monte Carlo generators
+when looking at NLO + parton shower.
+
+We use the NLO Higgs + 2jet LHEF sample with 8e6 events.
+
+The tunes used are
+ - For Pythia 6 : Perugia 2011
+ - For Pythia 8 : 4C (default)
+ - For Herwig 6 : AUET2
+
+Hadronisation is plotted as dashed lines.
+
+The conclusion seems to be that the different MCs are relatively
+compatible, within 2-4%. Miscellaneous remarks:
+ - Pythia 8 is slightly below Pythia 6 and Herwig at low pt in ptH.
+ - Pythia 6 is slightly above Pythia 8 and Herwig at high pt in ptj2.
+
+Hadronisation effects are small, see related logbook entry in 
+file:../2015-05-05-hadronisation-checks/README-hadronisation-checks.org
+for more details.

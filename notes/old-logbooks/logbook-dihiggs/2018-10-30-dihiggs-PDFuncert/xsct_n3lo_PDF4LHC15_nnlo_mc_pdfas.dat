@@ -1,0 +1,13 @@
+# Stamped by ./provbfh_incl on 31/10/2018 at 17:22:07
+# ./provbfh_incl -sqrts 27000 -pdfuncert -pdf PDF4LHC15_nnlo_mc_pdfas
+# Total N3LO cross-section (fb)
+# central     max          min          MC_error
+ 8.421776E+00 8.421752E+00 8.421752E+00 1.665526E-02
+
+
+# Summary:
+# sigma =   8.42178 fb
+# MC integration uncertainty =     0.198 %
+# PDF symmetric uncertainty* =     2.066 %
+# (*PDF uncertainty contains alphas uncertainty if using a
+#   PDF set that supports it (eg PDF4LHC15_nnlo_100_pdfas))

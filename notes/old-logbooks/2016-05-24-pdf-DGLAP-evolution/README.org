@@ -1,0 +1,43 @@
+#+TITLE: scale dependence of DGLAP evolution
+
+To check how much of the N3LO PDFs would come from the missing higher
+order terms in the DGLAP evolution, we check the impact of the scale
+variation on the evolution.
+
+We run using different reference Q0 (5 GeV, 8 GeV, 10 GeV), and do a
+variation by a factor two up and down.
+
+All in all, effects of higher order DGLAP looks to be:
+ - up to 1% at NLO
+ - up to 1%o at NNLO
+
+* values at NLO:
+
+  | units=pb    | Q0 = 5 GeV | Q0 = 8 GeV | Q0 = 10 GeV |
+  |-------------+------------+------------+-------------|
+  | xmuR = 0.5  |     3.8948 |     3.8900 |      3.8882 |
+  | xmuR = 1.0  |     3.8806 |     3.8820 |      3.8823 |
+  | xmuR = 2.0  |     3.8800 |     3.8826 |      3.8833 |
+  | 3-loop evln |     3.8767 |     3.8787 |      3.8794 |
+
+
+  | change wrt central | Q0 = 5 GeV | Q0 = 8 GeV | Q0 = 10 GeV |
+  |--------------------+------------+------------+-------------|
+  | xmuR = 0.5         |    +0.0037 |    +0.0021 |     +0.0015 |
+  | xmuR = 2.0         |    -0.0002 |    +0.0002 |     +0.0003 |
+  | 3-loop evln        |    -0.0010 |    -0.0009 |     -0.0007 |
+
+* values at NNLO
+
+  | units=pb   | Q0 = 5 GeV | Q0 = 8 GeV | Q0 = 10 GeV |
+  |------------+------------+------------+-------------|
+  | xmuR = 0.5 |     3.9268 |     3.9286 |      3.9294 |
+  | xmuR = 1.0 |     3.9308 |     3.9311 |      3.9312 |
+  | xmuR = 2.0 |     3.9319 |     3.9323 |      3.9324 |
+
+
+  | change wrt central | Q0 = 5 GeV | Q0 = 8 GeV | Q0 = 10 GeV |
+  |--------------------+------------+------------+-------------|
+  | xmuR = 0.5         |    -0.0010 |    -0.0006 |     -0.0005 |
+  | xmuR = 2.0         |    +0.0003 |    +0.0003 |      0.0003 |
+
