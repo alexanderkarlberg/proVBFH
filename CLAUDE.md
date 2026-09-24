@@ -64,6 +64,8 @@ that runs complete with finite output. They are not physics validations.
 `ci/tensor-checks.sh` additionally runs `make check` (proVBFH-inclusive), checks that the three
 `tensor.f90` copies are identical, and compares the tensor and analytic HH matrix elements at zero
 widths.
+`ci/nf-checks.sh` checks that the non-factorisable corrections do not depend on the gluon-mass
+regulator (`nf_regfact`).
 
 ## Running
 

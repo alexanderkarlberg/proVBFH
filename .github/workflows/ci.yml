@@ -145,6 +145,10 @@ jobs:
         if: ${{ !cancelled() && steps.build-hh.outcome == 'success' }}
         run: ci/annotate.sh ci/smoke-tests.sh proVBFHH
 
+      - name: NF checks
+        if: ${{ !cancelled() && steps.build-h.outcome == 'success' && steps.build-hh.outcome == 'success' }}
+        run: ci/annotate.sh ci/nf-checks.sh
+
       - name: Upload run directories
         if: failure()
         uses: actions/upload-artifact@v4
