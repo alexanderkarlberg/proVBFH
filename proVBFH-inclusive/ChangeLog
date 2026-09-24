@@ -1,5 +1,24 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/matrix_element_dihiggs.f90 (eval_matrix_element_tensor):
+	Fixed the F3 terms of the tensor matrix element. The four-vectors
+	were stored with their contravariant components in tensors declared
+	with lower indices, i.e. as the parity-flipped vectors, while the
+	Levi-Civita tensor of the F3 part of the hadronic tensor was not
+	flipped. This gave wrong F3 x F3 interference terms between the
+	g^mu_nu and the t/u-channel parts of the VV -> HH current (about
+	1e-4 of the cross section; the F1 and F2 terms were not affected).
+	The vectors are now lowered with the metric. With zero widths the
+	tensor and the analytic (default) matrix element now agree to
+	machine precision, F3 included. The analytic F3F3 expression in
+	ME_expressions.f was correct.
+
+	* src/tensor.f90:
+	* tests/test_tensor.f90:
+	Added InitFourVector(tensor, p, up), which stores a four-vector
+	given by its contravariant components with its index up or down
+	(lowering it with the metric).
+
 	* src/tensor.f90:
 	Rewritten without allocatable components (fixed-size arrays, no
 	deep copies), about twice as fast; same interface, and the same

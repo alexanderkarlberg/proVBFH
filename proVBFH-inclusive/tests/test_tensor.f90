@@ -45,6 +45,7 @@ program test_tensor
      call test_raise_lower()
      call test_arithmetic()
      call test_products()
+     call test_four_vector()
   end do
 
   do itrial = 1, nchain
@@ -249,6 +250,35 @@ contains
     maxdev_legacy = max(maxdev_legacy, reldev(c%values(:,1:1), lc%values))
     if (reldev(c%values(:,1:1), lc%values) > tol) call fail('TensorProduct 1x0 (legacy)')
   end subroutine test_products
+
+  !----------------------------------------------------------------------
+  ! InitFourVector: the index positions, the lowered components, and
+  ! that contracting p_mu with q^mu gives the Minkowski product
+  subroutine test_four_vector()
+    type(tensors) :: pu, pd, qu, c
+    real(dp) :: p(0:3), q(0:3)
+    complex(dp) :: ref(0:3,0:3)
+
+    call random_number(p); call random_number(q)
+    p = p - 0.5_dp; q = q - 0.5_dp
+    call InitFourVector(pu, p, .true.)
+    call InitFourVector(pd, p, .false.)
+    call InitFourVector(qu, q, .true.)
+    ref = zero
+    ref(:,1) = p
+    call check_formula(pu, ref, 1, 'InitFourVector (up)')
+    call check_up(pu, (/ .true., .true. /), 'InitFourVector (up)')
+    ref(1:3,1) = -p(1:3)
+    call check_formula(pd, ref, 1, 'InitFourVector (down)')
+    call check_up(pd, (/ .false., .true. /), 'InitFourVector (down)')
+    ! p.q is summed in a different order than in dot(), and may
+    ! involve cancellations, so compare to the scale sum |p_i q_i|
+    call ContractTensors(pd, 1, qu, 1, c)
+    if (c%rank /= 0) call fail('InitFourVector (p.q) (wrong rank)')
+    maxdev_formula = max(maxdev_formula, abs(c%values(1,1) - dot(p, q)) / sum(abs(p*q)))
+    if (abs(c%values(1,1) - dot(p, q)) > tol * sum(abs(p*q))) &
+         & call fail('InitFourVector (p.q) (differs from the Minkowski product)')
+  end subroutine test_four_vector
 
   !----------------------------------------------------------------------
   ! The chain of operations of eval_matrix_element_tensor, with random

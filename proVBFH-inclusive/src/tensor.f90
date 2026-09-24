@@ -22,6 +22,7 @@ module tensor
   private :: CheckIndex
 
   public :: InitTensor
+  public :: InitFourVector
   public :: ResetTensor
   public :: SetMetric
   public :: PrintTensor
@@ -80,6 +81,23 @@ contains
     tensor%values = zero
     tensor%initialised = .true.
   end subroutine InitTensor
+
+  ! Initialises tensor as the four-vector with contravariant
+  ! components p(0:3), with its index up (up = .true.) or down
+  ! (up = .false.). In the latter case the components are lowered
+  ! with the metric, p_mu = g_mu_nu p^nu, so SetMetric must have been
+  ! called. (Storing p(0:3) directly in a tensor with its index down
+  ! would describe the parity-flipped vector, which matters as soon as
+  ! the Levi-Civita tensor is involved.)
+  subroutine InitFourVector(tensor,p,up)
+    type(tensors) :: tensor
+    real(dp), intent(in) :: p(0:3)
+    logical, intent(in) :: up
+
+    call InitTensor(tensor,1,.true.)
+    tensor%values(:,1) = p(:)
+    if(.not.up) call lower(tensor,1)
+  end subroutine InitFourVector
 
   subroutine ResetTensor(tensor)
     type(tensors) :: tensor

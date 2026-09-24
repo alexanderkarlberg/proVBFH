@@ -4,6 +4,7 @@
 	Replaced by the allocation-free version shared with proVBFHH and
 	proVBFH-inclusive (same interface and results; see the
 	proVBFH-inclusive ChangeLog and its "make check").
+	Added InitFourVector.
 
 2022-10-10  Alexander Karlberg <alexander.karlberg@cern.ch>
 

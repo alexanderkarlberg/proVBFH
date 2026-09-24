@@ -1,9 +1,26 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/matrix_element.f90
+	(eval_matrix_element_tensor, VVtoHH_tensor):
+	Fixed the F3 terms of the tensor matrix element. The four-vectors
+	were stored with their contravariant components in tensors declared
+	with lower indices, i.e. as the parity-flipped vectors, while the
+	Levi-Civita tensor of the F3 part of the hadronic tensor was not
+	flipped. This gave wrong F3 x F3 interference terms between the
+	g^mu_nu and the t/u-channel parts of the VV -> HH current (about
+	1e-4 of the cross section; the F1 and F2 terms were not affected).
+	The vectors are now lowered with the metric. With zero widths the
+	tensor and the analytic (default) matrix element now agree to
+	machine precision, F3 included. The analytic F3F3 expression in
+	ME_expressions.f was correct.
+	This also affects the non-factorisable corrections, which always use
+	the tensor matrix element.
+
 	* src/inclusive/tensor.f90:
 	Replaced by the allocation-free version shared with proVBFH and
 	proVBFH-inclusive (same interface and results; see the
 	proVBFH-inclusive ChangeLog and its "make check").
+	Added InitFourVector.
 
 2022-08-24  Alexander Karlberg  <alexander.karlberg@cern.ch>
 

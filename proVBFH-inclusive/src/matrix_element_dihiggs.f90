@@ -453,13 +453,17 @@ contains
     g_mu_nu = gmunu
     g_mu_nu%up = .false. ! Lower all the indices
 
-    ! Copy the four-vectors into tensor types
-    q1mu%values(:,1) = q1(:)
-    q2mu%values(:,1) = q2(:)
-    k1mu%values(:,1) = pH1(:)
-    k2mu%values(:,1) = pH2(:)
-    P1mu%values(:,1) = P1(:)
-    P2mu%values(:,1) = P2(:)
+    ! Copy the four-vectors into tensor types. The indices are down,
+    ! so the components are lowered with the metric (storing the
+    ! contravariant components directly would describe the
+    ! parity-flipped vectors, which gave wrong F3 interference terms
+    ! between the g^mu_nu and the t/u-channel parts of M)
+    call InitFourVector(q1mu,q1,.false.)
+    call InitFourVector(q2mu,q2,.false.)
+    call InitFourVector(k1mu,pH1,.false.)
+    call InitFourVector(k2mu,pH2,.false.)
+    call InitFourVector(P1mu,P1,.false.)
+    call InitFourVector(P2mu,P2,.false.)
 
     !Compute all combinations of dot-products
     q1q1 = q1 .dot. q1
@@ -515,33 +519,35 @@ contains
     ! We perform the contraction between the levi-civita tensor and
     ! P_i and q_i explicitly, as implementing rank-4 tensors just for
     ! the levi-civita symbol is tedious. So T3(i) is given by
-    ! epsilon_mu_nu_rho_sigma * P_i^rho * q_i^sigma
+    ! epsilon_mu_nu_rho_sigma * P_i^rho * q_i^sigma, with lower
+    ! indices mu, nu and epsilon_0123 = +1, built from the
+    ! contravariant components P_i(:), q_i(:).
 
-    T3(1)%values(0,1) =   P1mu%values(2,1)*q1mu%values(3,1) &
-         &              - P1mu%values(3,1)*q1mu%values(2,1)
-    T3(1)%values(0,2) = - P1mu%values(1,1)*q1mu%values(3,1) &
-         &              + P1mu%values(3,1)*q1mu%values(1,1) 
-    T3(1)%values(0,3) =   P1mu%values(1,1)*q1mu%values(2,1) &
-         &              - P1mu%values(2,1)*q1mu%values(1,1) 
-    T3(1)%values(1,2) = - P1mu%values(3,1)*q1mu%values(0,1) &
-         &              + P1mu%values(0,1)*q1mu%values(3,1) 
-    T3(1)%values(1,3) =   P1mu%values(2,1)*q1mu%values(0,1) &
-         &              - P1mu%values(0,1)*q1mu%values(2,1) 
-    T3(1)%values(2,3) = - P1mu%values(1,1)*q1mu%values(0,1) &
-         &              + P1mu%values(0,1)*q1mu%values(1,1) 
+    T3(1)%values(0,1) =   P1(2)*q1(3) &
+         &              - P1(3)*q1(2)
+    T3(1)%values(0,2) = - P1(1)*q1(3) &
+         &              + P1(3)*q1(1) 
+    T3(1)%values(0,3) =   P1(1)*q1(2) &
+         &              - P1(2)*q1(1) 
+    T3(1)%values(1,2) = - P1(3)*q1(0) &
+         &              + P1(0)*q1(3) 
+    T3(1)%values(1,3) =   P1(2)*q1(0) &
+         &              - P1(0)*q1(2) 
+    T3(1)%values(2,3) = - P1(1)*q1(0) &
+         &              + P1(0)*q1(1) 
 
-    T3(2)%values(0,1) =   P2mu%values(2,1)*q2mu%values(3,1) &
-         &              - P2mu%values(3,1)*q2mu%values(2,1)
-    T3(2)%values(0,2) = - P2mu%values(1,1)*q2mu%values(3,1) &
-         &              + P2mu%values(3,1)*q2mu%values(1,1) 
-    T3(2)%values(0,3) =   P2mu%values(1,1)*q2mu%values(2,1) &
-         &              - P2mu%values(2,1)*q2mu%values(1,1) 
-    T3(2)%values(1,2) = - P2mu%values(3,1)*q2mu%values(0,1) &
-         &              + P2mu%values(0,1)*q2mu%values(3,1) 
-    T3(2)%values(1,3) =   P2mu%values(2,1)*q2mu%values(0,1) &
-         &              - P2mu%values(0,1)*q2mu%values(2,1) 
-    T3(2)%values(2,3) = - P2mu%values(1,1)*q2mu%values(0,1) &
-         &              + P2mu%values(0,1)*q2mu%values(1,1) 
+    T3(2)%values(0,1) =   P2(2)*q2(3) &
+         &              - P2(3)*q2(2)
+    T3(2)%values(0,2) = - P2(1)*q2(3) &
+         &              + P2(3)*q2(1) 
+    T3(2)%values(0,3) =   P2(1)*q2(2) &
+         &              - P2(2)*q2(1) 
+    T3(2)%values(1,2) = - P2(3)*q2(0) &
+         &              + P2(0)*q2(3) 
+    T3(2)%values(1,3) =   P2(2)*q2(0) &
+         &              - P2(0)*q2(2) 
+    T3(2)%values(2,3) = - P2(1)*q2(0) &
+         &              + P2(0)*q2(1) 
 
     ! Use anti-symmetric property    
     do i = 0,3
