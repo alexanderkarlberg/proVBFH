@@ -1,5 +1,11 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/nonfact.f90 (angular_integrals):
+	The triangle integrals (t01, t022) are computed in the same adaptive
+	integration as the first box integrals for each boson (they share
+	the roots r1-r4 and their logs): 15% fewer operations in the NF
+	angular integrals.
+
 	* src/inclusive/{nonfact.f90|nonfact_expressions.f|incl_parameters.f90|matrix_element.f90}:
 	* docs/provbfhh-doc.{tex|pdf}:
 	New input nf_regfact: gluon-mass regulator of the non-factorisable

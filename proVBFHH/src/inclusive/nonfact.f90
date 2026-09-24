@@ -155,13 +155,16 @@ contains
   end function tri_1loop
 
   !----------------------------------------------------------------------
-  ! The azimuthal integrals of b01 (1-loop box) and b022 (2-loop box),
-  ! I(1:2), computed together in one adaptive integration (they share
-  ! the roots and logs). box_1loop_new and box_2loop are called with the
-  ! same arguments for each boson and t/u channel, so the last few
-  ! results are cached (keyed on the exact arguments, so a new
-  ! phase-space point or nf_epsrel always recomputes). I(3:4) are
-  ! reserved for the triangle integrals (not computed here).
+  ! The azimuthal integrals of b01 (1-loop box), b022 (2-loop box) and
+  ! of t01, t022 (1- and 2-loop triangle), I = (B01, B022, T01, T022),
+  ! computed together in one adaptive integration: the triangle
+  ! integrands depend on the roots r1-r4 only, which the box ones share.
+  ! The triangle integrals are included with the first box for given
+  ! (MV, p1x, p2x, p2y) only; for the second one T01 = T022 = 0 here.
+  ! box_1loop_new and box_2loop are called with the same arguments for
+  ! each boson and t/u channel, and tri_2loop with the first five, so
+  ! the last few results are cached (keyed on the exact arguments, so
+  ! a new phase-space point or nf_epsrel always recomputes).
   subroutine angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, I)
     use incl_parameters, only: nf_epsrel, pi
     real(dp), intent(in) :: MV, MVH2, p1x, p2x, p2y, p3x, p3y
@@ -183,7 +186,12 @@ contains
     p3y_rk = p3y
     MVsq = MV**2
     MVHsq = MVH2
-    n = 2
+    ! The triangle integrals are needed once per boson: integrate them
+    ! along with the first box, the second box on its own
+    n = 4
+    do k = 1, ncache
+       if (all(cache_key((/1,3,4,5,8/),k) == args((/1,3,4,5,8/))) .and. cache_tri(k)) n = 2
+    enddo
     res = zero
     res(1:n) = adaptive_integral(nf_integrand, n, zero, 2.0_dp*pi)
     I = res
@@ -193,8 +201,9 @@ contains
     cache_next = mod(cache_next, ncache) + 1
   end subroutine angular_integrals
 
-  ! T01, T022 for the triangle, in one adaptive integration (the cache
-  ! lookup finds nothing until the box integrations include them)
+  ! T01, T022 for the triangle: from the cache if the box integrals
+  ! with the same (MV, p1x, p2x, p2y) have been computed, otherwise on
+  ! their own
   subroutine tri_angular_integrals(MV, p1x, p2x, p2y, TT01, TT022)
     use incl_parameters, only: nf_epsrel, pi
     real(dp), intent(in) :: MV, p1x, p2x, p2y
