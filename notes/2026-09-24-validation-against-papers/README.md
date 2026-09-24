@@ -374,6 +374,22 @@ in every printed digit. Wall times (8 runs in parallel on 12 cores):
 full HH NF 2332 s → 482 s, 2-loop runs 1720–1990 s → 370–440 s,
 1-loop runs 960–980 s → 410–445 s.
 
+**Regulator independence (fe67abd, 1a53e5e).** The integrands obey
+b12 = −2 b01 and t12 = −2 t01 point by point (1e-15 of the
+cancellation-free size at the dumped points), so the log(λ/M_V²)
+coefficients of the 2-loop box and triangle follow from the 1-loop
+integrals, and the log(λ/M_V²) terms cancel between the 1-loop square
+and the 2-loop interference for any λ. The numerical 1-loop triangle,
+−2 ∫t01/t11, agrees with the analytic f1 of `chi_tri1` to 1.7e-11
+(6000 points). New input `nf_regfact` (λ = `nf_regfact` M_V²,
+default 1). Same-seed runs with `nf_regfact` 0.01, 1 and 100 give
+identical results in every printed digit (HH all diagrams, HH
+triangles only, H); `ci/nf-checks.sh` checks this in CI. The HH
+triangle integrals are now computed together with the first box
+integrals per boson (15% fewer operations in the angular integrals).
+All NF runs of this section, repeated at the final commit, are
+identical in every printed digit to `runs/nonfact-adaptive/`.
+
 **HH Born normalisation (closed, accepted as is).** The HH Born numbers are
 0.25–0.3% below the paper (Σ −0.65%), well outside the 0.05% MC error.
 The paper does not state the PDF used for HH; it only says the EW
