@@ -1,0 +1,169 @@
+==== LHAPDF6 USING DEFAULT-TYPE LHAGLUE INTERFACE ====
+LHAPDF 6.5.5 loading /tmp/claude-9771/-home-thA371a-akarlber-cernbox-proVBFH-ci/9b436c78-fe81-4af1-8315-b2f11f3934b7/scratchpad/lhapdf/NNPDF30_nnlo_as_0118/NNPDF30_nnlo_as_0118_0000.dat
+NNPDF30_nnlo_as_0118 PDF set, member #0, version 2; LHAPDF ID = 261000
+  found input file powheg.input
+  opened powheg.input
+  powheginput keyword inclusive_only       set to    0.0000000000000000     
+  powheginput keyword qcd_order            set to    1.0000000000000000     
+  vbfnloinput keyword WMASS                set to    80.397999999999996     
+  vbfnloinput keyword ZMASS                set to    91.187600000000003     
+  vbfnloinput keyword WWIDTH               set to    2.1410000000000000     
+  vbfnloinput keyword ZWIDTH               set to    2.4952000000000001     
+  vbfnloinput keyword NFLAVOUR             set to    5.0000000000000000     
+  vbfnloinput keyword HMASS                set to    125.00000000000000     
+  vbfnloinput keyword HWIDTH               set to    4.0299999999999997E-003
+  powheginput keyword ebeam1               set to    6500.0000000000000     
+  powheginput keyword ebeam2               set to    6500.0000000000000     
+  powheginput keyword higgsbreitwigner     set to    0.0000000000000000     
+  powheginput keyword higgsmasswindow      set to    30.000000000000000     
+  powheginput keyword runningscales        set to    1.0000000000000000     
+  powheginput keyword readingrid           absent; set to   -1000000.0000000000     
+  powheginput keyword writeoutgrid         absent; set to   -1000000.0000000000     
+  powheginput keyword nonfact              set to    1.0000000000000000     
+  powheginput keyword nf_epsrel            absent; set to   -1000000.0000000000     
+  powheginput keyword niter                absent; set to   -1000000.0000000000     
+ Non factorisable contributions are being computed on their own.  All factorisable contributions have been turned off.
+  powheginput keyword tensorME             absent; set to   -1000000.0000000000     
+  powheginput keyword tri_off              set to    1.0000000000000000     
+ triangles turned OFF!!!
+  powheginput keyword tri1_off             absent; set to   -1000000.0000000000     
+  powheginput keyword tri2_off             set to    1.0000000000000000     
+ 2 loop triangles turned OFF!!!
+  powheginput keyword box1_off             absent; set to   -1000000.0000000000     
+  powheginput keyword box2_off             set to    1.0000000000000000     
+ 2 loop boxes turned OFF!!!
+  powheginput keyword box_t_off            absent; set to   -1000000.0000000000     
+  powheginput keyword box_u_off            absent; set to   -1000000.0000000000     
+  powheginput keyword facscfact            set to    1.0000000000000000     
+  powheginput keyword renscfact            set to    1.0000000000000000     
+  powheginput keyword lhans1               set to    261000.00000000000     
+  powheginput keyword ncall1               set to    200000.00000000000     
+  powheginput keyword ncall2               set to    1000000.0000000000     
+  powheginput keyword itmx1                set to    2.0000000000000000     
+  powheginput keyword itmx2                set to    2.0000000000000000     
+  powheginput keyword iseed                set to    20.000000000000000     
+  powheginput keyword manyseeds            set to    1.0000000000000000     
+ enter which seed
+  powheginput keyword toypdf               absent; set to   -1000000.0000000000     
+  powheginput keyword higgsfixedwidth      absent; set to   -1000000.0000000000     
+  powheginput keyword complexpolescheme    absent; set to   -1000000.0000000000     
+  powheginput keyword toyalphas            absent; set to   -1000000.0000000000     
+  powheginput keyword test_Q0              absent; set to   -1000000.0000000000     
+  powheginput keyword muR_PDF              absent; set to   -1000000.0000000000     
+  powheginput keyword lambdafact           absent; set to   -1000000.0000000000     
+  powheginput keyword cVVHHfact            absent; set to   -1000000.0000000000     
+  powheginput keyword cVVHfact             absent; set to   -1000000.0000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ Quick test that PDFs have been read in correctly
+ lhapdf:    0.0000000000000000        2.0579617846470149E-002   4.7907699460031622E-002   6.8470526803402862E-002  0.12369968960773327       0.15700653256300873        1.4543666551339165       0.41122354746717249       0.61433981862543197        7.9995953128941449E-002   4.7387704418622868E-002   2.0478682635651457E-002   0.0000000000000000     
+ hoppet:    0.0000000000000000        2.0578489745260452E-002   4.7905818375660117E-002   6.8467812048841031E-002  0.12369837406926340       0.15700520430162632        1.4543281851723802       0.41122430228920881       0.61433812035066937        7.9994116882370223E-002   4.7385807350167737E-002   2.0477551325008447E-002   0.0000000000000000     
+
+ input parameters for vegas: ndim= 11 ncall= 198656.
+                             it=    0 itmx=    2
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+                              xl( 8)=   0.000     xu( 8)=   1.000    
+                              xl( 9)=   0.000     xu( 9)=   1.000    
+                              xl(10)=   0.000     xu(10)=   1.000    
+                              xl(11)=   0.000     xu(11)=   1.000    
+
+ iteration no.  1: integral = 0.1158344E-03+/-  0.27E-04
+ all iterations: integral = 0.1158344E-03+/-  0.27E-04 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral = 0.1029305E-03+/-  0.23E-05
+ all iterations: integral = 0.1030270E-03+/-  0.23E-05 chi**2/it'n = 0.23    
+ ****************************************************
+ * Writing out vegas grid to grids-0001.dat                                                            *
+ ****************************************************
+#--------------------------------------------------------------------------
+#                         FastJet release 3.5.1
+#                 M. Cacciari, G.P. Salam and G. Soyez                  
+#     A software package for jet finding and analysis at colliders      
+#                           https://fastjet.fr                           
+#	                                                                      
+# Please cite EPJC72(2012)1896 [arXiv:1111.6097] if you use this package
+# for scientific work and optionally PLB641(2006)57 [hep-ph/0512210].   
+#                                                                       
+# FastJet is provided without warranty under the GNU GPL v2 or higher.  
+# It uses T. Chan's closest pair algorithm, S. Fortune's Voronoi code
+# and 3rd party plugin jet algorithms. See COPYING file for details.
+#--------------------------------------------------------------------------
+Thanks for using LHAPDF 6.5.5. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+-----------------------------------------------------------[1m
+                Welcome to HOPPET v. 2.3.0
+    Higher Order Perturbative Parton Evolution Toolkit     [0m
+-----------------------------------------------------------
+                  Written (2001-2025) by                   
+     Frederic Dreyer, Alexander Karlberg, Paolo Nason,     
+      Juan Rojo, Gavin P. Salam and Giulia Zanderighi      
+
+ It is made available under the GNU public license.        
+ If using it for scientific work, please cite              
+ G.P. Salam & J. Rojo, CPC 180(2009)120 (arXiv:0804.3755). 
+ and A. Karlberg, P. Nason, G.P. Salam, G. Zanderighi      
+ & F. Dreyer (arXiv:2510.09310).                           
+ 
+ You are also encouraged to cite the original references,  
+ for LO, NLO, NNLO, and N3LO splitting functions, the QCD  
+ 1, 2, 3, and 4 loop beta functions and the PDF and        
+ coupling mass threshold matching functions. Additionally  
+ the DIS coefficient functions should be cited when used.  
+-----------------------------------------------------------
+   1.0302700837702816E-004
+ upper limit incompatible with bin size
+ replacing    800.00000000000000       with    810.00000000000000     
+  in histogram ptH_h
+
+ input parameters for vegas: ndim= 11 ncall= 885735.
+                             it=    3 itmx=    2
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+                              xl( 8)=   0.000     xu( 8)=   1.000    
+                              xl( 9)=   0.000     xu( 9)=   1.000    
+                              xl(10)=   0.000     xu(10)=   1.000    
+                              xl(11)=   0.000     xu(11)=   1.000    
+  powheginput keyword ptalljetmin          set to    25.000000000000000     
+  powheginput keyword ptjetmin             set to    25.000000000000000     
+  powheginput keyword mjjmin               set to    600.00000000000000     
+  powheginput keyword deltay_jjmin         set to    4.5000000000000000     
+  powheginput keyword yjetmax              set to    4.5000000000000000     
+  powheginput keyword Rsep_jjmin           set to   0.40000000000000002     
+  powheginput keyword jet_opphem           set to    1.0000000000000000     
+ **************************************************
+ **************************************************
+                 ANALYSIS CUTS                     
+ **************************************************
+ **************************************************
+ ptalljetmin =    25.000000000000000     
+ ptjetmin =    25.000000000000000     
+ yjetmax =    4.5000000000000000     
+ mjjmin =    600.00000000000000     
+ deltay_jjmin =    4.5000000000000000     
+ Rsep_jjmin =   0.40000000000000002     
+ jet_opphem =  T
+ **************************************************
+ **************************************************
+  powheginput keyword ptjsqrtsmax          absent; set to   -1000000.0000000000     
+
+ iteration no.  1: integral = 0.1012501E-03+/-  0.36E-06
+ all iterations: integral = 0.1012501E-03+/-  0.36E-06 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral = 0.1015665E-03+/-  0.25E-06
+ all iterations: integral = 0.1014606E-03+/-  0.21E-06 chi**2/it'n = 0.52    
+

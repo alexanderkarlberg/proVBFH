@@ -340,6 +340,40 @@ which has the strongest cancellation, moves towards the paper
 The paper was computed with the old tensor code. H NF is unaffected
 (proVBFH uses the analytic matrix element).
 
+**NF speed-up (f37f0da, d593bb4, 03a4587).** Each phase-space point
+of an NF run needs integrals over the gluon azimuth ξ ∈ [0, 2π] of the
+eikonal integrands of `nonfact_expressions.f` (HH: 8 per boson, H: 2).
+They were done with `runge_kutta_dx`, `niter` = 100 steps of 4 calls.
+The integrands do not depend on y, so this is Simpson's rule with the
+midpoint and the left endpoint evaluated twice: 400 calls per
+integral, half of them redundant. A study on 9000 argument sets dumped
+from HH and H NF runs (`scripts/nf-quadrature/`) showed:
+
+- For typical kinematics the integrands are smooth (the old rule is
+  accurate to 1e-15 at the median), but at large transverse momenta
+  they have peaks of width ~ M_V/p_T where ξ aligns with an external
+  transverse momentum. The old rule was then off by up to 16% of
+  ∫|f| (t022; 2e-3 at the 99th percentile). The trapezoidal and
+  Gauss-Legendre rules converge slowly too.
+- Adaptive Gauss-Kronrod (G7/K15, 4 initial intervals, relative
+  accuracy 1e-8 of ∫|f|) needs 77–114 calls on average, with a maximum
+  error of 1e-9 of ∫|f|.
+- The integrals multiplied by log(λ/M_V²) (b12, t12) are always zero,
+  since λ = M_V² (3 of the 8 HH integrals, 1 of the 2 H ones).
+- The 1-loop and 2-loop box integrands share their roots and logs
+  (b01 = −Σ L_k/D_k, b022 = −2 Σ L_k²/D_k); integrating them together
+  saves another factor ~1.6 for HH.
+- The roots were single precision (`complex*8`): typically 5e-9,
+  at most 1.6e-4 relative on the integrals.
+
+The new input `nf_epsrel` (default 1e-8) replaces `niter`. Rerunning
+the NF runs of this section with the new code (same statistics and
+seeds, `runs/nonfact-adaptive/`) reproduces the HH table above
+(after the tensor fixes) and the H result (−0.0030251 ± 0.0000098 pb)
+in every printed digit. Wall times (8 runs in parallel on 12 cores):
+full HH NF 2332 s → 482 s, 2-loop runs 1720–1990 s → 370–440 s,
+1-loop runs 960–980 s → 410–445 s.
+
 **HH Born normalisation (closed, accepted as is).** The HH Born numbers are
 0.25–0.3% below the paper (Σ −0.65%), well outside the 0.05% MC error.
 The paper does not state the PDF used for HH; it only says the EW
@@ -379,6 +413,8 @@ since the NF validation does not depend on it.
   - `timing/`: tensor vs non-tensor timing
   - `nonfact-after-tensor-fix/`: the HH NF and Born runs repeated
     with the fixed tensor code
+  - `nonfact-adaptive/`: the H and HH NF runs repeated with the
+    adaptive azimuthal integration
   - `tensor-fix/`: logs of the same-point debug runs of the correction
     above (`runs-dbg4-*`: zero widths, physical widths, no F3;
     `runs-dbg5-*`: mirror-averaged), same-seed tensor vs analytic runs
@@ -412,6 +448,8 @@ since the NF validation does not depend on it.
   - `f3-check/`: the independent, index-correct evaluation of the F3
     terms at a physical point, compared with the analytic `F3F3` and
     with the old tensor convention (see its README).
+  - `nf-quadrature/`: the quadrature study of the NF azimuthal
+    integrals (see its README).
   - `dbg_patch.py`: same-point debug harness for the current code
     (analytic, new tensor and old tensor matrix element on the same
     points; `NOF3`, `MIRROR` switches), used for the tables in the
