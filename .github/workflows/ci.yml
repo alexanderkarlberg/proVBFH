@@ -34,7 +34,7 @@ jobs:
       lhapdf: ${{ steps.resolve.outputs.lhapdf }}
       fastjet: ${{ steps.resolve.outputs.fastjet }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: resolve
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,9 +58,9 @@ jobs:
       HOPPET_VERSION: ${{ needs.versions.outputs.hoppet }}
       LHAPDF_VERSION: ${{ needs.versions.outputs.lhapdf }}
       FASTJET_VERSION: ${{ needs.versions.outputs.fastjet }}
-      PREFIX: ${{ github.workspace }}/../deps
+      PREFIX: ${{ github.workspace }}/.deps
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install compilers (Linux)
         if: runner.os == 'Linux'
@@ -84,7 +84,7 @@ jobs:
       # dependencies to be rebuilt on every run.
       - name: Restore dependencies
         id: cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ${{ env.PREFIX }}
           key: deps-${{ runner.os }}-${{ runner.arch }}-gfortran${{ steps.compiler.outputs.gfortran }}-hoppet${{ env.HOPPET_VERSION }}-lhapdf${{ env.LHAPDF_VERSION }}-fastjet${{ env.FASTJET_VERSION }}-${{ hashFiles('ci/install-deps.sh') }}
@@ -95,7 +95,7 @@ jobs:
 
       - name: Save dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: ${{ env.PREFIX }}
           key: ${{ steps.cache.outputs.cache-primary-key }}
@@ -151,7 +151,7 @@ jobs:
 
       - name: Upload run directories
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: runs-${{ matrix.os }}
           path: ${{ env.RUNROOT }}
