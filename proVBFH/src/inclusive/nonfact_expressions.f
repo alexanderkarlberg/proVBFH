@@ -296,7 +296,7 @@ c.....................................................................
 ! Below are the roots r1 - r6 as defined in Lorenzo's logbook
       function r1(MV2, p1x, xi)
       real*8 MV2, p1x, xi
-      complex*8 r1
+      complex*16 r1
       r1 = p1x*Cos(xi) - ((0,1)*
      -     Sqrt(2*MV2 + p1x**2 - p1x**2*Cos(2*xi)))/
      -   Sqrt(2.d0)
@@ -304,7 +304,7 @@ c.....................................................................
 
       function r2(MV2, p1x, xi)
       real*8 MV2, p1x, xi
-      complex*8 r2
+      complex*16 r2
       r2 = p1x*Cos(xi) + ((0,1)*
      -     Sqrt(2*MV2 + p1x**2 - p1x**2*Cos(2*xi)))/
      -   Sqrt(2.d0)
@@ -312,7 +312,7 @@ c.....................................................................
 
       function r3(MV2, p2x, p2y, xi)
       real*8 MV2, p2x, p2y, xi
-      complex*8 r3
+      complex*16 r3
       r3 = -(p2x*Cos(xi)) - p2y*Sin(xi) - 
      -  (0,0.5)*Sqrt(4*(MV2 + p2x**2 + p2y**2) - 
      -     4*(p2x*Cos(xi) + p2y*Sin(xi))**2)
@@ -320,7 +320,7 @@ c.....................................................................
 
       function r4(MV2, p2x, p2y, xi)
       real*8 MV2, p2x, p2y, xi
-      complex*8 r4
+      complex*16 r4
       r4 = -(p2x*Cos(xi)) - p2y*Sin(xi) + 
      -  (0,0.5)*Sqrt(4*(MV2 + p2x**2 + p2y**2) - 
      -     4*(p2x*Cos(xi) + p2y*Sin(xi))**2)
@@ -328,7 +328,7 @@ c.....................................................................
 
       function r5(MV2, p1x, p3x, p3y, xi)
       real*8 MV2, p1x, p3x, p3y, xi
-      complex*8 r5
+      complex*16 r5
       r5 = p1x*Cos(xi) + p3x*Cos(xi) + p3y*Sin(xi) - 
      -  (0,0.5)*Sqrt(4*
      -      (MV2 + p1x**2 + 2*p1x*p3x + p3x**2 + p3y**2)
@@ -337,7 +337,7 @@ c.....................................................................
 
       function r6(MV2, p1x, p3x, p3y, xi)
       real*8 MV2, p1x, p3x, p3y, xi
-      complex*8 r6
+      complex*16 r6
       r6 = p1x*Cos(xi) + p3x*Cos(xi) + p3y*Sin(xi) + 
      -  (0,0.5)*Sqrt(4*
      -      (MV2 + p1x**2 + 2*p1x*p3x + p3x**2 + p3y**2)
@@ -347,7 +347,7 @@ c.....................................................................
 ! 1-loop Triangle
       function t01(MV2, pi, p1x, p2x, p2y, xi)
       real*8 MV, MV2, pi, p1x, p2x, p2y, xi
-      complex*8 r1v, r2v, r3v, r4v
+      complex*16 r1v, r2v, r3v, r4v
       real*8 t01
       MV = sqrt(MV2)
       r1v=r1(MV2, p1x, xi)
@@ -370,7 +370,7 @@ c.....................................................................
 !     1-loop Box
       function b01(MV2, pi, p1x, p2x, p2y, p3x, p3y,xi)
       real*8 MV, MV2, pi, p1x, p2x, p2y, p3x, p3y, xi
-      complex*8 r1v, r2v, r3v, r4v, r5v, r6v
+      complex*16 r1v, r2v, r3v, r4v, r5v, r6v
       real*8 b01
       MV = sqrt(MV2)
       r1v=r1(MV2, p1x, xi)
@@ -404,7 +404,7 @@ c.....................................................................
       
       function t022(MV2, pi, p1x, p2x, p2y, xi)
       real*8 MV, MV2, pi, p1x, p2x, p2y, xi
-      complex*8 r1v, r2v, r3v, r4v
+      complex*16 r1v, r2v, r3v, r4v
       real*8 t022
       MV = sqrt(MV2)
       r1v=r1(MV2, p1x, xi)
@@ -418,7 +418,7 @@ c.....................................................................
       
       function t12(MV2, pi, p1x, p2x, p2y, xi)
       real*8 MV, MV2, pi, p1x, p2x, p2y, xi
-      complex*8 r1v, r2v, r3v, r4v
+      complex*16 r1v, r2v, r3v, r4v
       real*8 t12
       MV = sqrt(MV2)
       r1v=r1(MV2, p1x, xi)
@@ -447,8 +447,8 @@ c.....................................................................
 
       function b022(MV2, pi, p1x, p2x, p2y, p3x, p3y, xi)
       real*8 MV, MV2, pi, p1x, p2x, p2y, p3x, p3y, xi
-      complex*8 r1v, r2v, r3v, r4v, r5v, r6v
-      complex*8 b022
+      complex*16 r1v, r2v, r3v, r4v, r5v, r6v
+      complex*16 b022
       MV = sqrt(MV2)
       r1v=r1(MV2, p1x, xi)
       r2v=r2(MV2, p1x, xi)
@@ -466,8 +466,8 @@ c.....................................................................
 
       function b12(MV2, pi, p1x, p2x, p2y, p3x, p3y, xi)
       real*8 MV, MV2, pi, p1x, p2x, p2y, p3x, p3y, xi
-      complex*8 r1v, r2v, r3v, r4v, r5v, r6v
-      complex*8 b12
+      complex*16 r1v, r2v, r3v, r4v, r5v, r6v
+      complex*16 b12
       MV = sqrt(MV2)
       r1v=r1(MV2, p1x, xi)
       r2v=r2(MV2, p1x, xi)

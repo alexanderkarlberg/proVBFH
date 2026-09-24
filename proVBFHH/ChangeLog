@@ -1,5 +1,10 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/nonfact_expressions.f:
+	The roots r1-r6 and the integrands of the non-factorisable
+	corrections were complex*8, i.e. single precision (effect on the
+	angular integrals: typically 5e-9, at most 2e-4). Now complex*16.
+
 	* Makefile:
 	Build on macOS: the Fortran module directory flag (-J) is no longer
 	passed to the C++ compiler (clang++ rejects it), and combine_runs is
