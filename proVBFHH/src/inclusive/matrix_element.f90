@@ -387,9 +387,24 @@ contains
   end function eval_matrix_element
 
   !----------------------------------------------------------------------
-  ! This function returns the same output as eval_matrix_element, but
-  ! is done with numerical tensor manipulations. It is significantly
-  ! slower than the analytically computed routine above.
+  ! The same matrix element as eval_matrix_element, computed with
+  ! numerical tensor contractions. Unlike eval_matrix_element it also
+  ! includes the F1 x F3 and F2 x F3 terms that arise from the
+  ! imaginary parts of the propagators with finite widths. They are
+  ! parity odd, so they integrate to zero for the cross section and
+  ! any parity-even distribution; otherwise the two agree to machine
+  ! precision. The diagram switches (tri_off, box_t_off, ...) and the
+  ! non-factorisable corrections are only available here.
+  !
+  ! The hadronic tensor of beam b at order i is
+  !   W_b^(i) = sum_k Fk_b^(i) G_b(k),
+  ! with the basis tensors G_b(1:3) of hadronic_basis, which depend
+  ! neither on the order nor on the boson. The contraction
+  ! Tr[(W_1 M)(M^* W_2)] is therefore computed once per phase-space
+  ! point and boson for each pair of basis tensors (trace_matrix), and
+  ! the orders are combined as in eval_matrix_element, i.e. summing
+  ! the products of beam-1 order i and beam-2 order j with
+  ! i + j = n + 1 for n = order_start..order_stop (order_sum).
   function eval_matrix_element_tensor(order_start,order_stop, x1, x2, P1, P2, q1, q2, &
        pH1, pH2, ptH1H2) result(res)
     use nonfact
@@ -400,119 +415,38 @@ contains
     !----------------------------------------------------------------------
     real(dp) :: Q1sq, Q2sq, Q1val, Q2val
     real(dp) :: muR1val, muR2val, muF1val, muF2val
-    real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4), F1sum(-6:7), F2sum(-6:7)
+    real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4)
     real(dp) :: WW_norm, ZZ_norm, overall_norm
-    real(dp) :: P1q1, P2q2, q1q1, q2q2, k1k2sq, q1k1sq, q1k2sq
-    integer  :: i, j
+    real(dp) :: TW(3,3), TZ(3,3), T1(3,3), T2(3,3)
     logical, parameter :: WpWm = .true., WmWp = .true., ZZ = .true.
-!    logical, parameter :: WpWm = .true., WmWp = .true., ZZ = .false.
     integer, parameter :: Wp=1, Wm=-1, Z=0
-    integer :: iorder
-    type(tensors) :: M(-1:1),Mstar(-1:1), Wx1(-1:1), Wx2(-1:1)
-    type(tensors) :: g_mu_nu, q1mu, q2mu, P1mu, P2mu, k1mu, k2mu
-    type(tensors) ::  P1hatmu, P2hatmu, dummy1, dummy2, T3(2), MWx1(-1:1), MstarWx2(-1:1)
-    real * 8 :: sigma, sigmaWpWm, sigmaWmWp, sigmaZZ
-    real(dp) :: res2, alphas_lcl,ptj1,ptj2,muR_nonfact
-    type(tensors) :: M1loop(-1:1), M1loopstar(-1:1), M2loop(-1:1), M2loopstar(-1:1)
+    integer :: iWp(3), iWm(3), iZ(3), i
+    type(tensors) :: M(Z:Wp), Mstar(Z:Wp), G1(3), G2(3), g_mu_nu
+    type(tensors) :: M1loop(Z:Wp), M1loopstar(Z:Wp), M2loop(Z:Wp), M2loopstar(Z:Wp)
     ! Tensors to be passed to nonfact loop routines
     type(tensors) :: VV_H_HH(Z:Wp), VVHH(Z:Wp), VHVHVt(Z:Wp), VHVHVu(Z:Wp)
+    real(dp) :: sigma, alphas_lcl, muR_nonfact
 
-    ! Start by initialising all the tensors needed
+    ! Structure-function indices of F1, F2, F3 for each boson
+    iWp = (/ iF1Wp, iF2Wp, iF3Wp /)
+    iWm = (/ iF1Wm, iF2Wm, iF3Wm /)
+    iZ  = (/ iF1Z,  iF2Z,  iF3Z  /)
+
     if(.not.gmunu%initialised) then
        call SetMetric(1)
     endif
-    
-    do i = -1,1
-       if(.not.Wx1(i)%initialised) then
-          call InitTensor(Wx1(i),2,.false.)
-       else
-          call ResetTensor(Wx1(i))
-       endif
-       if(.not.Wx2(i)%initialised) then
-          call InitTensor(Wx2(i),2,.false.)
-       else
-          call ResetTensor(Wx2(i))
-       endif
-    enddo
-    do i=0,1
-       if(.not.VV_H_HH(i)%initialised) then
-          call InitTensor(VV_H_HH(i),2,.false.)
-       else
-          call ResetTensor(VV_H_HH(i))
-       endif
-       if(.not.VVHH(i)%initialised) then
-          call InitTensor(VVHH(i),2,.false.)
-       else
-          call ResetTensor(VVHH(i))
-       endif
-       if(.not.VHVHVt(i)%initialised) then
-          call InitTensor(VHVHVt(i),2,.false.)
-       else
-          call ResetTensor(VHVHVt(i))
-       endif
-       if(.not.VHVHVu(i)%initialised) then
-          call InitTensor(VHVHVu(i),2,.false.)
-       else
-          call ResetTensor(VHVHVu(i))
-       endif
-    enddo
-    if(.not.q1mu%initialised) then
-       call InitTensor(q1mu,1,.false.)
-    else
-       call ResetTensor(q1mu)
-    endif
-    if(.not.q2mu%initialised) then
-       call InitTensor(q2mu,1,.false.)
-    else
-       call ResetTensor(q2mu)
-    endif
-    
-    if(.not.P1mu%initialised) then
-       call InitTensor(P1mu,1,.false.)
-    else
-       call ResetTensor(P1mu)
-    endif
-    if(.not.P2mu%initialised) then
-       call InitTensor(P2mu,1,.false.)
-    else
-       call ResetTensor(P2mu)
-    endif
-
-    if(.not.T3(1)%initialised) then
-       call InitTensor(T3(1),2,.false.)
-    else
-       call ResetTensor(T3(1))
-    endif
-    if(.not.T3(2)%initialised) then
-       call InitTensor(T3(2),2,.false.)
-    else
-       call ResetTensor(T3(2))
-    endif
-    
     g_mu_nu = gmunu
     g_mu_nu%up = .false. ! Lower all the indices
 
-    ! Copy the four-vectors into tensor types. The indices are down,
-    ! so the components are lowered with the metric (storing the
-    ! contravariant components directly would describe the
-    ! parity-flipped vectors, which gave wrong F3 interference terms
-    ! between the g^mu_nu and the t/u-channel parts of M)
-    call InitFourVector(q1mu,q1,.false.)
-    call InitFourVector(q2mu,q2,.false.)
-    call InitFourVector(P1mu,P1,.false.)
-    call InitFourVector(P2mu,P2,.false.)
+    do i = Z, Wp
+       call InitTensor(VV_H_HH(i),2,.false.)
+       call InitTensor(VVHH(i),2,.false.)
+       call InitTensor(VHVHVt(i),2,.false.)
+       call InitTensor(VHVHVu(i),2,.false.)
+    enddo
 
-    !Compute all combinations of dot-products
-    q1q1 = q1 .dot. q1
-    q2q2 = q2 .dot. q2
-    P1q1 = P1 .dot. q1
-    P2q2 = P2 .dot. q2
-
-    P1hatmu = P1mu - P1q1/q1q1 * q1mu 
-    P2hatmu = P2mu - P2q2/q2q2 * q2mu
-
-    Q1sq = -q1q1
-    Q2sq = -q2q2
+    Q1sq = -(q1 .dot. q1)
+    Q2sq = -(q2 .dot. q2)
     Q1val = sqrt(Q1sq)
     Q2val = sqrt(Q2sq)
 
@@ -521,9 +455,9 @@ contains
     muF1val = muF1(Q1val, Q2val, ptH1H2)
     muF2val = muF2(Q1val, Q2val, ptH1H2)
 
-    ! Compute VVHH currents
+    ! Compute VVHH currents. The matrix element is identical between
+    ! W+ and W-, so only Wp and Z are needed.
     M(Wp) = VVtoHH_tensor(Wp,q1,q2,pH1,pH2,g_mu_nu,VV_H_HH(Wp), VVHH(Wp), VHVHVt(Wp), VHVHVu(Wp))
-    M(Wm) = M(Wp) ! Matrix element is identical between W+/W-
     M(Z) = VVtoHH_tensor(Z,q1,q2,pH1,pH2,g_mu_nu,VV_H_HH(Z), VVHH(Z), VHVHVt(Z), VHVHVu(Z))
 
     ! Compute the overall numerical factors
@@ -533,135 +467,69 @@ contains
     ZZ_norm =  MZ**8 / (((Q1sq + MZsq)**2 + Z_WIDTH**2 * MZsq)& 
          & * ((Q2sq + MZsq)**2 + Z_WIDTH**2 * MZsq ))
     
-  ! We need to raise the indeces of M and Mstar
-    call raise(M(Wp),1) ! Raise first index
-    call raise(M(Wp),2) ! Raise second index
-    call raise(M(Wm),1) ! Raise first index
-    call raise(M(Wm),2) ! Raise second index
-    call raise(M(Z),1) ! Raise first index
-    call raise(M(Z),2) ! Raise second index
-    
-    Mstar = M ! For initialisation
-    Mstar(Wp)%values = dconjg(M(Wp)%values) ! Complex conjugate
-    Mstar(Wm)%values = dconjg(M(Wm)%values) ! Complex conjugate
-    Mstar(Z)%values = dconjg(M(Z)%values) ! Complex conjugate
+    ! We need to raise the indices of M and Mstar
+    do i = Z, Wp
+       call raise(M(i),1) ! Raise first index
+       call raise(M(i),2) ! Raise second index
+       Mstar(i) = M(i)
+       Mstar(i)%values = dconjg(M(i)%values) ! Complex conjugate
+    enddo
 
     if(non_fact) then
        if(order_stop.gt.1) stop 'Cannot do non factorisable corrections'
-       !       ptj1 = q1(1)**2 + q1(2)**2
-       !       ptj2 = q2(1)**2 + q2(2)**2
-       !       muR_nonfact = max((ptj1*ptj2)**0.25_dp,Qmin)
-       !       muR_nonfact = muR_nonfact * xmur
        muR_nonfact = sqrt(muR1val * muR2val)
        alphas_lcl = Value(coupling,muR_nonfact)
        ! Eq. 6 in 1906.10899 for Nc = 3
        overall_norm = overall_norm * 2.0_dp/9.0_dp * alphas_lcl**2
 
-       ! Compute 1-loop nonfact VVHH currents
-       M1loop(Wp) = nonfact_1loop_VVtoHH_tensor(Wp, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH(Wp), &
-            & VVHH(Wp), VHVHVt(Wp), VHVHVu(Wp))
-       M1loop(Wm) = M1loop(Wp) ! Matrix element is identical between W+/W-
-       M1loop(Z) = nonfact_1loop_VVtoHH_tensor(Z, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH(Z), &
-            & VVHH(Z), VHVHVt(Z), VHVHVu(Z))
-       
-       ! We need to raise the indeces of M and Mstar
-       call raise(M1loop(Wp),1) ! Raise first index
-       call raise(M1loop(Wp),2) ! Raise second index
-       call raise(M1loop(Wm),1) ! Raise first index
-       call raise(M1loop(Wm),2) ! Raise second index
-       call raise(M1loop(Z),1) ! Raise first index
-       call raise(M1loop(Z),2) ! Raise second index
-       
-       M1loopstar = M1loop ! For initialisation
-       M1loopstar(Wp)%values = dconjg(M1loop(Wp)%values) ! Complex conjugate
-       M1loopstar(Wm)%values = dconjg(M1loop(Wm)%values) ! Complex conjugate
-       M1loopstar(Z)%values = dconjg(M1loop(Z)%values) ! Complex conjugate
-       
-       ! Compute 2-loop nonfact VVHH currents
-       M2loop(Wp) = nonfact_2loop_VVtoHH_tensor(Wp, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH(Wp), &
-            & VVHH(Wp), VHVHVt(Wp), VHVHVu(Wp))
-       M2loop(Wm) = M2loop(Wp) ! Matrix element is identical between W+/W-
-       M2loop(Z) = nonfact_2loop_VVtoHH_tensor(Z, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH(Z), &
-            & VVHH(Z), VHVHVt(Z), VHVHVu(Z))
-
-       ! We need to raise the indeces of M and Mstar
-       call raise(M2loop(Wp),1) ! Raise first index
-       call raise(M2loop(Wp),2) ! Raise second index
-       call raise(M2loop(Wm),1) ! Raise first index
-       call raise(M2loop(Wm),2) ! Raise second index
-       call raise(M2loop(Z),1) ! Raise first index
-       call raise(M2loop(Z),2) ! Raise second index
-       
-       M2loopstar = M2loop ! For initialisation
-       M2loopstar(Wp)%values = dconjg(M2loop(Wp)%values) ! Complex conjugate
-       M2loopstar(Wm)%values = dconjg(M2loop(Wm)%values) ! Complex conjugate
-       M2loopstar(Z)%values = dconjg(M2loop(Z)%values) ! Complex conjugate
+       do i = Z, Wp
+          ! Compute 1-loop and 2-loop nonfact VVHH currents
+          M1loop(i) = nonfact_1loop_VVtoHH_tensor(i, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH(i), &
+               & VVHH(i), VHVHVt(i), VHVHVu(i))
+          M2loop(i) = nonfact_2loop_VVtoHH_tensor(i, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH(i), &
+               & VVHH(i), VHVHVt(i), VHVHVu(i))
+          ! We need to raise the indices of M and Mstar
+          call raise(M1loop(i),1)
+          call raise(M1loop(i),2)
+          call raise(M2loop(i),1)
+          call raise(M2loop(i),2)
+          M1loopstar(i) = M1loop(i)
+          M1loopstar(i)%values = dconjg(M1loop(i)%values)
+          M2loopstar(i) = M2loop(i)
+          M2loopstar(i)%values = dconjg(M2loop(i)%values)
+       enddo
     endif
 
+    ! Contract the basis tensors of the two hadronic tensors with the
+    ! matrix elements
+    call hadronic_basis(P1, q1, G1)
+    call hadronic_basis(P2, q2, G2)
+    if(.not.non_fact) then
+       call trace_matrix(G1, G2, M(Wp), Mstar(Wp), TW)
+       call trace_matrix(G1, G2, M(Z), Mstar(Z), TZ)
+    else
+       ! 1-loop squared, plus the interference of the 2-loop currents
+       ! with the Born
+       call trace_matrix(G1, G2, M1loop(Wp), M1loopstar(Wp), TW)
+       call trace_matrix(G1, G2, M2loop(Wp), Mstar(Wp), T1)
+       call trace_matrix(G1, G2, M(Wp), M2loopstar(Wp), T2)
+       TW = TW + T1 + T2
+       call trace_matrix(G1, G2, M1loop(Z), M1loopstar(Z), TZ)
+       call trace_matrix(G1, G2, M2loop(Z), Mstar(Z), T1)
+       call trace_matrix(G1, G2, M(Z), M2loopstar(Z), T2)
+       TZ = TZ + T1 + T2
+    endif
 
-    ! We perform the contraction between the levi-civita tensor and
-    ! P_i and q_i explicitly, as implementing rank-4 tensors just for
-    ! the levi-civita symbol is tedious. So T3(i) is given by
-    ! epsilon_mu_nu_rho_sigma * P_i^rho * q_i^sigma, with lower
-    ! indices mu, nu and epsilon_0123 = +1, built from the
-    ! contravariant components P_i(:), q_i(:).
-
-    T3(1)%values(0,1) =   P1(2)*q1(3) &
-         &              - P1(3)*q1(2)
-    T3(1)%values(0,2) = - P1(1)*q1(3) &
-         &              + P1(3)*q1(1) 
-    T3(1)%values(0,3) =   P1(1)*q1(2) &
-         &              - P1(2)*q1(1) 
-    T3(1)%values(1,2) = - P1(3)*q1(0) &
-         &              + P1(0)*q1(3) 
-    T3(1)%values(1,3) =   P1(2)*q1(0) &
-         &              - P1(0)*q1(2) 
-    T3(1)%values(2,3) = - P1(1)*q1(0) &
-         &              + P1(0)*q1(1) 
-
-    T3(2)%values(0,1) =   P2(2)*q2(3) &
-         &              - P2(3)*q2(2)
-    T3(2)%values(0,2) = - P2(1)*q2(3) &
-         &              + P2(3)*q2(1) 
-    T3(2)%values(0,3) =   P2(1)*q2(2) &
-         &              - P2(2)*q2(1) 
-    T3(2)%values(1,2) = - P2(3)*q2(0) &
-         &              + P2(0)*q2(3) 
-    T3(2)%values(1,3) =   P2(2)*q2(0) &
-         &              - P2(0)*q2(2) 
-    T3(2)%values(2,3) = - P2(1)*q2(0) &
-         &              + P2(0)*q2(1) 
-
-    ! Use anti-symmetric property    
-    do i = 0,3
-       do j = i,3
-          T3(1)%values(j,i) = - T3(1)%values(i,j)
-          T3(2)%values(j,i) = - T3(2)%values(i,j)
-       enddo
-    enddo
-
-    ! And now mulitply with overall factor i
-    T3(1)%values(:,:) = cmplx(zero,one,kind=dp) * T3(1)%values(:,:)
-    T3(2)%values(:,:) = cmplx(zero,one,kind=dp) * T3(2)%values(:,:)
-    
-    !These will contain the full structure functions for the two protons
-    F1sum = zero
-    F2sum = zero
-    
     ! Compute the LO structure funtion by adding all the pieces
     ! from tables
     Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
     Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
-    F1sum(:) = Fx1(:,1)
-    F2sum(:) = Fx2(:,1)
 
     if (order_stop.ge.2) then
        ! Compute the NLO structure funtion by adding all the pieces
        ! from tables
        Fx1(:,2) = two*F_NLO(x1, Q1val, muR1val, muF1val)
        Fx2(:,2) = two*F_NLO(x2, Q2val, muR2val, muF2val)
-       F1sum(:) = F1sum(:) + Fx1(:,2)
-       F2sum(:) = F2sum(:) + Fx2(:,2)
     endif
 
     if (order_stop.ge.3) then
@@ -669,8 +537,6 @@ contains
        ! from tables
        Fx1(:,3) = two*F_NNLO(x1, Q1val, muR1val, muF1val)
        Fx2(:,3) = two*F_NNLO(x2, Q2val, muR2val, muF2val)
-       F1sum(:) = F1sum(:) + Fx1(:,3)
-       F2sum(:) = F2sum(:) + Fx2(:,3)
     endif
 
     if (order_stop.ge.4) then
@@ -678,139 +544,128 @@ contains
        ! from tables
        Fx1(:,4) = two*F_N3LO(x1, Q1val, muR1val, muF1val)
        Fx2(:,4) = two*F_N3LO(x2, Q2val, muR2val, muF2val)
-       F1sum(:) = F1sum(:) + Fx1(:,4)
-       F2sum(:) = F2sum(:) + Fx2(:,4)
     endif
 
-    ! Compute hadronic tensors
-    Wx1(Wp) = F1sum(iF1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1sum(iF2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1sum(iF3Wp)*(one/(two*P1q1))*T3(1)
+    ! Compute the 3 different contributions
+    sigma = zero
+    if (WpWm) sigma = sigma + WW_norm * order_sum(order_start, order_stop, Fx1, Fx2, iWp, iWm, TW)
+    if (WmWp) sigma = sigma + WW_norm * order_sum(order_start, order_stop, Fx1, Fx2, iWm, iWp, TW)
+    if (ZZ)   sigma = sigma + ZZ_norm * order_sum(order_start, order_stop, Fx1, Fx2, iZ,  iZ,  TZ)
 
-    Wx1(Wm) = F1sum(iF1Wm)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1sum(iF2Wm)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1sum(iF3Wm)*(one/(two*P1q1))*T3(1)
-
-    Wx1(Z) = F1sum(iF1Z)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
-         & + F1sum(iF2Z)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
-         & + F1sum(iF3Z)*(one/(two*P1q1))*T3(1)
-
-    Wx2(Wp) = F2sum(iF1Wp)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2sum(iF2Wp)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2sum(iF3Wp)*(one/(two*P2q2))*T3(2)
-
-    Wx2(Wm) = F2sum(iF1Wm)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2sum(iF2Wm)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2sum(iF3Wm)*(one/(two*P2q2))*T3(2)
-
-    Wx2(Z) = F2sum(iF1Z)*((one/q2q2)*(q2mu.otimes.q2mu)-g_mu_nu) &
-         & + F2sum(iF2Z)*(one/P2q2)*(P2hatmu.otimes.P2hatmu) &
-         & + F2sum(iF3Z)*(one/(two*P2q2))*T3(2)
-
-    if(.not.non_fact) then
-       ! Do first contraction between a hadronic tensor and a matrix element.
-       call ContractTensors(Wx1(Wp),1,M(Wp),1,MWx1(Wp))
-       call ContractTensors(Wx1(Wm),1,M(Wm),1,MWx1(Wm))
-       call ContractTensors(Wx1(Z),1,M(Z),1,MWx1(Z))
-       
-       call ContractTensors(Mstar(Wp),2,Wx2(Wp),2,MstarWx2(Wp))
-       call ContractTensors(Mstar(Wm),2,Wx2(Wm),2,MstarWx2(Wm))
-       call ContractTensors(Mstar(Z),2,Wx2(Z),2,MstarWx2(Z))
-       
-       ! Compute the 3 different contributions
-       if(WpWm) then
-          call ContractTensors(MWx1(Wp),1,MstarWx2(Wm),1,Dummy1)
-          sigmaWpWm = WW_norm * TensorTrace(Dummy1)
-       endif
-       
-       if(WmWp) then
-          call ContractTensors(MWx1(Wm),1,MstarWx2(Wp),1,Dummy1)
-          sigmaWmWp = WW_norm * TensorTrace(Dummy1)
-       endif
-       
-       if(ZZ) then
-          call ContractTensors(MWx1(Z),1,MstarWx2(Z),1,Dummy1)
-          sigmaZZ = ZZ_norm * TensorTrace(Dummy1)
-       endif
-    else
-       ! 1-loop squared
-       call ContractTensors(Wx1(Wp),1,M1loop(Wp),1,MWx1(Wp))
-       call ContractTensors(Wx1(Wm),1,M1loop(Wm),1,MWx1(Wm))
-       call ContractTensors(Wx1(Z),1,M1loop(Z),1,MWx1(Z))
-       
-       call ContractTensors(M1loopstar(Wp),2,Wx2(Wp),2,MstarWx2(Wp))
-       call ContractTensors(M1loopstar(Wm),2,Wx2(Wm),2,MstarWx2(Wm))
-       call ContractTensors(M1loopstar(Z),2,Wx2(Z),2,MstarWx2(Z))
-       
-       ! Compute the 3 different contributions
-       if(WpWm) then
-          call ContractTensors(MWx1(Wp),1,MstarWx2(Wm),1,Dummy1)
-          sigmaWpWm = WW_norm * TensorTrace(Dummy1)
-       end if
-       
-       if(WmWp) then
-          call ContractTensors(MWx1(Wm),1,MstarWx2(Wp),1,Dummy1)
-          sigmaWmWp = WW_norm * TensorTrace(Dummy1)
-       endif
-       
-       if(ZZ) then
-          call ContractTensors(MWx1(Z),1,MstarWx2(Z),1,Dummy1)
-          sigmaZZ = ZZ_norm * TensorTrace(Dummy1)
-       endif
-
-       ! 2-loop
-       call ContractTensors(Wx1(Wp),1,M2loop(Wp),1,MWx1(Wp))
-       call ContractTensors(Wx1(Wm),1,M2loop(Wm),1,MWx1(Wm))
-       call ContractTensors(Wx1(Z),1,M2loop(Z),1,MWx1(Z))
-       
-       call ContractTensors(Mstar(Wp),2,Wx2(Wp),2,MstarWx2(Wp))
-       call ContractTensors(Mstar(Wm),2,Wx2(Wm),2,MstarWx2(Wm))
-       call ContractTensors(Mstar(Z),2,Wx2(Z),2,MstarWx2(Z))
-       
-       ! Compute the 3 different contributions
-       if(WpWm) then
-          call ContractTensors(MWx1(Wp),1,MstarWx2(Wm),1,Dummy1)
-          sigmaWpWm = sigmaWpWm + WW_norm * TensorTrace(Dummy1)
-       end if
-       
-       if(WmWp) then
-          call ContractTensors(MWx1(Wm),1,MstarWx2(Wp),1,Dummy1)
-          sigmaWmWp = sigmaWmWp + WW_norm * TensorTrace(Dummy1)
-       endif
-       
-       if(ZZ) then
-          call ContractTensors(MWx1(Z),1,MstarWx2(Z),1,Dummy1)
-          sigmaZZ = sigmaZZ + ZZ_norm * TensorTrace(Dummy1)
-       endif
-
-       call ContractTensors(Wx1(Wp),1,M(Wp),1,MWx1(Wp))
-       call ContractTensors(Wx1(Wm),1,M(Wm),1,MWx1(Wm))
-       call ContractTensors(Wx1(Z),1,M(Z),1,MWx1(Z))
-       
-       call ContractTensors(M2loopstar(Wp),2,Wx2(Wp),2,MstarWx2(Wp))
-       call ContractTensors(M2loopstar(Wm),2,Wx2(Wm),2,MstarWx2(Wm))
-       call ContractTensors(M2loopstar(Z),2,Wx2(Z),2,MstarWx2(Z))
-       
-       ! Compute the 3 different contributions
-       if(WpWm) then
-          call ContractTensors(MWx1(Wp),1,MstarWx2(Wm),1,Dummy1)
-          sigmaWpWm = sigmaWpWm + WW_norm * TensorTrace(Dummy1)
-       end if
-       
-       if(WmWp) then
-          call ContractTensors(MWx1(Wm),1,MstarWx2(Wp),1,Dummy1)
-          sigmaWmWp = sigmaWmWp + WW_norm * TensorTrace(Dummy1)
-       endif
-       
-       if(ZZ) then
-          call ContractTensors(MWx1(Z),1,MstarWx2(Z),1,Dummy1)
-          sigmaZZ = sigmaZZ + ZZ_norm * TensorTrace(Dummy1)
-       endif
-
-    endif
-    sigma = overall_norm * (sigmaWpWm + sigmaWmWp + sigmaZZ)
-    res = sigma
+    res = overall_norm * sigma
   end function eval_matrix_element_tensor
+
+  !----------------------------------------------------------------------
+  ! Basis tensors of the hadronic tensor of a beam with momentum P and
+  ! momentum transfer q (all indices down):
+  !   W_mu_nu = F1 G(1) + F2 G(2) + F3 G(3), with
+  !   G(1) = q_mu q_nu / q^2 - g_mu_nu
+  !   G(2) = Phat_mu Phat_nu / (P.q),  Phat = P - (P.q)/q^2 q
+  !   G(3) = i epsilon_mu_nu_rho_sigma P^rho q^sigma / (2 P.q)
+  subroutine hadronic_basis(P, q, G)
+    real(dp), intent(in) :: P(0:3), q(0:3)
+    type(tensors), intent(inout) :: G(3)
+    type(tensors) :: g_mu_nu, qmu, Pmu, Phatmu
+    real(dp) :: qq, Pq
+    integer :: i, j
+
+    g_mu_nu = gmunu
+    g_mu_nu%up = .false. ! Lower all the indices
+    call InitFourVector(qmu,q,.false.)
+    call InitFourVector(Pmu,P,.false.)
+    qq = q .dot. q
+    Pq = P .dot. q
+    Phatmu = Pmu - Pq/qq * qmu
+
+    G(1) = (one/qq)*(qmu.otimes.qmu) - g_mu_nu
+    G(2) = (one/Pq)*(Phatmu.otimes.Phatmu)
+
+    ! We perform the contraction between the levi-civita tensor and
+    ! P and q explicitly, as implementing rank-4 tensors just for
+    ! the levi-civita symbol is tedious. These are the lower-index
+    ! components epsilon_mu_nu_rho_sigma P^rho q^sigma, with
+    ! epsilon_0123 = +1 and P, q the contravariant components.
+    call InitTensor(G(3),2,.false.)
+    G(3)%values(0,1) =   P(2)*q(3) - P(3)*q(2)
+    G(3)%values(0,2) = - P(1)*q(3) + P(3)*q(1)
+    G(3)%values(0,3) =   P(1)*q(2) - P(2)*q(1)
+    G(3)%values(1,2) = - P(3)*q(0) + P(0)*q(3)
+    G(3)%values(1,3) =   P(2)*q(0) - P(0)*q(2)
+    G(3)%values(2,3) = - P(1)*q(0) + P(0)*q(1)
+    ! Use anti-symmetric property    
+    do i = 0,3
+       do j = i,3
+          G(3)%values(j,i) = - G(3)%values(i,j)
+       enddo
+    enddo
+    ! And now mulitply with overall factor i/(2 P.q)
+    G(3)%values(:,:) = cmplx(zero,one/(two*Pq),kind=dp) * G(3)%values(:,:)
+  end subroutine hadronic_basis
+
+  !----------------------------------------------------------------------
+  ! T(k,l) = Re[ G1(k)_{mu nu} G2(l)_{rho sigma} Ma^{mu rho} Mbstar^{nu sigma} ]
+  ! (Ma and Mbstar with both indices up, G1 and G2 with both down),
+  ! i.e. the coefficient of Fk(beam 1) Fl(beam 2) in the squared
+  ! matrix element for Ma = M, Mbstar = M^*. Since the G are hermitian,
+  ! T is real in that case; for Ma /= Mb only the real part is kept,
+  ! as in the interference terms of the non-factorisable corrections.
+  !
+  ! This is the bulk of the work, so it is done directly on the
+  ! component arrays: with X(k)^nu_rho = G1(k)_{mu nu} Ma^{mu rho}
+  ! and Y(l)^nu_rho = Mbstar^{nu sigma} G2(l)_{rho sigma},
+  ! T(k,l) = Re sum_{nu,rho} X(k)^nu_rho Y(l)^nu_rho. This is what
+  ! ContractTensors(G1(k),1,Ma,1,X), ContractTensors(Mbstar,2,G2(l),2,Y),
+  ! ContractTensors(X,1,Y,1,XY) and TensorTrace(XY) would give, at
+  ! about a third of the cost.
+  subroutine trace_matrix(G1, G2, Ma, Mbstar, T)
+    type(tensors), intent(in) :: G1(3), G2(3), Ma, Mbstar
+    real(dp), intent(out) :: T(3,3)
+    complex(dp) :: X(0:3,0:3,3), Y(0:3,0:3,3)
+    integer :: k, l
+
+    ! The index positions assumed above
+    if(.not.(all(Ma%up).and.all(Mbstar%up)).or.Ma%rank.ne.2.or.Mbstar%rank.ne.2) then
+       stop 'trace_matrix: Ma and Mbstar must be rank 2 with both indices up'
+    endif
+    do k = 1, 3
+       if(any(G1(k)%up).or.any(G2(k)%up).or.G1(k)%rank.ne.2.or.G2(k)%rank.ne.2) then
+          stop 'trace_matrix: G1 and G2 must be rank 2 with both indices down'
+       endif
+    enddo
+
+    do k = 1, 3
+       X(:,:,k) = matmul(transpose(G1(k)%values), Ma%values)
+       Y(:,:,k) = matmul(Mbstar%values, transpose(G2(k)%values))
+    enddo
+    do l = 1, 3
+       do k = 1, 3
+          T(k,l) = real(sum(X(:,:,k)*Y(:,:,l)), kind=dp)
+       enddo
+    enddo
+  end subroutine trace_matrix
+
+  !----------------------------------------------------------------------
+  ! sum_{n=order_start}^{order_stop} sum_{i+j=n+1}
+  !     sum_{k,l} Fk(beam 1, order i) Fl(beam 2, order j) T(k,l)
+  ! where i1(k) and i2(l) are the indices of F1, F2, F3 for the bosons
+  ! attached to beams 1 and 2.
+  real(dp) function order_sum(order_start, order_stop, Fx1, Fx2, i1, i2, T) result(res)
+    integer,  intent(in) :: order_start, order_stop, i1(3), i2(3)
+    real(dp), intent(in) :: Fx1(-6:7,4), Fx2(-6:7,4), T(3,3)
+    integer :: iorder, i, j, k, l
+
+    res = zero
+    do iorder = order_start, order_stop
+       do i = 1, iorder
+          j = 1 + iorder - i
+          do l = 1, 3
+             do k = 1, 3
+                res = res + Fx1(i1(k),i) * Fx2(i2(l),j) * T(k,l)
+             enddo
+          enddo
+       enddo
+    enddo
+  end function order_sum
   
   function VVtoHH_tensor(V, q1, q2, pH1, pH2, g_mu_nu, VV_H_HH, VVHH, VHVHVt,VHVHVu) result(res)
     implicit none

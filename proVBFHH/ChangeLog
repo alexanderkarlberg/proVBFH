@@ -1,5 +1,19 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/matrix_element.f90 (eval_matrix_element_tensor):
+	The tensor matrix element now combines the perturbative orders like
+	the analytic one (products of beam-1 order i and beam-2 order j with
+	i + j = n + 1, n = order_start..order_stop). Before, it summed the
+	structure functions over all orders up to order_stop and contracted
+	the product, which added beyond-accuracy terms (NLO x NLO at NLO,
+	etc.: +2.7e-4 of sigma at NLO, 0.65e-4 at NNLO) and ignored
+	order_start. The hadronic tensors are expanded in three basis
+	tensors (hadronic_basis) whose contractions with the current are
+	computed once per point (trace_matrix, on plain 4x4 arrays), and the
+	orders are combined with the structure functions (order_sum). With
+	zero widths, same-seed runs with and without the tensor matrix
+	element now give identical results at every order.
+
 	* src/inclusive/matrix_element.f90:
 	cmplx() without kind=dp returns a single-precision complex, so the
 	propagators of both the analytic and the tensor matrix element were
