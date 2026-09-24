@@ -1,0 +1,5 @@
+# Stamped by /tmp/claude-9771/-home-thA371a-akarlber-cernbox-proVBFH-ci/9b436c78-fe81-4af1-8 on 24/09/2026 at 16:02:46
+# /tmp/claude-9771/-home-thA371a-akarlber-cernbox-proVBFH-ci/9b436c78-fe81-4af1-8315-b2f11f3934b7/scratchpad/fix/proVBFH-inclusive/provbfhh_incl -nnlo -wwidth 0 -zwidth 0 -hwidth 0 -cVVHfact 1.1 -cVVHHfact 0.7 -lambdafact 2.5 -sqrts 14000 -pdf PDF4LHC21_40 -mh 125 -mw 80.379 -scale-choice 1 -ncall1 100000 -ncall2 400000 -itmx1 2 -itmx2 2 -iseed 7
+# Total NNLO cross-section (fb)
+# central     MC_error
+ 7.467001E+00 1.400482E-02

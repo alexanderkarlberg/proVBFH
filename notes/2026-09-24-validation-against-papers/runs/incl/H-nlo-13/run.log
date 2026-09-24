@@ -1,0 +1,255 @@
+LHAPDF 6.5.6 loading /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4-480ce2ec5103/scratchpad/deps/share/LHAPDF/PDF4LHC15_nnlo_mc/PDF4LHC15_nnlo_mc_0000.dat
+PDF4LHC15_nnlo_mc PDF set, member #0, version 1; LHAPDF ID = 91500
+ PDF member:           0
+ Doing μR =    1.0000000000000000      , and μF =    1.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+
+ input parameters for vegas: ndim=  7 ncall= 839808.
+                             it=    0 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.953683    +/-  0.19E-01
+ all iterations: integral =  3.953683    +/-  0.19E-01 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.971644    +/-  0.54E-02
+ all iterations: integral =  3.970250    +/-  0.52E-02 chi**2/it'n = 0.86    
+
+ iteration no.  3: integral =  3.970835    +/-  0.48E-02
+ all iterations: integral =  3.970564    +/-  0.35E-02 chi**2/it'n = 0.43    
+ ****************************************************
+ * Writing out vegas grid to grids_0010.dat                                                            *
+ ****************************************************
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.967048    +/-  0.23E-02
+ all iterations: integral =  3.967048    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.968102    +/-  0.23E-02
+ all iterations: integral =  3.967578    +/-  0.16E-02 chi**2/it'n = 0.11    
+
+ iteration no.  3: integral =  3.967905    +/-  0.23E-02
+ all iterations: integral =  3.967688    +/-  0.13E-02 chi**2/it'n = 0.60E-01
+ Doing μR =    2.0000000000000000      , and μF =    2.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ grids_0010.dat                                                          *
+ ****************************************************
+ * Reading in vegas grid from grids_0010.dat                                                           *
+ ****************************************************
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.993475    +/-  0.23E-02
+ all iterations: integral =  3.993475    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.993049    +/-  0.22E-02
+ all iterations: integral =  3.993260    +/-  0.16E-02 chi**2/it'n = 0.18E-01
+
+ iteration no.  3: integral =  3.999152    +/-  0.23E-02
+ all iterations: integral =  3.995133    +/-  0.13E-02 chi**2/it'n =  2.2    
+ Doing μR =   0.50000000000000000      , and μF =   0.50000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ grids_0010.dat                                                          *
+ ****************************************************
+ * Reading in vegas grid from grids_0010.dat                                                           *
+ ****************************************************
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.946013    +/-  0.23E-02
+ all iterations: integral =  3.946013    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.945587    +/-  0.22E-02
+ all iterations: integral =  3.945798    +/-  0.16E-02 chi**2/it'n = 0.18E-01
+
+ iteration no.  3: integral =  3.951560    +/-  0.23E-02
+ all iterations: integral =  3.947635    +/-  0.13E-02 chi**2/it'n =  2.1    
+ Doing μR =    1.0000000000000000      , and μF =    2.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ grids_0010.dat                                                          *
+ ****************************************************
+ * Reading in vegas grid from grids_0010.dat                                                           *
+ ****************************************************
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.988656    +/-  0.23E-02
+ all iterations: integral =  3.988656    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.988252    +/-  0.23E-02
+ all iterations: integral =  3.988452    +/-  0.16E-02 chi**2/it'n = 0.16E-01
+
+ iteration no.  3: integral =  3.994373    +/-  0.23E-02
+ all iterations: integral =  3.990337    +/-  0.13E-02 chi**2/it'n =  2.2    
+ Doing μR =    1.0000000000000000      , and μF =   0.50000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ grids_0010.dat                                                          *
+ ****************************************************
+ * Reading in vegas grid from grids_0010.dat                                                           *
+ ****************************************************
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.969183    +/-  0.23E-02
+ all iterations: integral =  3.969183    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.968740    +/-  0.23E-02
+ all iterations: integral =  3.968959    +/-  0.16E-02 chi**2/it'n = 0.19E-01
+
+ iteration no.  3: integral =  3.974843    +/-  0.23E-02
+ all iterations: integral =  3.970834    +/-  0.13E-02 chi**2/it'n =  2.1    
+ Doing μR =    2.0000000000000000      , and μF =    1.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ grids_0010.dat                                                          *
+ ****************************************************
+ * Reading in vegas grid from grids_0010.dat                                                           *
+ ****************************************************
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.981799    +/-  0.23E-02
+ all iterations: integral =  3.981799    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.981358    +/-  0.23E-02
+ all iterations: integral =  3.981576    +/-  0.16E-02 chi**2/it'n = 0.19E-01
+
+ iteration no.  3: integral =  3.987465    +/-  0.23E-02
+ all iterations: integral =  3.983451    +/-  0.13E-02 chi**2/it'n =  2.2    
+ Doing μR =   0.50000000000000000      , and μF =    1.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ grids_0010.dat                                                          *
+ ****************************************************
+ * Reading in vegas grid from grids_0010.dat                                                           *
+ ****************************************************
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+-----------------------------------------------------------[1m
+                Welcome to HOPPET v. 2.3.0
+    Higher Order Perturbative Parton Evolution Toolkit     [0m
+-----------------------------------------------------------
+                  Written (2001-2025) by                   
+     Frederic Dreyer, Alexander Karlberg, Paolo Nason,     
+      Juan Rojo, Gavin P. Salam and Giulia Zanderighi      
+
+ It is made available under the GNU public license.        
+ If using it for scientific work, please cite              
+ G.P. Salam & J. Rojo, CPC 180(2009)120 (arXiv:0804.3755). 
+ and A. Karlberg, P. Nason, G.P. Salam, G. Zanderighi      
+ & F. Dreyer (arXiv:2510.09310).                           
+ 
+ You are also encouraged to cite the original references,  
+ for LO, NLO, NNLO, and N3LO splitting functions, the QCD  
+ 1, 2, 3, and 4 loop beta functions and the PDF and        
+ coupling mass threshold matching functions. Additionally  
+ the DIS coefficient functions should be cited when used.  
+-----------------------------------------------------------
+WARNING in get_lnlnQ_wgts: Q out of range; result will be set to zero; Q was:
+   28657.641709733733     
+WARNING in get_lnlnQ_wgts: Q out of range; result will be set to zero; Q was:
+   33170.208015568474     
+WARNING in get_lnlnQ_wgts: Q out of range; result will be set to zero; Q was:
+   38462.556782331012     
+WARNING in get_lnlnQ_wgts: Q out of range; result will be set to zero; Q was:
+   44680.697992487258     
+WARNING in get_lnlnQ_wgts: Q out of range; result will be set to zero; Q was:
+   51999.999999999942     
+----- No more such warnings will be issued ------
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  3.951393    +/-  0.23E-02
+ all iterations: integral =  3.951393    +/-  0.23E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  3.950963    +/-  0.22E-02
+ all iterations: integral =  3.951175    +/-  0.16E-02 chi**2/it'n = 0.18E-01
+
+ iteration no.  3: integral =  3.956957    +/-  0.23E-02
+ all iterations: integral =  3.953022    +/-  0.13E-02 chi**2/it'n =  2.1    
+
+==================== TOTAL TIME :  2.32E+02 s.
+

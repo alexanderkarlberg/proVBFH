@@ -1,0 +1,94 @@
+LHAPDF 6.5.6 loading /home/thA371a/akarlber/.local/share/LHAPDF/PDF4LHC21_40/PDF4LHC21_40_0000.dat
+PDF4LHC21_40 PDF set, member #0, version 1; LHAPDF ID = 93100
+ PDF member:           0
+ Doing μR =    1.0000000000000000      , and μF =    1.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+
+ input parameters for vegas: ndim= 11 ncall=  98304.
+                             it=    0 itmx=    2
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+                              xl( 8)=   0.000     xu( 8)=   1.000    
+                              xl( 9)=   0.000     xu( 9)=   1.000    
+                              xl(10)=   0.000     xu(10)=   1.000    
+                              xl(11)=   0.000     xu(11)=   1.000    
+ DBG noF3 = F
+
+ iteration no.  1: integral = 0.2067372E-02+/-  0.15E-03
+ all iterations: integral = 0.2067372E-02+/-  0.15E-03 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral = 0.2027748E-02+/-  0.24E-04
+ all iterations: integral = 0.2028741E-02+/-  0.24E-04 chi**2/it'n = 0.68E-01
+ ****************************************************
+ * Writing out vegas grid to grids_0007.dat                                                            *
+ ****************************************************
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+-----------------------------------------------------------[1m
+              Welcome to HOPPET v. 2.3.1-dev0
+    Higher Order Perturbative Parton Evolution Toolkit     [0m
+-----------------------------------------------------------
+                  Written (2001-2025) by                   
+     Frederic Dreyer, Alexander Karlberg, Paolo Nason,     
+      Juan Rojo, Gavin P. Salam and Giulia Zanderighi      
+
+ It is made available under the GNU public license.        
+ If using it for scientific work, please cite              
+ G.P. Salam & J. Rojo, CPC 180(2009)120 (arXiv:0804.3755). 
+ and A. Karlberg, P. Nason, G.P. Salam, G. Zanderighi      
+ & F. Dreyer (arXiv:2510.09310).                           
+ 
+ You are also encouraged to cite the original references,  
+ for LO, NLO, NNLO, and N3LO splitting functions, the QCD  
+ 1, 2, 3, and 4 loop beta functions and the PDF and        
+ coupling mass threshold matching functions. Additionally  
+ the DIS coefficient functions should be cited when used.  
+-----------------------------------------------------------
+
+ input parameters for vegas: ndim= 11 ncall= 354294.
+                             it=    3 itmx=    2
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+                              xl( 8)=   0.000     xu( 8)=   1.000    
+                              xl( 9)=   0.000     xu( 9)=   1.000    
+                              xl(10)=   0.000     xu(10)=   1.000    
+                              xl(11)=   0.000     xu(11)=   1.000    
+ DBG n, plain/tensor-1, err, old/new tensor-1, err:    200000 -2.22045E-16  1.38222E-15  1.91552E-04  4.80915E-04
+ DBG max |plain-tensor|/scale, |oldtensor-tensor|/scale:  4.40210E-08  4.77177E+02
+ DBG frac of points |p/t-1|>1e-14,-12,-10,-8,-4:  6.44E-01  1.55E-01  1.63E-02  1.74E-03  0.00E+00
+ DBG frac of |sigma| from them:       2.18E-01  3.45E-03  9.69E-06  9.91E-09  0.00E+00
+ DBG worst rel point: dev, t, p, scale:  5.92865E-06  1.06171E-30  1.06171E-30  1.75593E-28
+ DBG n, plain/tensor-1, err, old/new tensor-1, err:    400000  2.22045E-16  1.06732E-15  2.05755E-04  3.68935E-04
+ DBG max |plain-tensor|/scale, |oldtensor-tensor|/scale:  4.40210E-08  4.77177E+02
+ DBG frac of points |p/t-1|>1e-14,-12,-10,-8,-4:  5.45E-01  9.68E-02  8.92E-03  9.02E-04  0.00E+00
+ DBG frac of |sigma| from them:       2.14E-01  3.10E-03  9.34E-06  8.14E-09  0.00E+00
+ DBG worst rel point: dev, t, p, scale:  5.92865E-06  1.06171E-30  1.06171E-30  1.75593E-28
+
+ iteration no.  1: integral = 0.2061262E-02+/-  0.84E-05
+ all iterations: integral = 0.2061262E-02+/-  0.84E-05 chi**2/it'n =  0.0    
+ DBG n, plain/tensor-1, err, old/new tensor-1, err:    600000  4.44089E-16  9.07491E-16  2.13677E-04  3.05006E-04
+ DBG max |plain-tensor|/scale, |oldtensor-tensor|/scale:  4.40210E-08  4.77177E+02
+ DBG frac of points |p/t-1|>1e-14,-12,-10,-8,-4:  5.62E-01  1.00E-01  8.47E-03  8.05E-04  0.00E+00
+ DBG frac of |sigma| from them:       2.15E-01  3.27E-03  9.44E-06  7.27E-09  0.00E+00
+ DBG worst rel point: dev, t, p, scale:  5.92865E-06  1.06171E-30  1.06171E-30  1.75593E-28
+
+ iteration no.  2: integral = 0.2057470E-02+/-  0.73E-05
+ all iterations: integral = 0.2059101E-02+/-  0.55E-05 chi**2/it'n = 0.11    
+
+==================== TOTAL TIME :  1.43E+01 s.
+

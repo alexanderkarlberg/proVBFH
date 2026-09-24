@@ -1,0 +1,12 @@
+# Stamped by /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4- on 24/09/2026 at 10:17:07
+# /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4-480ce2ec5103/scratchpad/ws/proVBFH-inclusive/provbfh_incl -lo -sqrts 13000 -pdf NNPDF30_nnlo_as_0118 -mh 125 -mw 80.398 -wwidth 2.141 -scale-choice 3 -ncall1 1000000 -ncall2 4000000 -itmx1 3 -itmx2 3 -7scaleuncert
+# Total LO cross-section (pb)
+# central     max          min          MC_error
+ 4.027595E+00 4.086886E+00 3.960594E+00 1.226043E-03
+
+
+# Summary:
+# sigma =   4.02760 pb
+# QCD scale uncertainty (+) =  0.05929 pb (    1.472 %)
+# QCD scale uncertainty (-) = -0.06700 pb (   -1.664 %)
+# MC integration uncertainty =     0.030 %

@@ -1,0 +1,167 @@
+diff -ruN /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/matrix_element_dihiggs.f90 src/matrix_element_dihiggs.f90
+--- /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/matrix_element_dihiggs.f90	2026-09-24 09:52:05.502372388 +0200
++++ src/matrix_element_dihiggs.f90	2026-09-24 11:56:34.447802861 +0200
+@@ -44,6 +44,12 @@
+   private
+   public :: eval_matrix_element
+   public :: eval_matrix_element_tensor
++  ! DEBUG: 0 = full, 1 = F3 set to zero (sym x sym), 2 = only F3 (anti x anti)
++  integer, public :: tensor_F_mode = 0
++  ! DEBUG: factors multiplying the A, B and C amplitudes in both implementations
++  real(dp), public :: fA = 1.0_dp, fB = 1.0_dp, fC = 1.0_dp
++  ! DEBUG: keep only F_keep1 on line 1 and F_keep2 on line 2 (0 = keep all)
++  integer, public :: keep1 = 0, keep2 = 0
+   interface operator(.dot.)
+      module procedure dot
+   end interface operator(.dot.)
+@@ -176,6 +182,9 @@
+     ZZ_C = cVVHfact**2*(MZ**2/complex(q1pH2sq - MZ**2,MZ*Z_WIDTH))/two &
+          &           *MZ**2/complex(MZ**2,-MZ*Z_WIDTH)
+     
++    WW_A = fA*WW_A; ZZ_A = fA*ZZ_A
++    WW_B = fB*WW_B; ZZ_B = fB*ZZ_B
++    WW_C = fC*WW_C; ZZ_C = fC*ZZ_C
+     ! Below is a narrow-width propagator; This was used in earlier versions of the code
+     ! ZZ_norm =  MZ**8 / ((Q1sq + MZ**2)**2 * (Q2sq + MZ**2)**2)
+     ! WW_norm =  MW**8 / ((Q1sq + MW**2)**2 * (Q2sq + MW**2)**2)
+@@ -184,6 +193,7 @@
+     ! from tables
+     Fx1(:,1) = two*F_LO(x1, Q1val, muR1val, muF1val)
+     Fx2(:,1) = two*F_LO(x2, Q2val, muR2val, muF2val)
++    call keep_only(Fx1(:,1), keep1); call keep_only(Fx2(:,1), keep2)
+ 
+     if (order_stop.ge.2) then
+        ! Compute the NLO structure funtion by adding all the pieces
+@@ -474,26 +484,26 @@
+     P1hatmu = P1mu - P1q1/q1q1 * q1mu 
+     P2hatmu = P2mu - P2q2/q2q2 * q2mu
+ 
+-    M(Wp) = (two*((two*MW**2)/complex(q1k1sq-MW**2,MW*W_WIDTH) &
++    M(Wp) = (fA*two*((two*MW**2)/complex(q1k1sq-MW**2,MW*W_WIDTH) &
+          & + (two*MW**2)/complex(q1k2sq-MW**2,MW*W_WIDTH) & 
+          & + three*MH**2/complex(k1k2sq - MH**2,MH*HWIDTH) + one))*g_mu_nu ! gmunu
+                                                                                ! contribution
+-    M(Wp) = M(Wp) + (one/complex(q1k1sq -MW**2,MW*W_WIDTH)) &
++    M(Wp) = M(Wp) + (fB/complex(q1k1sq -MW**2,MW*W_WIDTH)) &
+          &           *MW**2/complex(MW**2,-MW*W_WIDTH) &
+          &           *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
+-    M(Wp) = M(Wp) + (one/complex(q1k2sq -MW**2,MW*W_WIDTH)) &
++    M(Wp) = M(Wp) + (fC/complex(q1k2sq -MW**2,MW*W_WIDTH)) &
+          &           *MW**2/complex(MW**2,-MW*W_WIDTH) &
+          &           *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
+     M(Wm) = M(Wp) ! Matrix element is identical between W+/W-
+ 
+-    M(Z) = (two*((two*MZ**2)/complex(q1k1sq-MZ**2,MZ*Z_WIDTH) &
++    M(Z) = (fA*two*((two*MZ**2)/complex(q1k1sq-MZ**2,MZ*Z_WIDTH) &
+          & + (two*MZ**2)/complex(q1k2sq-MZ**2,MZ*Z_WIDTH) & 
+          & + three*MH**2/complex(k1k2sq - MH**2,MH*HWIDTH) + one))*g_mu_nu ! gmunu
+                                                                                ! contribution
+-    M(Z) = M(Z) + (one/complex(q1k1sq -MZ**2,MZ*Z_WIDTH)) &
++    M(Z) = M(Z) + (fB/complex(q1k1sq -MZ**2,MZ*Z_WIDTH)) &
+          &         *MZ**2/complex(MZ**2,-MZ*Z_WIDTH) &
+          &         *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
+-    M(Z) = M(Z) + (one/complex(q1k2sq -MZ**2,MZ*Z_WIDTH)) &
++    M(Z) = M(Z) + (fC/complex(q1k2sq -MZ**2,MZ*Z_WIDTH)) &
+          &         *MZ**2/complex(MZ**2,-MZ*Z_WIDTH) &
+          &         *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
+ 
+@@ -610,6 +620,16 @@
+        F2(:) = F2(:) + Fx2(:,4)
+     endif
+ 
++    call keep_only(F1, keep1); call keep_only(F2, keep2)
++    if (tensor_F_mode == 1) then
++       F1(iF3Wp) = zero; F1(iF3Wm) = zero; F1(iF3Z) = zero
++       F2(iF3Wp) = zero; F2(iF3Wm) = zero; F2(iF3Z) = zero
++    else if (tensor_F_mode == 2) then
++       F1(iF1Wp) = zero; F1(iF1Wm) = zero; F1(iF1Z) = zero
++       F2(iF1Wp) = zero; F2(iF1Wm) = zero; F2(iF1Z) = zero
++       F1(iF2Wp) = zero; F1(iF2Wm) = zero; F1(iF2Z) = zero
++       F2(iF2Wp) = zero; F2(iF2Wm) = zero; F2(iF2Z) = zero
++    end if
+     ! Compute hadronic tensors
+     Wx1(Wp) = F1(iF1Wp)*((one/q1q1)*(q1mu.otimes.q1mu)-g_mu_nu) &
+          & + F1(iF2Wp)*(one/P1q1)*(P1hatmu.otimes.P1hatmu) &
+@@ -666,6 +686,19 @@
+ 
+   !----------------------------------------------------------------------
+   ! dot product
++  subroutine keep_only(F, k)
++    real(dp), intent(inout) :: F(-6:7)
++    integer, intent(in) :: k
++    if (k == 0) return
++    if (k == -1) then ! drop F3 only
++       F(iF3Wp) = zero; F(iF3Wm) = zero; F(iF3Z) = zero
++       return
++    end if
++    if (k /= 1) then; F(iF1Wp) = zero; F(iF1Wm) = zero; F(iF1Z) = zero; end if
++    if (k /= 2) then; F(iF2Wp) = zero; F(iF2Wm) = zero; F(iF2Z) = zero; end if
++    if (k /= 3) then; F(iF3Wp) = zero; F(iF3Wm) = zero; F(iF3Z) = zero; end if
++  end subroutine keep_only
++
+   real(dp) function dot(p1,p2)
+     real(dp), intent(in) :: p1(0:3), p2(0:3)
+     dot = p1(0)*p2(0) - sum(p1(1:3)*p2(1:3))
+diff -ruN /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/phase_space_dihiggs.f src/phase_space_dihiggs.f
+--- /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/phase_space_dihiggs.f	2026-09-24 09:52:05.502582320 +0200
++++ src/phase_space_dihiggs.f	2026-09-24 11:56:34.447702244 +0200
+@@ -57,6 +57,7 @@
+ C     $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
+ C     print*, 'vbfnlo', dsigma
+          if(tensorME) then
++            call debug_compare(ptH1H2, vegas_weight)
+             dsigma = eval_matrix_element_tensor(order_min,order_max, x1, x2,
+      $           kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2, ptH1H2)
+ !     print*, 'tensor', dsigma
+@@ -78,6 +79,51 @@
+       
+       end function dsigma
+ 
++C     DEBUG: accumulate vegas-weighted integrals of the non-tensor,
++C     full tensor and tensor without F3 on the same points
++      subroutine debug_compare(ptH1H2, wgt)
++      use matrix_element_dihiggs
++      use parameters
++      implicit none
++      include 'pwhg_kn.h'
++      double precision ptH1H2, wgt, dN, dT0, dTnoF3, dNnoF3
++      double precision sN, sT0, sTnoF3, sNnoF3, sN2, sT2, sD2
++      integer*8 npts
++      data npts/0/, sN/0d0/, sT0/0d0/, sTnoF3/0d0/, sNnoF3/0d0/
++      data sN2/0d0/, sT2/0d0/, sD2/0d0/
++      save
++      npts = npts + 1
++      dN = wgt*jacobian*eval_matrix_element(order_min,order_max,
++     $     x1, x2, kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2,
++     $     ptH1H2)
++      dT0 = wgt*jacobian*eval_matrix_element_tensor(order_min,
++     $     order_max, x1, x2, kn_beams(:,1), kn_beams(:,2), vq1, vq2,
++     $     pH1, pH2, ptH1H2)
++      tensor_F_mode = 1
++      dTnoF3 = wgt*jacobian*eval_matrix_element_tensor(order_min,
++     $     order_max, x1, x2, kn_beams(:,1), kn_beams(:,2), vq1, vq2,
++     $     pH1, pH2, ptH1H2)
++      tensor_F_mode = 0
++      keep1 = -1; keep2 = -1
++      dNnoF3 = wgt*jacobian*eval_matrix_element(order_min,order_max,
++     $     x1, x2, kn_beams(:,1), kn_beams(:,2), vq1, vq2, pH1, pH2,
++     $     ptH1H2)
++      keep1 = 0; keep2 = 0
++      sN = sN + dN; sT0 = sT0 + dT0; sTnoF3 = sTnoF3 + dTnoF3
++      sNnoF3 = sNnoF3 + dNnoF3
++      sN2 = sN2 + dN**2; sT2 = sT2 + dT0**2; sD2 = sD2 + (dN-dT0)**2
++      if (mod(npts,500000_8).eq.0) then
++         open(unit=77, file='me_integrals.dat')
++         write(77,*) 'npts', npts
++         write(77,*) 'N/T-1        ', sN/sT0-1d0, '+-',
++     $        sqrt(sD2 - (sN-sT0)**2/npts)/abs(sT0)
++         write(77,*) 'noF3: N/T-1  ', sNnoF3/sTnoF3-1d0
++         write(77,*) 'F3 share of T', 1d0-sTnoF3/sT0
++         write(77,*) 'F3 share of N', 1d0-sNnoF3/sN
++         close(77)
++      endif
++      end subroutine debug_compare
++
+ C----------------------------------------------------------------------
+ C     set_beams(sqrts)
+ C     set kn_beams(:,:) and beams(:,:) to required value

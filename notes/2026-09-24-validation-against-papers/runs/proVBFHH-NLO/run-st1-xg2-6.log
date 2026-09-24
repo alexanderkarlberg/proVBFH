@@ -1,0 +1,307 @@
+==== LHAPDF6 USING DEFAULT-TYPE LHAGLUE INTERFACE ====
+LHAPDF 6.5.6 loading /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4-480ce2ec5103/scratchpad/deps/share/LHAPDF/PDF4LHC15_nnlo_mc/PDF4LHC15_nnlo_mc_0000.dat
+PDF4LHC15_nnlo_mc PDF set, member #0, version 1; LHAPDF ID = 91500
+  found input file powheg.input
+  opened powheg.input
+  powheginput keyword inclusive_only       set to    0.0000000000000000     
+  powheginput keyword qcd_order            set to    2.0000000000000000     
+  vbfnloinput keyword WMASS                set to    80.379000000000005     
+  vbfnloinput keyword ZMASS                set to    91.187600000000003     
+  vbfnloinput keyword WWIDTH               set to    2.1410000000000000     
+  vbfnloinput keyword ZWIDTH               set to    2.4952000000000001     
+  vbfnloinput keyword NFLAVOUR             set to    5.0000000000000000     
+  vbfnloinput keyword HMASS                set to    125.00000000000000     
+  vbfnloinput keyword HWIDTH               set to    4.0299999999999997E-003
+  powheginput keyword ebeam1               set to    7000.0000000000000     
+  powheginput keyword ebeam2               set to    7000.0000000000000     
+  powheginput keyword higgsbreitwigner     set to    0.0000000000000000     
+  powheginput keyword higgsmasswindow      set to    30.000000000000000     
+  powheginput keyword runningscales        set to    1.0000000000000000     
+  powheginput keyword readingrid           absent; set to   -1000000.0000000000     
+  powheginput keyword writeoutgrid         absent; set to   -1000000.0000000000     
+  powheginput keyword nonfact              set to    0.0000000000000000     
+  powheginput keyword tensorME             absent; set to   -1000000.0000000000     
+  powheginput keyword tri_off              absent; set to   -1000000.0000000000     
+  powheginput keyword tri1_off             absent; set to   -1000000.0000000000     
+  powheginput keyword tri2_off             absent; set to   -1000000.0000000000     
+  powheginput keyword box1_off             absent; set to   -1000000.0000000000     
+  powheginput keyword box2_off             absent; set to   -1000000.0000000000     
+  powheginput keyword box_t_off            absent; set to   -1000000.0000000000     
+  powheginput keyword box_u_off            absent; set to   -1000000.0000000000     
+  powheginput keyword facscfact            set to    1.0000000000000000     
+  powheginput keyword renscfact            set to    1.0000000000000000     
+  powheginput keyword lhans1               set to    91500.000000000000     
+  powheginput keyword ncall1               set to    100000.00000000000     
+  powheginput keyword ncall2               set to    1000000.0000000000     
+  powheginput keyword itmx1                set to    3.0000000000000000     
+  powheginput keyword itmx2                set to    3.0000000000000000     
+  powheginput keyword iseed                set to    20.000000000000000     
+  powheginput keyword manyseeds            set to    1.0000000000000000     
+ enter which seed
+  powheginput keyword toypdf               absent; set to   -1000000.0000000000     
+  powheginput keyword higgsfixedwidth      absent; set to   -1000000.0000000000     
+  powheginput keyword complexpolescheme    absent; set to   -1000000.0000000000     
+  powheginput keyword toyalphas            absent; set to   -1000000.0000000000     
+  powheginput keyword test_Q0              absent; set to   -1000000.0000000000     
+  powheginput keyword muR_PDF              absent; set to   -1000000.0000000000     
+  powheginput keyword lambdafact           absent; set to   -1000000.0000000000     
+  powheginput keyword cVVHHfact            absent; set to   -1000000.0000000000     
+  powheginput keyword cVVHfact             absent; set to   -1000000.0000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+ Quick test that PDFs have been read in correctly
+ lhapdf:    0.0000000000000000        1.9026125396657909E-002   4.6264231136811627E-002   7.5660521349552007E-002  0.12459937789118027       0.15927714302339419        1.4276422300415430       0.41402646182180702       0.62293884666846955        8.2499924859469984E-002   4.5964857250374566E-002   1.8963179811048111E-002   0.0000000000000000     
+ hoppet:    0.0000000000000000        1.9025029747610993E-002   4.6262213956592892E-002   7.5657713745799854E-002  0.12459820439455975       0.15927717406874567        1.4275985147833083       0.41402772332378751       0.62293712044266925        8.2497501741631452E-002   4.5962830819517402E-002   1.8962082124579623E-002   0.0000000000000000     
+  powheginput keyword testplots            set to    1.0000000000000000     
+  powheginput keyword numevts              set to    1.0000000000000000     
+  powheginput keyword storemintupb         absent; set to   -1000000.0000000000     
+  powheginput keyword fastbtlbound         absent; set to   -1000000.0000000000     
+  powheginput keyword maxseeds             set to    9999.0000000000000     
+  powheginput keyword flg_debug            absent; set to   -1000000.0000000000     
+  powheginput keyword withnegweights       set to    1.0000000000000000     
+  powheginput keyword bornsuppfact         set to    0.0000000000000000     
+  powheginput keyword ptsupp               absent; set to   -1000000.0000000000     
+  powheginput keyword doublefsr            set to    1.0000000000000000     
+  powheginput keyword smartsig             set to    1.0000000000000000     
+  powheginput keyword withsubtr            absent; set to   -1000000.0000000000     
+  powheginput keyword hfact                absent; set to   -1000000.0000000000     
+  powheginput keyword withdamp             absent; set to   -1000000.0000000000     
+  powheginput keyword bornzerodamp         absent; set to   -1000000.0000000000     
+  powheginput keyword hdamp                absent; set to   -1000000.0000000000     
+  powheginput keyword LOevents             absent; set to   -1000000.0000000000     
+  powheginput keyword novirtual            absent; set to   -1000000.0000000000     
+  powheginput keyword rand1                absent; set to   -1000000.0000000000     
+  powheginput keyword rand2                absent; set to   -1000000.0000000000     
+  powheginput keyword iupperisr            absent; set to   -1000000.0000000000     
+  powheginput keyword iupperfsr            absent; set to   -1000000.0000000000     
+  powheginput keyword pdfreweight          absent; set to   -1000000.0000000000     
+  powheginput keyword storeinfo_rwgt       absent; set to   -1000000.0000000000     
+  powheginput keyword compute_rwgt         absent; set to   -1000000.0000000000     
+  powheginput keyword minlo                absent; set to   -1000000.0000000000     
+  powheginput keyword ubexcess_correct     absent; set to   -1000000.0000000000     
+ RM48 INITIALIZED:        20           0         0
+  powheginput keyword par_diexp            absent; set to   -1000000.0000000000     
+  powheginput keyword par_dijexp           absent; set to   -1000000.0000000000     
+  powheginput keyword par_2gsupp           absent; set to   -1000000.0000000000     
+  powheginput keyword ih1                  set to    1.0000000000000000     
+  powheginput keyword ih2                  set to    1.0000000000000000     
+  powheginput keyword lhans2               set to    91500.000000000000     
+  check: alpha_s(Mz)=  0.11800230075848536     
+  alpha_s order (0,1,2):            2
+  Lambda 5 is   0.20839257465514974     
+  LHA value is   0.23899999999999999     
+  powheginput keyword bornktmin            absent; set to   -1000000.0000000000     
+  powheginput keyword ptsqmin              absent; set to   -1000000.0000000000     
+  powheginput keyword charmthr             absent; set to   -1000000.0000000000     
+  powheginput keyword bottomthr            absent; set to   -1000000.0000000000     
+  powheginput keyword evenmaxrat           absent; set to   -1000000.0000000000     
+ ****************************************
+ ****************************************
+       USING alphasPDF from LHAPDF 
+ ****************************************
+ ****************************************
+  powheginput keyword hdecaymode           absent; set to   -1000000.0000000000     
+  powheginput keyword channel_type         absent; set to   -1000000.0000000000     
+ for processes including gluons:
+
+  all flavor channels are summed
+  powheginput keyword qq_exclude           absent; set to   -1000000.0000000000     
+
+  pure quark flavor channels are considered
+  powheginput keyword withfulltags         set to    1.0000000000000000     
+ done finalize
+  powheginput keyword ckm_offdiag          set to    0.0000000000000000     
+  
+               Physics parameters
+ -----------------------------------------------
+  vbfnloinput keyword TOPMASS              set to    172.40000000000001     
+  vbfnloinput keyword BOTTOMMASS           set to    4.7500000000000000     
+  vbfnloinput keyword CHARMMASS            set to    1.3999999999999999     
+  vbfnloinput keyword TAU_MASS             set to    1.7767999999999999     
+  vbfnloinput keyword FERMI_CONST          set to    1.1663700000000000E-005
+  
+   Information on couplings, masses and widths
+ ===============================================
+  
+   SM coupling parameters 
+ ---------------------------
+   G_Fermi                         : 0.000011663700
+   SIN**2 of the weak mixing angle : 0.22301323
+   Q.E.D. fine structure constant  : 1/132.18517    
+   Q.C.D. NLO alfas(MZ)            : 0.11800230
+  
+      particle masses
+ ---------------------------
+   mass of the Z0 boson            :   91.1876
+   mass of the W+/- boson          :   80.3790
+   mass of the Higgs boson         :  125.0000
+   mass of the top quark           :  172.4000
+   mass of the bottom quark at MH  :    2.7377
+  (All other fermions have mass equal ZERO)
+  
+      particle widths
+ ---------------------------
+   total widths of Z0              :   2.495200 GeV
+   total widths of W+ or W-        :   2.141000 GeV
+   total widths of Higgs           :   0.004030 GeV
+   total widths of top quark       :   1.339935 GeV
+  
+  partial Higgs decay width 
+ ---------------------------
+   H -> WW                         : 0.865507D-03 GeV
+   H -> ZZ                         : 0.111200D-03 GeV
+   H -> bottom anti-bottom         : 0.231240D-02 GeV
+   H -> top anti-top               : 0.000000D+00 GeV
+   H -> charm anti-charm           : 0.792522D-04 GeV
+   H -> tau anti-tau               : 0.258685D-03 GeV
+   H -> mu anti-mu                 : 0.000000D+00 GeV
+   H -> gluon gluon                : 0.333497D-03 GeV
+   H -> gamma gamma                : 0.986440D-05 GeV
+   H -> Z gamma                    : 0.671543D-05 GeV
+  
+     branching ratios
+ ---------------------------
+   W -> lepton anti-lepton         : 10.6128335 %
+   W -> massless quark anti-quark  : 33.0343958 %
+   W -> top bottom                 :  0.0000000 %
+  
+   Z -> neutrino anti-neutrino     :  6.6480185 %
+   Z -> charged lepton anti-lepton :  3.3627425 %
+   Z -> up-type quark anti-quark   : 12.0461884 %
+   Z -> down-type quark anti-quark : 15.4548636 %
+   Z -> top anti-top               :  0.0000000 %
+  
+   H -> WW                         : 21.4766015 %
+   H -> ZZ                         :  2.7593033 %
+   H -> bottom anti-bottom         : 57.3796757 %
+   H -> top anti-top               :  0.0000000 %
+   H -> charm anti-charm           :  1.9665548 %
+   H -> tau anti-tau               :  6.4189919 %
+   H -> mu anti-mu                 :  0.0000000 %
+   H -> gluon gluon                :  8.2753567 %
+   H -> gamma gamma                :  0.2447741 %
+   H -> Z gamma                    :  0.1666359 %
+  
+ *************************************
+ Z mass =    91.187600000000003     
+ Z width =    2.4952000000000001     
+ W mass =    80.379000000000005     
+ W width =    2.1410000000000000     
+ H mass =    125.00000000000000     
+ H width =    4.0299999999999997E-003
+ 1/alphaem =    132.18516510406951     
+ sthw2 =   0.22301322532678336     
+ (unit_e)^2 =    9.5066421443477850E-002
+ (g_w)^2 =   0.42628154139368252     
+ CKM matrix for events
+   1.0000000000000000        0.0000000000000000        0.0000000000000000     
+   0.0000000000000000        1.0000000000000000        0.0000000000000000     
+   0.0000000000000000        0.0000000000000000        1.0000000000000000     
+ *************************************
+  **** Minimum maxalr allowed:         7316  *********
+  **** Number of born graphs:           396
+  **** Number of real graphs:          2333
+  **** Number of regular regions:           0
+  powheginput keyword softtest             absent; set to   -1000000.0000000000     
+  powheginput keyword colltest             absent; set to   -1000000.0000000000     
+  POWHEG: no soft and coll. tests if bornonly is set
+#--------------------------------------------------------------------------
+#                         FastJet release 3.5.1
+#                 M. Cacciari, G.P. Salam and G. Soyez                  
+#     A software package for jet finding and analysis at colliders      
+#                           https://fastjet.fr                           
+#	                                                                      
+# Please cite EPJC72(2012)1896 [arXiv:1111.6097] if you use this package
+# for scientific work and optionally PLB641(2006)57 [hep-ph/0512210].   
+#                                                                       
+# FastJet is provided without warranty under the GNU GPL v2 or higher.  
+# It uses T. Chan's closest pair algorithm, S. Fortune's Voronoi code
+# and 3rd party plugin jet algorithms. See COPYING file for details.
+#--------------------------------------------------------------------------
+  powheginput keyword phspcuts             set to    1.0000000000000000     
+  powheginput keyword parallelstage        set to    1.0000000000000000     
+  powheginput keyword xgriditeration       set to    2.0000000000000000     
+
+  POWHEG: initialization
+  Computing the integral of the absolute value
+  of the cross section to set up the adaptive grid
+ RM48 INITIALIZED:  54217137           0         0
+ RM48 INITIALIZED: 800736021           0         0
+  Opened pwggridinfo-btl-xg1-0001.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0002.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0003.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0004.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0005.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0006.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0007.dat                                                                        
+  Opened pwggridinfo-btl-xg1-0008.dat                                                                        
+  powheginput keyword ncall1rm             absent; set to   -1000000.0000000000     
+  powheginput keyword itmx1rm              absent; set to   -1000000.0000000000     
+  result +- errtot (picobarn) for each iteration
+ upper limit incompatible with bin size
+ replacing    800.00000000000000       with    810.00000000000000     
+  in histogram ptH_h
+  powheginput keyword fixedgrid            absent; set to   -1000000.0000000000     
+  powheginput keyword btildeborn           absent; set to   -1000000.0000000000     
+  powheginput keyword btildevirt           absent; set to   -1000000.0000000000     
+  powheginput keyword btildecoll           absent; set to   -1000000.0000000000     
+  powheginput keyword btildereal           absent; set to   -1000000.0000000000     
+  powheginput keyword btildennlo           absent; set to   -1000000.0000000000     
+ Using no Born suppression
+ *************************************
+ Factorization and renormalization 
+ scales (mur, muf) set to 
+ ((MH/2)**4+(MH*ptH/2)**2)**1/4
+ Renormalization scale rescaled by   1.0000000000000000     
+ Factorization scale rescaled by     1.0000000000000000     
+ *************************************
+ RM48 INITIALIZED: 800736021         118         0
+ RM48IN SKIPPING OVER             118
+  powheginput keyword ptalljetmin          set to    25.000000000000000     
+  powheginput keyword ptjetmin             set to    25.000000000000000     
+  powheginput keyword mjjmin               set to    600.00000000000000     
+  powheginput keyword deltay_jjmin         set to    4.5000000000000000     
+  powheginput keyword yjetmax              set to    4.5000000000000000     
+  powheginput keyword Rsep_jjmin           set to   0.40000000000000002     
+  powheginput keyword jet_opphem           set to    1.0000000000000000     
+ **************************************************
+ **************************************************
+              USING PHASE SPACE CUTS               
+ **************************************************
+ **************************************************
+  powheginput keyword charmthrpdf          absent; set to   -1000000.0000000000     
+  powheginput keyword bottomthrpdf         absent; set to   -1000000.0000000000     
+   1.0514644354478323E-003   3.1092811022433828E-005
+  Importance sampling x grids generated and stored
+ powheginput WARNING: unused variable fakevirt            
+ powheginput WARNING: unused variable use-old-grid        
+ powheginput WARNING: unused variable use-old-ubound      
+ powheginput WARNING: unused variable foldcsi             
+ powheginput WARNING: unused variable foldy               
+ powheginput WARNING: unused variable foldphi             
+ powheginput WARNING: unused variable nubound             
+ powheginput WARNING: unused variable icsimax             
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+-----------------------------------------------------------[1m
+                Welcome to HOPPET v. 2.3.0
+    Higher Order Perturbative Parton Evolution Toolkit     [0m
+-----------------------------------------------------------
+                  Written (2001-2025) by                   
+     Frederic Dreyer, Alexander Karlberg, Paolo Nason,     
+      Juan Rojo, Gavin P. Salam and Giulia Zanderighi      
+
+ It is made available under the GNU public license.        
+ If using it for scientific work, please cite              
+ G.P. Salam & J. Rojo, CPC 180(2009)120 (arXiv:0804.3755). 
+ and A. Karlberg, P. Nason, G.P. Salam, G. Zanderighi      
+ & F. Dreyer (arXiv:2510.09310).                           
+ 
+ You are also encouraged to cite the original references,  
+ for LO, NLO, NNLO, and N3LO splitting functions, the QCD  
+ 1, 2, 3, and 4 loop beta functions and the PDF and        
+ coupling mass threshold matching functions. Additionally  
+ the DIS coefficient functions should be cited when used.  
+-----------------------------------------------------------
+ powheginput WARNING: unused variable iymax               
+ powheginput WARNING: unused variable xupbound            

@@ -1,0 +1,5 @@
+# Stamped by /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4- on 24/09/2026 at 11:34:05
+# /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4-480ce2ec5103/scratchpad/ws/proVBFH-inclusive/provbfh_incl -lo -sqrts 13000 -pdf NNPDF30_nnlo_as_0118 -mh 125 -mw 80.398 -wwidth 2.141 -scale-choice 3 -ncall1 1000000 -ncall2 4000000 -itmx1 3 -itmx2 3
+# Total LO cross-section (pb)
+# central     MC_error
+ 4.027595E+00 1.219964E-03

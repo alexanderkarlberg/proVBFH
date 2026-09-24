@@ -1,0 +1,84 @@
+LHAPDF 6.5.6 loading /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4-480ce2ec5103/scratchpad/deps/share/LHAPDF/PDF4LHC15_nnlo_mc/PDF4LHC15_nnlo_mc_0000.dat
+PDF4LHC15_nnlo_mc PDF set, member #0, version 1; LHAPDF ID = 91500
+ PDF member:           0
+ Doing μR =    1.0000000000000000      , and μF =    1.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+
+ input parameters for vegas: ndim= 11 ncall= 885735.
+                             it=    0 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+                              xl( 8)=   0.000     xu( 8)=   1.000    
+                              xl( 9)=   0.000     xu( 9)=   1.000    
+                              xl(10)=   0.000     xu(10)=   1.000    
+                              xl(11)=   0.000     xu(11)=   1.000    
+
+ iteration no.  1: integral = 0.2138319E-02+/-  0.59E-04
+ all iterations: integral = 0.2138319E-02+/-  0.59E-04 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral = 0.2042357E-02+/-  0.62E-05
+ all iterations: integral = 0.2043387E-02+/-  0.61E-05 chi**2/it'n =  2.6    
+
+ iteration no.  3: integral = 0.2052382E-02+/-  0.42E-05
+ all iterations: integral = 0.2049499E-02+/-  0.35E-05 chi**2/it'n =  2.0    
+ ****************************************************
+ * Writing out vegas grid to grids_0010.dat                                                            *
+ ****************************************************
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+-----------------------------------------------------------[1m
+                Welcome to HOPPET v. 2.3.0
+    Higher Order Perturbative Parton Evolution Toolkit     [0m
+-----------------------------------------------------------
+                  Written (2001-2025) by                   
+     Frederic Dreyer, Alexander Karlberg, Paolo Nason,     
+      Juan Rojo, Gavin P. Salam and Giulia Zanderighi      
+
+ It is made available under the GNU public license.        
+ If using it for scientific work, please cite              
+ G.P. Salam & J. Rojo, CPC 180(2009)120 (arXiv:0804.3755). 
+ and A. Karlberg, P. Nason, G.P. Salam, G. Zanderighi      
+ & F. Dreyer (arXiv:2510.09310).                           
+ 
+ You are also encouraged to cite the original references,  
+ for LO, NLO, NNLO, and N3LO splitting functions, the QCD  
+ 1, 2, 3, and 4 loop beta functions and the PDF and        
+ coupling mass threshold matching functions. Additionally  
+ the DIS coefficient functions should be cited when used.  
+-----------------------------------------------------------
+
+ input parameters for vegas: ndim= 11 ncall=3897234.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+                              xl( 8)=   0.000     xu( 8)=   1.000    
+                              xl( 9)=   0.000     xu( 9)=   1.000    
+                              xl(10)=   0.000     xu(10)=   1.000    
+                              xl(11)=   0.000     xu(11)=   1.000    
+
+ iteration no.  1: integral = 0.2053026E-02+/-  0.19E-05
+ all iterations: integral = 0.2053026E-02+/-  0.19E-05 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral = 0.2050129E-02+/-  0.19E-05
+ all iterations: integral = 0.2051555E-02+/-  0.13E-05 chi**2/it'n =  1.2    
+
+ iteration no.  3: integral = 0.2052532E-02+/-  0.19E-05
+ all iterations: integral = 0.2051881E-02+/-  0.11E-05 chi**2/it'n = 0.68    
+
+==================== TOTAL TIME :  6.29E+01 s.
+

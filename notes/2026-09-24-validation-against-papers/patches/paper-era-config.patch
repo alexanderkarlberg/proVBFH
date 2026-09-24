@@ -1,0 +1,24 @@
+diff -ruN /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/parameters.f90 src/parameters.f90
+--- /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/parameters.f90	2026-09-24 09:52:05.502416902 +0200
++++ src/parameters.f90	2026-09-24 11:40:34.846082029 +0200
+@@ -101,7 +101,7 @@
+     ! various setup
+     write(seedstr,"(I4.4)") iseed
+     idum = -iseed
+-    Qmin = max(sqrt(2.0_dp), sqrt(Q2minPDF))
++    Qmin = 1.0_dp
+     pi   = 4.0_dp*atan(1.0_dp)
+     Q0_cut_sq = 4.0_dp
+     mh_sq = mh**2
+diff -ruN /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/provbfhh_incl.f90 src/provbfhh_incl.f90
+--- /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/provbfhh_incl.f90	2026-09-24 09:52:05.502691435 +0200
++++ src/provbfhh_incl.f90	2026-09-24 11:40:34.853383398 +0200
+@@ -102,7 +102,7 @@
+         call hoppetStartExtended(ymax,dy,minQval,max(xmuf,one)*maxQval&
+              &,dlnlnQ,nloop, order,factscheme_MSbar)
+         call StartStrFct(order_max, nflav, scale_choice_hoppet, mh,&
+-             & .not.exact_coeff, mw, mz)
++             & .not.exact_coeff, 80.398_dp, 91.187_dp)
+         call read_PDF(toy_Q0, test_Q0, mur_PDF)
+         call InitStrFct(order_max, separate_orders = .true., xR = xmur, xF = xmuf)
+         ! !! === DEBUGGING ONLY

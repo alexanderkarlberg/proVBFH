@@ -1,0 +1,12 @@
+diff -ruN /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/parameters.f90 src/parameters.f90
+--- /home/karlberg/cernbox/proVBFH-ci/proVBFH-inclusive/src/parameters.f90	2026-09-24 09:52:05.502416902 +0200
++++ src/parameters.f90	2026-09-24 11:33:17.034823944 +0200
+@@ -101,7 +101,7 @@
+     ! various setup
+     write(seedstr,"(I4.4)") iseed
+     idum = -iseed
+-    Qmin = max(sqrt(2.0_dp), sqrt(Q2minPDF))
++    Qmin = 1.0_dp
+     pi   = 4.0_dp*atan(1.0_dp)
+     Q0_cut_sq = 4.0_dp
+     mh_sq = mh**2

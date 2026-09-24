@@ -1,0 +1,76 @@
+LHAPDF 6.5.6 loading /tmp/claude-1000/-home-karlberg-cernbox-proVBFH-github/60e1988e-5395-46ce-8aa4-480ce2ec5103/scratchpad/deps/share/LHAPDF/NNPDF30_nnlo_as_0118/NNPDF30_nnlo_as_0118_0000.dat
+NNPDF30_nnlo_as_0118 PDF set, member #0, version 2; LHAPDF ID = 261000
+ PDF member:           0
+ Doing μR =    1.0000000000000000      , and μF =    1.0000000000000000     
+Starting the structure functions with fixed number of flavours
+nf =  5
+
+ input parameters for vegas: ndim=  7 ncall= 839808.
+                             it=    0 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  4.015501    +/-  0.18E-01
+ all iterations: integral =  4.015501    +/-  0.18E-01 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  4.032771    +/-  0.50E-02
+ all iterations: integral =  4.031530    +/-  0.48E-02 chi**2/it'n = 0.86    
+
+ iteration no.  3: integral =  4.032766    +/-  0.44E-02
+ all iterations: integral =  4.032195    +/-  0.33E-02 chi**2/it'n = 0.45    
+ ****************************************************
+ * Writing out vegas grid to grids_0010.dat                                                            *
+ ****************************************************
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+-----------------------------------------------------------[1m
+                Welcome to HOPPET v. 2.3.0
+    Higher Order Perturbative Parton Evolution Toolkit     [0m
+-----------------------------------------------------------
+                  Written (2001-2025) by                   
+     Frederic Dreyer, Alexander Karlberg, Paolo Nason,     
+      Juan Rojo, Gavin P. Salam and Giulia Zanderighi      
+
+ It is made available under the GNU public license.        
+ If using it for scientific work, please cite              
+ G.P. Salam & J. Rojo, CPC 180(2009)120 (arXiv:0804.3755). 
+ and A. Karlberg, P. Nason, G.P. Salam, G. Zanderighi      
+ & F. Dreyer (arXiv:2510.09310).                           
+ 
+ You are also encouraged to cite the original references,  
+ for LO, NLO, NNLO, and N3LO splitting functions, the QCD  
+ 1, 2, 3, and 4 loop beta functions and the PDF and        
+ coupling mass threshold matching functions. Additionally  
+ the DIS coefficient functions should be cited when used.  
+-----------------------------------------------------------
+
+ input parameters for vegas: ndim=  7 ncall=3294172.
+                             it=    4 itmx=    3
+                             nprn=  0 alph= 1.50
+                             mds=  1 nd=  50
+                              xl( 1)=   0.000     xu( 1)=   1.000    
+                              xl( 2)=   0.000     xu( 2)=   1.000    
+                              xl( 3)=   0.000     xu( 3)=   1.000    
+                              xl( 4)=   0.000     xu( 4)=   1.000    
+                              xl( 5)=   0.000     xu( 5)=   1.000    
+                              xl( 6)=   0.000     xu( 6)=   1.000    
+                              xl( 7)=   0.000     xu( 7)=   1.000    
+
+ iteration no.  1: integral =  4.029101    +/-  0.21E-02
+ all iterations: integral =  4.029101    +/-  0.21E-02 chi**2/it'n =  0.0    
+
+ iteration no.  2: integral =  4.029382    +/-  0.21E-02
+ all iterations: integral =  4.029242    +/-  0.15E-02 chi**2/it'n = 0.87E-02
+
+ iteration no.  3: integral =  4.029116    +/-  0.21E-02
+ all iterations: integral =  4.029200    +/-  0.12E-02 chi**2/it'n = 0.56E-02
+
+==================== TOTAL TIME :  2.47E+01 s.
+
