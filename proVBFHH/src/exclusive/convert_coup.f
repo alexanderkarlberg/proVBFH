@@ -1625,9 +1625,16 @@ c  	vector boson couplings:
 	
 c	gauge - higgs boson couplings:
 
-        kappa_2v=powheginput("#cVVHHfact")
-        kappa_v=powheginput("#cVVHfact")
-        kappa_lambda=powheginput("#lambdafact")
+c     coupling modifiers default to the SM value if not set in powheg.input
+        kappa_2v=1d0
+        kappa_v=1d0
+        kappa_lambda=1d0
+        if(powheginput("#cVVHHfact").gt.-1d5)
+     $       kappa_2v=powheginput("#cVVHHfact")
+        if(powheginput("#cVVHfact").gt.-1d5)
+     $       kappa_v=powheginput("#cVVHfact")
+        if(powheginput("#lambdafact").gt.-1d5)
+     $       kappa_lambda=powheginput("#lambdafact")
 c     gauge-higgs boson couplings:
         gwwh  = kappa_v*dcmplx(b(3,4,6)*wmass)	
         gzzh  = kappa_v*dcmplx(b(2,2,6)*wmass)
