@@ -195,6 +195,7 @@ incl_parameters.o: integration.o
 incl2pwhg.o: matrix_element.o
 matrix_element.o: incl_parameters.o tensor.o nonfact.o
 nonfact.o : helper.o constants.o incl_parameters.o nonfact_expressions.o
+constants.o: helper.o
 
 clean:
 	rm -f $(OBJ)/*.o $(OBJ)/*~ $(OBJ)/*.mod
