@@ -79,9 +79,12 @@ jobs:
           # so the major version goes into the dependency cache key
           echo "gfortran=$(gfortran -dumpversion | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache dependencies
+      # Restore and save separately: actions/cache only saves when the
+      # whole job succeeds, so a failing test would otherwise force the
+      # dependencies to be rebuilt on every run.
+      - name: Restore dependencies
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.PREFIX }}
           key: deps-${{ runner.os }}-${{ runner.arch }}-gfortran${{ steps.compiler.outputs.gfortran }}-hoppet${{ env.HOPPET_VERSION }}-lhapdf${{ env.LHAPDF_VERSION }}-fastjet${{ env.FASTJET_VERSION }}-${{ hashFiles('ci/install-deps.sh') }}
@@ -89,6 +92,13 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: ci/annotate.sh ci/install-deps.sh
+
+      - name: Save dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.PREFIX }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
 
       - name: Set up environment
         id: env
