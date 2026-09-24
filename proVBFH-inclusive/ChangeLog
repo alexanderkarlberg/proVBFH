@@ -1,3 +1,18 @@
+2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
+
+	* src/tensor.f90:
+	Rewritten without allocatable components (fixed-size arrays, no
+	deep copies), about twice as fast; same interface, and the same
+	results to the last bit. Fixed the rank-2 x rank-1 contraction over
+	the second index (not used by the matrix elements). The same file is
+	now used in proVBFH, proVBFHH and proVBFH-inclusive.
+
+	* tests/{tensor_legacy.f90|test_tensor.f90}:
+	* Makefile:
+	Added "make check": unit test of src/tensor.f90 against the previous
+	implementation (kept as tests/tensor_legacy.f90) and against
+	explicit formulae, on random inputs.
+
 2022-10-13  Alexander Karlberg  <alexander.karlberg@cern.ch>
 
 	* src/provbfh_incl.f90:

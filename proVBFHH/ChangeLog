@@ -1,3 +1,10 @@
+2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
+
+	* src/inclusive/tensor.f90:
+	Replaced by the allocation-free version shared with proVBFH and
+	proVBFH-inclusive (same interface and results; see the
+	proVBFH-inclusive ChangeLog and its "make check").
+
 2022-08-24  Alexander Karlberg  <alexander.karlberg@cern.ch>
 
 	* src/inclusive/{nonfact.f90|matrix_element.f90}:

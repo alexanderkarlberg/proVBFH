@@ -2,6 +2,7 @@
 # Makefile for proVBFH-inclusive 
 #
 #  - "make" creates the vbfh executable
+#  - "make check" builds and runs the unit test in tests/
 #  - "make clean" removes all files created by the "make" command
 ######################################################################
 
@@ -38,7 +39,8 @@ MODULES = integration phase_space parameters io_utils lcl_dec		\
 #FF = ifort
 SRC=$(PWD)/src
 OBJ=$(PWD)/obj
-VPATH=./:$(SRC):/$(OBJ)
+TESTS=$(PWD)/tests
+VPATH=./:$(SRC):$(TESTS):/$(OBJ)
 
 FFLAGS= -O3 -ffixed-line-length-132 -flto 
 FFLAGS+= $(shell $(HPEXEC) --fflags)
@@ -52,6 +54,14 @@ all: provbfh_incl provbfhh_incl
 # main program
 $(MAIN): %: %.o $(addsuffix .o,$(MODULES)) Makefile
 	$(FF) $(OBJ)/$@.o $(patsubst %,$(OBJ)/%,$(addsuffix .o,$(MODULES))) \
+	$(FFLAGS) $(LDFLAGS) -o $@
+
+# unit test of the tensor module against its previous implementation
+check: tests/test_tensor
+	./tests/test_tensor
+
+tests/test_tensor: test_tensor.o tensor.o tensor_legacy.o Makefile
+	$(FF) $(patsubst %,$(OBJ)/%,test_tensor.o tensor.o tensor_legacy.o) \
 	$(FFLAGS) $(LDFLAGS) -o $@
 
 # object files
@@ -69,8 +79,9 @@ provbfhh_incl.o: matrix_element_dihiggs.o parameters.o phase_space_dihiggs.o int
 parameters.o: io_utils.o lcl_dec.o integration.o
 matrix_element.o: parameters.o
 matrix_element_dihiggs.o: parameters.o tensor.o ME_expressions.o
+test_tensor.o: tensor.o tensor_legacy.o
 
 # make clean
 clean:
-	rm -f $(OBJ)/*.o $(OBJ)/*.mod *~ *.log fort* $(MAIN)
+	rm -f $(OBJ)/*.o $(OBJ)/*.mod *~ *.log fort* $(MAIN) tests/test_tensor
 
