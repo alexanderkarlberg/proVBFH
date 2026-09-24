@@ -25,7 +25,7 @@ module incl_parameters
 !  logical, public :: small_qt_limit
   character * 5, public :: seedstr
   real(dp), public :: test_Q0, muR_PDF
-  integer,  public :: niter
+  real(dp), public :: nf_epsrel ! relative accuracy of the angular integrals of the NF corrections
     real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
   integer, public :: nloop, order
 
@@ -84,9 +84,13 @@ contains
     endif
     if(powheginput('#nonfact').eq.1) then
        non_fact = .true.
-       niter = 100
+       ! Relative accuracy (with respect to the integral of the absolute
+       ! value) of the adaptive integration over the gluon azimuth
+       nf_epsrel = 1d-8
+       if(powheginput('#nf_epsrel').gt.0d0) nf_epsrel = powheginput('#nf_epsrel')
        if(powheginput('#niter').gt.0d0) then
-          niter = int(powheginput('#niter'))
+          print*, 'niter is no longer used: the angular integrals of the non &
+               &factorisable corrections are now adaptive, see nf_epsrel'
        endif
        if(order_max.ne.1) then
           print*, 'In order to compute non factorisable corrections qcd_order &

@@ -1,5 +1,19 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/nonfact.f90:
+	* src/inclusive/incl_parameters.f90:
+	* docs/*-doc.tex, docs/*-doc.pdf:
+	The azimuthal integrals of the non-factorisable corrections used RK4
+	with niter = 100 steps (400 integrand calls per integral; since the
+	integrands do not depend on y this is Simpson's rule with half of
+	the calls repeated). They now use adaptive Gauss-Kronrod (7-15)
+	quadrature with relative accuracy nf_epsrel (new input, default
+	1e-8), typically 70-110 calls, and much more accurate at large
+	transverse momenta, where the integrands are sharply peaked (RK4 was
+	off by up to 16% there). The integrals multiplied by log(lambda/MV^2)
+	are skipped, since lambda = MV^2. niter is no longer used. The NF runs
+	are 4-5 times faster.
+
 	* src/inclusive/nonfact_expressions.f:
 	The roots r1-r6 and the integrands of the non-factorisable
 	corrections were complex*8, i.e. single precision (effect on the
