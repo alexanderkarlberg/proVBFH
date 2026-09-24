@@ -109,11 +109,13 @@ VBFHJJJ=$(PWGPATH)/hjjj-files
 # includes
 INCLUDE= -I$(SRC) -I$(INCLUSIVE) -I$(EXCLUSIVE) -I$(PWGPATH) -I$(PWGPATH)/include 
 INCLUDE+= -I$(ANALYSIS) -I$(VBFHJJJ) -I$(VBFHJJJ)/vbfnlo-files 
+# where the Fortran compiler writes .mod files (Fortran rules only:
+# clang++, the default C++ compiler on macOS, rejects -J)
 ifeq ("$(COMPILER)","gfortran")	
-INCLUDE+= -J$(OBJ)
+MODDIR= -J$(OBJ)
 endif
 ifeq ("$(COMPILER)","ifort")	
-INCLUDE+= -module $(OBJ)
+MODDIR= -module $(OBJ)
 endif
 # vpath
 VPATH= ./:$(SRC)/:$(EXCLUSIVE)/:$(INCLUSIVE)/:$(PWGPATH)/:$(EXCLUSIVE)/vbfnlo-files/
@@ -170,18 +172,26 @@ proVBFH: $(OBJS) $(ANALYSIS_FILE) Makefile
 	$(FC) $(FFLAGS) $(STATIC) $(patsubst %,$(OBJ)/%,$(OBJS)) \
 	$(patsubst %,$(OBJ)/%,$(ANALYSIS_FILE)) $(LIBS) $(CXXLIBS) -o $@
 
+# combine_runs has ~1.5 GB of static arrays. On macOS (always
+# position-independent code) gcc does not support -mcmodel=large, and
+# it is not needed there.
+ifeq ($(shell uname), Darwin)
+  BIGDATA=
+else
+  BIGDATA= -mcmodel=large
+endif
 combine_runs: 
-	$(FC) $(FFLAGS) -mcmodel=large -o $(AUX)/$@ $(AUX)/combine_runs.f
+	$(FC) $(FFLAGS) $(BIGDATA) -o $(AUX)/$@ $(AUX)/combine_runs.f
 
 # rules to compile source programs
 %.o: %.f Makefile
-	$(FC) $(FFLAGS) $(INCLUDE) -c -o $(OBJ)/$@ $< 
+	$(FC) $(FFLAGS) $(INCLUDE) $(MODDIR) -c -o $(OBJ)/$@ $< 
 
 %.o: %.F Makefile
-	$(FC) $(FFLAGS) $(INCLUDE) -o $(OBJ)/$@ $< -c 
+	$(FC) $(FFLAGS) $(INCLUDE) $(MODDIR) -o $(OBJ)/$@ $< -c 
 
 %.o: %.f90 Makefile
-	$(FC) $(F90FLAGS) $(INCLUDE) -o $(OBJ)/$@ $< -c
+	$(FC) $(F90FLAGS) $(INCLUDE) $(MODDIR) -o $(OBJ)/$@ $< -c
 
 %.o: %.cc Makefile
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c -o $(OBJ)/$@ $<

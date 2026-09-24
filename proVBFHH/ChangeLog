@@ -1,5 +1,11 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* Makefile:
+	Build on macOS: the Fortran module directory flag (-J) is no longer
+	passed to the C++ compiler (clang++ rejects it), and combine_runs is
+	linked without -mcmodel=large on macOS (not supported there with the
+	position-independent code that is the default, and not needed).
+
 	* src/inclusive/tensor.f90:
 	* src/inclusive/matrix_element.f90 (trace_matrix):
 	Use error stop, so that fatal errors give a non-zero exit status.
