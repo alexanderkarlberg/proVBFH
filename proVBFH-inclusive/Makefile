@@ -44,7 +44,8 @@ FFLAGS= -O3 -ffixed-line-length-132 -flto
 FFLAGS+= $(shell $(HPEXEC) --fflags)
 INCLUDE= -I$(SRC) $(wildcard *.h)
 FFLAGS+= $(INCLUDE) -J$(OBJ)
-LDFLAGS= $(shell $(HPEXEC) --libs) $(shell $(LHEXEC) --libs)
+LDFLAGS= -Wl,-rpath,$(shell $(HPEXEC) --prefix)/lib $(shell $(HPEXEC) --libs)
+LDFLAGS+= -Wl,-rpath,$(shell $(LHEXEC) --prefix)/lib $(shell $(LHEXEC) --libs)
 
 all: provbfh_incl provbfhh_incl
 
