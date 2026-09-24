@@ -1,5 +1,11 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/matrix_element_dihiggs.f90 (eval_matrix_element_tensor,
+	VVtoHH_tensor):
+	The tensor matrix element ignored the coupling modifiers -cVVHfact,
+	-cVVHHfact and -lambdafact. The VV -> HH current is now built by
+	VVtoHH_tensor, as in proVBFHH, including them.
+
 	* src/matrix_element_dihiggs.f90 (eval_matrix_element_tensor):
 	The tensor matrix element now combines the perturbative orders like
 	the analytic one (products of beam-1 order i and beam-2 order j with

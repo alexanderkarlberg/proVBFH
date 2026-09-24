@@ -389,13 +389,12 @@ contains
     real(dp) :: muR1val, muR2val, muF1val, muF2val
     real(dp) :: Fx1(-6:7,4), Fx2(-6:7,4)
     real(dp) :: WW_norm, ZZ_norm, overall_norm
-    real(dp) :: q1q1, q2q2, k1k2sq, q1k1sq, q1k2sq
     real(dp) :: TW(3,3), TZ(3,3)
     logical, parameter :: WpWm = .true., WmWp = .true., ZZ = .true.
     integer, parameter :: Wp=1, Wm=-1, Z=0
     integer :: iWp(3), iWm(3), iZ(3)
     type(tensors) :: M(-1:1), Mstar(-1:1), G1(3), G2(3)
-    type(tensors) :: g_mu_nu, q1mu, k1mu, k2mu
+    type(tensors) :: g_mu_nu
     real(dp) :: sigma
 
     ! Structure-function indices of F1, F2, F3 for each boson
@@ -409,39 +408,9 @@ contains
     g_mu_nu = gmunu
     g_mu_nu%up = .false. ! Lower all the indices
 
-    ! Copy the four-vectors into tensor types, with lower indices
-    call InitFourVector(q1mu,q1,.false.)
-    call InitFourVector(k1mu,pH1,.false.)
-    call InitFourVector(k2mu,pH2,.false.)
-
-    !Compute all combinations of dot-products
-    q1q1 = q1 .dot. q1
-    q2q2 = q2 .dot. q2
-    k1k2sq = (pH1 + pH2) .dot. (pH1 + pH2)
-    q1k1sq = (q1 + pH1) .dot. (q1 + pH1)
-    q1k2sq = (q1 + pH2) .dot. (q1 + pH2)
-
-    M(Wp) = (two*((two*MW**2)/complex(q1k1sq-MW**2,MW*W_WIDTH) &
-         & + (two*MW**2)/complex(q1k2sq-MW**2,MW*W_WIDTH) & 
-         & + three*MH**2/complex(k1k2sq - MH**2,MH*HWIDTH) + one))*g_mu_nu ! gmunu
-                                                                               ! contribution
-    M(Wp) = M(Wp) + (one/complex(q1k1sq -MW**2,MW*W_WIDTH)) &
-         &           *MW**2/complex(MW**2,-MW*W_WIDTH) &
-         &           *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
-    M(Wp) = M(Wp) + (one/complex(q1k2sq -MW**2,MW*W_WIDTH)) &
-         &           *MW**2/complex(MW**2,-MW*W_WIDTH) &
-         &           *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
-
-    M(Z) = (two*((two*MZ**2)/complex(q1k1sq-MZ**2,MZ*Z_WIDTH) &
-         & + (two*MZ**2)/complex(q1k2sq-MZ**2,MZ*Z_WIDTH) & 
-         & + three*MH**2/complex(k1k2sq - MH**2,MH*HWIDTH) + one))*g_mu_nu ! gmunu
-                                                                               ! contribution
-    M(Z) = M(Z) + (one/complex(q1k1sq -MZ**2,MZ*Z_WIDTH)) &
-         &         *MZ**2/complex(MZ**2,-MZ*Z_WIDTH) &
-         &         *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
-    M(Z) = M(Z) + (one/complex(q1k2sq -MZ**2,MZ*Z_WIDTH)) &
-         &         *MZ**2/complex(MZ**2,-MZ*Z_WIDTH) &
-         &         *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
+    ! Compute the VVHH currents
+    M(Wp) = VVtoHH_tensor(Wp, q1, pH1, pH2, g_mu_nu)
+    M(Z)  = VVtoHH_tensor(Z,  q1, pH1, pH2, g_mu_nu)
 
     ! We need to raise the indices of M. The matrix element is
     ! identical between W+ and W-, so M(Wm) is not needed.
@@ -462,8 +431,8 @@ contains
     call trace_matrix(G1, G2, M(Wp), Mstar(Wp), TW)
     call trace_matrix(G1, G2, M(Z), Mstar(Z), TZ)
 
-    Q1sq = -q1q1
-    Q2sq = -q2q2
+    Q1sq = -(q1 .dot. q1)
+    Q2sq = -(q2 .dot. q2)
     Q1val = sqrt(Q1sq)
     Q2val = sqrt(Q2sq)
     
@@ -513,6 +482,60 @@ contains
 
     res = overall_norm * sigma
   end function eval_matrix_element_tensor
+
+  !----------------------------------------------------------------------
+  ! The VV -> HH current M_mu_nu (both indices down) for V = W (V=+-1)
+  ! or Z (V=0), with the coupling modifiers cVVHfact, cVVHHfact and
+  ! lambdafact. As VVtoHH_tensor in proVBFHH, which in addition has
+  ! switches for the individual diagrams and returns them separately
+  ! for the non-factorisable corrections.
+  function VVtoHH_tensor(V, q1, pH1, pH2, g_mu_nu) result(res)
+    integer, intent(in) :: V
+    real(dp), intent(in) :: q1(0:3), pH1(0:3), pH2(0:3)
+    type(tensors), intent(in) :: g_mu_nu ! The metric with all indices down
+    type(tensors) :: res
+    type(tensors) :: q1mu, k1mu, k2mu, VV_H_HH, VVHH, VHVHVt, VHVHVu
+    real(dp) :: q1k1sq, q1k2sq, k1k2sq, MV, MVsq, V_WIDTH
+
+    ! Copy the four-vectors into tensor types, with lower indices
+    call InitFourVector(q1mu,q1,.false.)
+    call InitFourVector(k1mu,pH1,.false.)
+    call InitFourVector(k2mu,pH2,.false.)
+
+    !Compute all combinations of dot-products
+    k1k2sq = (pH1 + pH2) .dot. (pH1 + pH2)
+    q1k1sq = (q1 + pH1) .dot. (q1 + pH1)
+    q1k2sq = (q1 + pH2) .dot. (q1 + pH2)
+
+    if(V.eq.0) then ! Z
+       MV = MZ
+       V_WIDTH = Z_WIDTH
+    elseif(abs(V).eq.1) then ! W+/W-
+       MV = MW
+       V_WIDTH = W_WIDTH
+    else
+       stop 'Wrong boson in VVtoHH'
+    endif
+    MVsq = MV**2
+
+    ! VV -> H -> HH part
+    VV_H_HH = 6.0_dp * cVVHfact * lambdafact * MH**2/cmplx(k1k2sq - MH**2,MH*HWIDTH,kind=dp)*g_mu_nu
+    ! Quartic vertex part
+    VVHH = two * cVVHHfact * g_mu_nu 
+    ! Double VBF part
+    VHVHVt = two*((two*MVsq)/cmplx(q1k1sq-MVsq,MV*V_WIDTH,kind=dp))*g_mu_nu &
+         & + (one/cmplx(q1k1sq -MVsq,MV*V_WIDTH,kind=dp)) &
+         &         *MVsq/cmplx(MVsq,-MV*V_WIDTH,kind=dp) &
+         &         *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
+    VHVHVt = cVVHfact**2 * VHVHVt
+    VHVHVu = two*((two*MVsq)/cmplx(q1k2sq-MVsq,MV*V_WIDTH,kind=dp))*g_mu_nu &
+         & + (one/cmplx(q1k2sq -MVsq,MV*V_WIDTH,kind=dp)) &
+         &         *MVsq/cmplx(MVsq,-MV*V_WIDTH,kind=dp) &
+         &         *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
+    VHVHVu = cVVHfact**2 * VHVHVu
+
+    res = VV_H_HH + VVHH + VHVHVt + VHVHVu
+  end function VVtoHH_tensor
 
   !----------------------------------------------------------------------
   ! Basis tensors of the hadronic tensor of a beam with momentum P and
