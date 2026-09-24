@@ -1,5 +1,11 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/matrix_element.f90:
+	cmplx() without kind=dp returns a single-precision complex, so the
+	propagators of both the analytic and the tensor matrix element were
+	rounded to single precision (relative effect about 1e-8). Added
+	kind=dp throughout.
+
 	* src/inclusive/matrix_element.f90
 	(eval_matrix_element_tensor, VVtoHH_tensor):
 	Fixed the F3 terms of the tensor matrix element. The four-vectors

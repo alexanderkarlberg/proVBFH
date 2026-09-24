@@ -182,21 +182,23 @@ contains
     ! the first single-Higgs like piece, labelled A
     ! A = 2 Mv^4/((q1 + pH1)^2 - Mv^2) + 2 Mv^4/((q1 + pH2)^2 - Mv^2)
     !     + 6 v lambda Mv^2/((pH1 + pH2)^2 - Mh^2) + Mv^2
-    WW_A = cVVHfact**2*two*MW**4/cmplx(q1pH1sq - MWsq,MW*W_WIDTH) + cVVHfact**2*two*MW**4/cmplx(q1pH2sq - MWsq,MW*W_WIDTH) &
-         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MWsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + cVVHHfact*MWsq
-    ZZ_A = cVVHfact**2*two*MZ**4/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH) + cVVHfact**2*two*MZ**4/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH) &
-         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MZsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH) + cVVHHfact*MZsq
+    WW_A = cVVHfact**2*two*MW**4/cmplx(q1pH1sq - MWsq,MW*W_WIDTH,kind=dp) &
+         & + cVVHfact**2*two*MW**4/cmplx(q1pH2sq - MWsq,MW*W_WIDTH,kind=dp) &
+         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MWsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH,kind=dp) + cVVHHfact*MWsq
+    ZZ_A = cVVHfact**2*two*MZ**4/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH,kind=dp) &
+         & + cVVHfact**2*two*MZ**4/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH,kind=dp) &
+         & + 6.0_dp * v_H * cVVHfact * lambda_HHH * (MZsq) /cmplx(pH1pH2sq - mh_sq,MH*HWIDTH,kind=dp) + cVVHHfact*MZsq
 
     
     ! the two new terms, B and C
-    WW_B = cVVHfact**2*(MWsq/cmplx(q1pH1sq - MWsq,MW*W_WIDTH))/two &
-         &           *MWsq/cmplx(MWsq,-MW*W_WIDTH)
-    ZZ_B = cVVHfact**2*(MZsq/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH))/two &
-         &           *MZsq/cmplx(MZsq,-MZ*Z_WIDTH)
-    WW_C = cVVHfact**2*(MWsq/cmplx(q1pH2sq - MWsq,MW*W_WIDTH))/two &
-         &           *MWsq/cmplx(MWsq,-MW*W_WIDTH)
-    ZZ_C = cVVHfact**2*(MZsq/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH))/two &
-         &           *MZsq/cmplx(MZsq,-MZ*Z_WIDTH)
+    WW_B = cVVHfact**2*(MWsq/cmplx(q1pH1sq - MWsq,MW*W_WIDTH,kind=dp))/two &
+         &           *MWsq/cmplx(MWsq,-MW*W_WIDTH,kind=dp)
+    ZZ_B = cVVHfact**2*(MZsq/cmplx(q1pH1sq - MZsq,MZ*Z_WIDTH,kind=dp))/two &
+         &           *MZsq/cmplx(MZsq,-MZ*Z_WIDTH,kind=dp)
+    WW_C = cVVHfact**2*(MWsq/cmplx(q1pH2sq - MWsq,MW*W_WIDTH,kind=dp))/two &
+         &           *MWsq/cmplx(MWsq,-MW*W_WIDTH,kind=dp)
+    ZZ_C = cVVHfact**2*(MZsq/cmplx(q1pH2sq - MZsq,MZ*Z_WIDTH,kind=dp))/two &
+         &           *MZsq/cmplx(MZsq,-MZ*Z_WIDTH,kind=dp)
     
     ! Below is a narrow-width propagator; This was used in earlier versions of the code
     ! ZZ_norm =  MZ**8 / ((Q1sq + MZsq)**2 * (Q2sq + MZsq)**2)
@@ -639,8 +641,8 @@ contains
     enddo
 
     ! And now mulitply with overall factor i
-    T3(1)%values(:,:) = cmplx(zero,one) * T3(1)%values(:,:)
-    T3(2)%values(:,:) = cmplx(zero,one) * T3(2)%values(:,:)
+    T3(1)%values(:,:) = cmplx(zero,one,kind=dp) * T3(1)%values(:,:)
+    T3(2)%values(:,:) = cmplx(zero,one,kind=dp) * T3(2)%values(:,:)
     
     !These will contain the full structure functions for the two protons
     F1sum = zero
@@ -871,7 +873,7 @@ contains
 
     if(tri_on) then
        ! VV -> H -> HH part
-       VV_H_HH = 6.0_dp * cVVHfact * lambdafact * MH**2/cmplx(k1k2sq - MH**2,MH*HWIDTH)*g_mu_nu
+       VV_H_HH = 6.0_dp * cVVHfact * lambdafact * MH**2/cmplx(k1k2sq - MH**2,MH*HWIDTH,kind=dp)*g_mu_nu
        
        ! Quartic vertex part
        VVHH = two * cVVHHfact * g_mu_nu 
@@ -881,18 +883,18 @@ contains
     endif
     ! Double VBF part
     if(box_t_on) then
-       VHVHVt = two*((two*MVsq)/cmplx(q1k1sq-MVsq,MV*V_WIDTH))*g_mu_nu &
-            & + (one/cmplx(q1k1sq -MVsq,MV*V_WIDTH)) &
-            &         *MVsq/cmplx(MVsq,-MV*V_WIDTH) &
+       VHVHVt = two*((two*MVsq)/cmplx(q1k1sq-MVsq,MV*V_WIDTH,kind=dp))*g_mu_nu &
+            & + (one/cmplx(q1k1sq -MVsq,MV*V_WIDTH,kind=dp)) &
+            &         *MVsq/cmplx(MVsq,-MV*V_WIDTH,kind=dp) &
             &         *((two*k1mu+q1mu).otimes.(k2mu-k1mu-q1mu))
        VHVHVt = cVVHfact**2 * VHVHVt
     else
        VHVHVt%values = (zero,zero)
     endif
     if(box_u_on) then
-       VHVHVu = two*((two*MVsq)/cmplx(q1k2sq-MVsq,MV*V_WIDTH))*g_mu_nu &
-            & + (one/cmplx(q1k2sq -MVsq,MV*V_WIDTH)) &
-            &         *MVsq/cmplx(MVsq,-MV*V_WIDTH) &
+       VHVHVu = two*((two*MVsq)/cmplx(q1k2sq-MVsq,MV*V_WIDTH,kind=dp))*g_mu_nu &
+            & + (one/cmplx(q1k2sq -MVsq,MV*V_WIDTH,kind=dp)) &
+            &         *MVsq/cmplx(MVsq,-MV*V_WIDTH,kind=dp) &
             &         *((two*k2mu+q1mu).otimes.(k1mu-k2mu-q1mu))
        VHVHVu = cVVHfact**2 * VHVHVu
     else
@@ -972,19 +974,19 @@ contains
     if(tri1_on) then
        ! Triangle
        res = VV_H_HH + VVHH 
-       res%values = res%values * chi_tri1(pt1,pt2,sval,MV,lambda) * cmplx(zero,one)
+       res%values = res%values * chi_tri1(pt1,pt2,sval,MV,lambda) * cmplx(zero,one,kind=dp)
     endif
     if(box1_on) then
        ! Box
        ! Fix. Minus in front of 2*ph1m*q1p as we define
        ! q1 = p5 - p1
        MVH2 = MVsq - MH**2 - ptH1 - two * pH1m * q1p
-       res%values = res%values + VHVHVt%values * cmplx(zero,one) * &
+       res%values = res%values + VHVHVt%values * cmplx(zero,one,kind=dp) * &
             box_1loop_new(MV, MVH2, q1rot(1), q2rot(1), q2rot(2), pH1rot(1), pH1rot(2), lambda)
        ! Fix. Minus in front of 2*ph1m*q1p as we define
        ! q1 = p5 - p1
        MVH2 = MVsq - MH**2 - ptH2 - two * pH2m * q1p
-       res%values = res%values + VHVHVu%values * cmplx(zero,one) * &
+       res%values = res%values + VHVHVu%values * cmplx(zero,one,kind=dp) * &
             box_1loop_new(MV, MVH2, q1rot(1), q2rot(1), q2rot(2), pH2rot(1), pH2rot(2), lambda)
     endif
   end function nonfact_1loop_VVtoHH_tensor
@@ -1447,8 +1449,8 @@ contains
     enddo
 
     ! And now mulitply with overall factor i
-    T3(1)%values(:,:) = cmplx(zero,one) * T3(1)%values(:,:)
-    T3(2)%values(:,:) = cmplx(zero,one) * T3(2)%values(:,:)
+    T3(1)%values(:,:) = cmplx(zero,one,kind=dp) * T3(1)%values(:,:)
+    T3(2)%values(:,:) = cmplx(zero,one,kind=dp) * T3(2)%values(:,:)
     
     Q1sq = -q1q1
     Q2sq = -q2q2
