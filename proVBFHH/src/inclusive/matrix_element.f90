@@ -823,7 +823,7 @@ contains
     tval = (q1(1)+pH1(1))**2+(q1(2)+pH1(2))**2
     uval = (q1(1)+pH2(1))**2+(q1(2)+pH2(2))**2
 
-    lambda = MVsq ! Corresponds to setting the log = 0
+    lambda = nf_regfact * MVsq ! nf_regfact = 1 (default) sets log(lambda/MV^2) = 0
 
     res%values = (zero,zero)
     if(tri1_on) then
@@ -909,7 +909,7 @@ contains
     tval = (q1(1)+pH1(1))**2+(q1(2)+pH1(2))**2
     uval = (q1(1)+pH2(1))**2+(q1(2)+pH2(2))**2
 
-    lambda = MVsq ! Corresponds to setting the log = 0
+    lambda = nf_regfact * MVsq ! nf_regfact = 1 (default) sets log(lambda/MV^2) = 0
 
     res%values = (zero,zero)
     if(tri2_on) then

@@ -202,16 +202,55 @@ c.....................................................................
       end function
 
 
-!     b01 and b022 at the same point, sharing the roots and logs. With
-!     D_k = Pi r_k prod_{j/=k} (r_k - r_j) and L_k = Log(-r_k/MV), the
-!     expressions above are b01 = -sum_k L_k/D_k and
-!     b022 = -2 sum_k L_k**2/D_k, k = 1, 3, 5 (b12 = -2 b01).
-      subroutine box_integrands(MV2, MVH2, pi, p1x, p2x, p2y, p3x, p3y,
-     $     xi, b01v, b022v)
-      real*8 MV, MV2, MVH2, pi, p1x, p2x, p2y, p3x, p3y, xi
-      real*8 b01v, b022v
-      complex*16 r(6), d, l, s1, s2
-      integer k, j
+!     t01 and t022 at the same point, sharing the roots and logs. With
+!     D_k = Pi r_k prod_{j/=k, j<=4} (r_k - r_j) and L_k = Log(-r_k/MV),
+!     t01 = -sum_k L_k/D_k and t022 = -2 sum_k L_k**2/D_k, k = 1, 3
+!     (t12 = -2 t01).
+      subroutine tri_integrands(MV2, pi, p1x, p2x, p2y, xi, t01v, t022v)
+      real*8 MV2, pi, p1x, p2x, p2y, xi, t01v, t022v
+      complex*16 r(4)
+      r(1)=r1(MV2, p1x, xi)
+      r(2)=r2(MV2, p1x, xi)
+      r(3)=r3(MV2, p2x, p2y, xi)
+      r(4)=r4(MV2, p2x, p2y, xi)
+      call root_sums(r, 4, sqrt(MV2), pi, t01v, t022v)
+      end subroutine
+
+!     -sum_k L_k/D_k and -2 sum_k L_k**2/D_k over k = 1, 3, ... < n, with
+!     D_k = Pi r_k prod_{j/=k, j<=n} (r_k - r_j), L_k = Log(-r_k/MV)
+      subroutine root_sums(r, n, MV, pi, s1v, s2v)
+      integer n, k, j
+      complex*16 r(n), d, l, s1, s2
+      real*8 MV, pi, s1v, s2v
+      s1 = 0d0
+      s2 = 0d0
+      do k = 1, n-1, 2
+         d = Pi*r(k)
+         do j = 1, n
+            if (j.ne.k) d = d*(r(k) - r(j))
+         enddo
+         l = Log(-(r(k)/MV))
+         s1 = s1 + l/d
+         s2 = s2 + l**2/d
+      enddo
+      s1v = -dble(s1)
+      s2v = -2d0*dble(s2)
+      end subroutine
+
+!     The angular integrands of the HH NF corrections at one point,
+!     from one set of roots and logs: v(1) = b01, v(2) = b022 for the
+!     box with p3, and, if withtri, v(3) = t01, v(4) = t022 for the
+!     triangle (which depends on r1-r4 only). With L_k = Log(-r_k/MV)
+!     and D_k = Pi r_k prod_{j/=k} (r_k - r_j),
+!     b01 = -sum_k L_k/D_k, b022 = -2 sum_k L_k**2/D_k, k = 1, 3, 5
+!     (b12 = -2 b01), and likewise for the triangle with k = 1, 3 and
+!     j <= 4 (see tri_integrands). The box D_k (k = 1, 3) are the
+!     triangle ones times (r_k - r5) (r_k - r6).
+      subroutine nf_integrands(MV2, MVH2, pi, p1x, p2x, p2y, p3x, p3y,
+     $     xi, withtri, v)
+      real*8 MV2, MVH2, pi, p1x, p2x, p2y, p3x, p3y, xi, v(4), MV
+      logical withtri
+      complex*16 r(6), l1, l3, l5, dt1, dt3, db1, db3, db5
       MV = sqrt(MV2)
       r(1)=r1(MV2, p1x, xi)
       r(2)=r2(MV2, p1x, xi)
@@ -219,19 +258,24 @@ c.....................................................................
       r(4)=r4(MV2, p2x, p2y, xi)
       r(5)=r5(MVH2, p1x, p3x, p3y, xi)
       r(6)=r6(MVH2, p1x, p3x, p3y, xi)
-      s1 = 0d0
-      s2 = 0d0
-      do k = 1, 5, 2
-         d = Pi*r(k)
-         do j = 1, 6
-            if (j.ne.k) d = d*(r(k) - r(j))
-         enddo
-         l = Log(-(r(k)/MV))
-         s1 = s1 + l/d
-         s2 = s2 + l**2/d
-      enddo
-      b01v = -dble(s1)
-      b022v = -2d0*dble(s2)
+      l1 = Log(-(r(1)/MV))
+      l3 = Log(-(r(3)/MV))
+      l5 = Log(-(r(5)/MV))
+      dt1 = Pi*r(1)*(r(1) - r(2))*(r(1) - r(3))*(r(1) - r(4))
+      dt3 = Pi*r(3)*(r(3) - r(1))*(r(3) - r(2))*(r(3) - r(4))
+      db1 = dt1*(r(1) - r(5))*(r(1) - r(6))
+      db3 = dt3*(r(3) - r(5))*(r(3) - r(6))
+      db5 = Pi*r(5)*(r(5) - r(1))*(r(5) - r(2))*(r(5) - r(3))
+     $     *(r(5) - r(4))*(r(5) - r(6))
+      v(1) = -dble(l1/db1 + l3/db3 + l5/db5)
+      v(2) = -2d0*dble(l1**2/db1 + l3**2/db3 + l5**2/db5)
+      if (withtri) then
+         v(3) = -dble(l1/dt1 + l3/dt3)
+         v(4) = -2d0*dble(l1**2/dt1 + l3**2/dt3)
+      else
+         v(3) = 0d0
+         v(4) = 0d0
+      endif
       end subroutine
 c......................................................................
       end module nonfact_expressions

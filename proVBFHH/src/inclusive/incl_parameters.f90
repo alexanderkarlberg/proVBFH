@@ -26,6 +26,7 @@ module incl_parameters
   character * 5, public :: seedstr
   real(dp), public :: test_Q0, muR_PDF
   real(dp), public :: nf_epsrel ! relative accuracy of the angular integrals of the NF corrections
+  real(dp), public :: nf_regfact ! NF gluon-mass regulator lambda = nf_regfact * MV^2
     real(dp), public :: dy, dlnlnQ, minQval, maxQval, ymax
   integer, public :: nloop, order
 
@@ -88,6 +89,11 @@ contains
        ! value) of the adaptive integration over the gluon azimuth
        nf_epsrel = 1d-8
        if(powheginput('#nf_epsrel').gt.0d0) nf_epsrel = powheginput('#nf_epsrel')
+       ! Gluon-mass regulator of the NF corrections, lambda = nf_regfact *
+       ! MV^2. The result does not depend on it; lambda = MV^2 (default)
+       ! is the most efficient choice, since then log(lambda/MV^2) = 0.
+       nf_regfact = 1d0
+       if(powheginput('#nf_regfact').gt.0d0) nf_regfact = powheginput('#nf_regfact')
        if(powheginput('#niter').gt.0d0) then
           print*, 'niter is no longer used: the angular integrals of the non &
                &factorisable corrections are now adaptive, see nf_epsrel'

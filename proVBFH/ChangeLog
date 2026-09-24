@@ -1,5 +1,13 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/{nonfact.f90|nonfact_expressions.f|incl_parameters.f90}:
+	* docs/provbfh-doc.{tex|pdf}:
+	New input nf_regfact: gluon-mass regulator of the non-factorisable
+	corrections, lambda = nf_regfact * MV^2 (default 1, as before). The
+	integrals multiplying log(lambda/MV^2) are obtained from the 1-loop
+	ones (b12 = -2 b01, t12 = -2 t01 pointwise), so any lambda costs the
+	same; the result does not depend on it.
+
 	* src/inclusive/nonfact.f90:
 	Same vector-valued adaptive integration routine as in proVBFHH.
 

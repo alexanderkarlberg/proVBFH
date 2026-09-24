@@ -12,11 +12,16 @@ module nonfact
 
 !  private f2_integrand
   private adaptive_integral, gauss_kronrod_15, scalar_integral
-  private box_angular_integrals, box_pair_integrand
+  private angular_integrals, tri_angular_integrals, nf_integrand, tri_integrand
 
   real(dp),save :: q1sq_rk,q2sq_rk,qHsq_rk, s_sk, t_sk
   real(dp),save :: p1x_rk, p2x_rk, p2y_rk, p3x_rk, p3y_rk
   real(dp), save :: MVsq, MVHsq ! Mass of vector boson, ie either MW or MZ
+  ! cache of angular_integrals: arguments and (B01, B022, T01, T022)
+  integer, parameter :: ncache = 4
+  real(dp), save :: cache_key(8,ncache) = -1.0_dp, cache_val(4,ncache) = 0.0_dp
+  logical, save :: cache_tri(ncache) = .false. ! entry includes T01, T022
+  integer, save :: cache_next = 1
 contains
   ! Expressions from Kirill below 
   ! Eq. 9 + 10 of 1906.10899 
@@ -58,7 +63,7 @@ contains
     use nonfact_expressions
     use incl_parameters
     real(dp), intent(in) :: MV, MVH2, p1x, p2x, p2y, p3x, p3y, lambda
-    real(dp) :: BB012, BB022, BB12, BB22, BB01, logl
+    real(dp) :: BB012, BB022, BB12, BB22, BB01, logl, I(4)
     real(dp) :: res
     p1x_rk = p1x
     p2x_rk = p2x
@@ -73,10 +78,10 @@ contains
     BB012 = b012(MVsq, MVH2, pi, p1x, p2x, p2y, p3x, p3y)
     BB22 = b22(MVsq, MVH2, pi, p1x, p2x, p2y, p3x, p3y)
 
-    call box_angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, BB01, BB022)
-    ! only needed for lambda /= MV^2
-    BB12 = zero
-    if (logl /= zero) BB12 = scalar_integral(b12_integrand,zero,2.0_dp*pi)
+    call angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, I)
+    BB01 = I(1)
+    BB022 = I(2)
+    BB12 = -two*BB01 ! b12 = -2 b01 pointwise
     
     res = (BB012 + two*BB022 + two*BB12*logl + BB22*logl**2)/BB22
   end function box_2loop
@@ -85,7 +90,7 @@ contains
     use nonfact_expressions
     use incl_parameters
     real(dp), intent(in) :: MV, MVH2, p1x, p2x, p2y, p3x, p3y, lambda
-    real(dp) :: BB01, BB11, BB022, logl
+    real(dp) :: BB01, BB11, logl, I(4)
     real(dp) :: res
     p1x_rk = p1x
     p2x_rk = p2x
@@ -99,7 +104,8 @@ contains
 
     BB11 = b11(MVsq, MVH2, pi, p1x, p2x, p2y, p3x, p3y)
 
-    call box_angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, BB01, BB022)
+    call angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, I)
+    BB01 = I(1)
     ! Minus sign because of factored out 1/i
     res = -(two*BB01 + BB11*logl)/BB11
   end function box_1loop_new
@@ -108,7 +114,7 @@ contains
     use nonfact_expressions
     use incl_parameters
     real(dp), intent(in) :: MV, p1x, p2x, p2y, lambda
-    real(dp) :: TT012, TT022, TT12, TT22,logl
+    real(dp) :: TT012, TT022, TT12, TT22, TT01, logl
     real(dp) :: res
     p1x_rk = p1x
     p2x_rk = p2x
@@ -120,10 +126,8 @@ contains
     TT012 = t012(MVsq, pi, p1x, p2x, p2y)
     TT22 = t22(MVsq, pi, p1x, p2x, p2y)
 
-    TT022 = scalar_integral(t022_integrand,zero,2.0_dp*pi)
-    ! only needed for lambda /= MV^2
-    TT12 = zero
-    if (logl /= zero) TT12 = scalar_integral(t12_integrand,zero,2.0_dp*pi)
+    call tri_angular_integrals(MV, p1x, p2x, p2y, TT01, TT022)
+    TT12 = -two*TT01 ! t12 = -2 t01 pointwise
     
     res = (TT012 + two*TT022 + two*TT12*logl + TT22*logl**2)/TT22
   end function tri_2loop
@@ -133,7 +137,7 @@ contains
     use incl_parameters
     real(dp), intent(in) :: MV, p1x, p2x, p2y, lambda
 
-    real(dp) :: TT01, TT11,logl
+    real(dp) :: TT01, TT11, TT022, logl
     real(dp) :: res
     p1x_rk = p1x
     p2x_rk = p2x
@@ -144,7 +148,7 @@ contains
 
     TT11 = t11(MVsq, pi, p1x, p2x, p2y)
 
-    TT01 = scalar_integral(t01_integrand,zero,2.0_dp*pi)
+    call tri_angular_integrals(MV, p1x, p2x, p2y, TT01, TT022)
     
     ! Minus sign because of factored out 1/i
     res = -(two*TT01 + TT11*logl)/TT11
@@ -152,26 +156,23 @@ contains
 
   !----------------------------------------------------------------------
   ! The azimuthal integrals of b01 (1-loop box) and b022 (2-loop box),
-  ! computed together (they share the roots and logs, and the peaks of
-  ! the integrands). box_1loop_new and box_2loop are called with the
+  ! I(1:2), computed together in one adaptive integration (they share
+  ! the roots and logs). box_1loop_new and box_2loop are called with the
   ! same arguments for each boson and t/u channel, so the last few
   ! results are cached (keyed on the exact arguments, so a new
-  ! phase-space point or nf_epsrel always recomputes).
-  subroutine box_angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, BB01, BB022)
+  ! phase-space point or nf_epsrel always recomputes). I(3:4) are
+  ! reserved for the triangle integrals (not computed here).
+  subroutine angular_integrals(MV, MVH2, p1x, p2x, p2y, p3x, p3y, I)
     use incl_parameters, only: nf_epsrel, pi
     real(dp), intent(in) :: MV, MVH2, p1x, p2x, p2y, p3x, p3y
-    real(dp), intent(out) :: BB01, BB022
-    integer, parameter :: ncache = 4
-    real(dp), save :: key(8,ncache) = -one, val(2,ncache) = zero
-    integer, save :: next = 1
-    real(dp) :: args(8), res(2)
-    integer :: i
+    real(dp), intent(out) :: I(4)
+    real(dp) :: args(8), res(4)
+    integer :: k, n
 
     args = (/ MV, MVH2, p1x, p2x, p2y, p3x, p3y, nf_epsrel /)
-    do i = 1, ncache
-       if (all(key(:,i) == args)) then
-          BB01 = val(1,i)
-          BB022 = val(2,i)
+    do k = 1, ncache
+       if (all(cache_key(:,k) == args)) then
+          I = cache_val(:,k)
           return
        endif
     enddo
@@ -182,54 +183,60 @@ contains
     p3y_rk = p3y
     MVsq = MV**2
     MVHsq = MVH2
-    res = adaptive_integral(box_pair_integrand, 2, zero, 2.0_dp*pi)
-    BB01 = res(1)
-    BB022 = res(2)
-    key(:,next) = args
-    val(:,next) = res
-    next = mod(next, ncache) + 1
-  end subroutine box_angular_integrals
+    n = 2
+    res = zero
+    res(1:n) = adaptive_integral(nf_integrand, n, zero, 2.0_dp*pi)
+    I = res
+    cache_tri(cache_next) = (n == 4)
+    cache_key(:,cache_next) = args
+    cache_val(:,cache_next) = I
+    cache_next = mod(cache_next, ncache) + 1
+  end subroutine angular_integrals
 
-  subroutine box_pair_integrand(x, res)
+  ! T01, T022 for the triangle, in one adaptive integration (the cache
+  ! lookup finds nothing until the box integrations include them)
+  subroutine tri_angular_integrals(MV, p1x, p2x, p2y, TT01, TT022)
+    use incl_parameters, only: nf_epsrel, pi
+    real(dp), intent(in) :: MV, p1x, p2x, p2y
+    real(dp), intent(out) :: TT01, TT022
+    real(dp) :: res(2)
+    integer :: k
+
+    do k = 1, ncache
+       if (cache_tri(k) .and. cache_key(1,k) == MV .and. cache_key(3,k) == p1x .and. &
+            & cache_key(4,k) == p2x .and. cache_key(5,k) == p2y .and. cache_key(8,k) == nf_epsrel) then
+          TT01 = cache_val(3,k)
+          TT022 = cache_val(4,k)
+          return
+       endif
+    enddo
+    p1x_rk = p1x
+    p2x_rk = p2x
+    p2y_rk = p2y
+    MVsq = MV**2
+    res = adaptive_integral(tri_integrand, 2, zero, 2.0_dp*pi)
+    TT01 = res(1)
+    TT022 = res(2)
+  end subroutine tri_angular_integrals
+
+  subroutine nf_integrand(x, res)
     use nonfact_expressions
-    use incl_parameters
+    use incl_parameters, only: pi
     real(dp), intent(in) :: x
     real(dp), intent(out) :: res(:)
-    call box_integrands(MVsq, MVHsq, pi, p1x_rk, p2x_rk, p2y_rk, p3x_rk, p3y_rk, x, &
-         & res(1), res(2))
-  end subroutine box_pair_integrand
+    real(dp) :: v(4)
+    call nf_integrands(MVsq, MVHsq, pi, p1x_rk, p2x_rk, p2y_rk, p3x_rk, p3y_rk, x, &
+         & size(res) == 4, v)
+    res = v(1:size(res))
+  end subroutine nf_integrand
 
-  subroutine b12_integrand(x, res)
+  subroutine tri_integrand(x, res)
     use nonfact_expressions
-    use incl_parameters
+    use incl_parameters, only: pi
     real(dp), intent(in) :: x
     real(dp), intent(out) :: res(:)
-    res(1) = b12(MVsq, MVHsq, pi, p1x_rk, p2x_rk, p2y_rk, p3x_rk, p3y_rk, x)
-  end subroutine b12_integrand
-
-  subroutine t022_integrand(x, res)
-    use nonfact_expressions
-    use incl_parameters
-    real(dp), intent(in) :: x
-    real(dp), intent(out) :: res(:)
-    res(1) = t022(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end subroutine t022_integrand
-
-  subroutine t12_integrand(x, res)
-    use nonfact_expressions
-    use incl_parameters
-    real(dp), intent(in) :: x
-    real(dp), intent(out) :: res(:)
-    res(1) = t12(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end subroutine t12_integrand
-
-  subroutine t01_integrand(x, res)
-    use nonfact_expressions
-    use incl_parameters
-    real(dp), intent(in) :: x
-    real(dp), intent(out) :: res(:)
-    res(1) = t01(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end subroutine t01_integrand
+    call tri_integrands(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x, res(1), res(2))
+  end subroutine tri_integrand
 
   ! Integral of a one-component integrand
   function scalar_integral(f, x0, x1) result(res)

@@ -11,7 +11,7 @@ module nonfact
 
   private f1_integrand
 !  private f2_integrand
-  private adaptive_integral, gauss_kronrod_15, scalar_integral
+  private adaptive_integral, gauss_kronrod_15, scalar_integral, tri_integrand
 
   real(dp),save :: q1sq_rk,q2sq_rk,qHsq_rk
   real(dp),save :: p1x_rk, p2x_rk, p2y_rk, p3x_rk, p3y_rk
@@ -115,7 +115,7 @@ contains
     use nonfact_expressions
     use incl_parameters
     real(dp), intent(in) :: MV, p1x, p2x, p2y, lambda
-    real(dp) :: TT012, TT022, TT12, TT22,logl
+    real(dp) :: TT012, TT022, TT12, TT22, logl, TT(2)
     real(dp) :: res
     p1x_rk = p1x
     p2x_rk = p2x
@@ -126,17 +126,18 @@ contains
 
     TT012 = t012(MVsq, pi, p1x, p2x, p2y)
     TT22 = t22(MVsq, pi, p1x, p2x, p2y)
-    TT022 = scalar_integral(t022_integrand,zero,2.0_dp*pi)
-    ! only needed for lambda /= MV^2
-    TT12 = zero
-    if (logl /= zero) TT12 = scalar_integral(t12_integrand,zero,2.0_dp*pi)
+    ! t01 and t022 in one adaptive integration (they share the roots
+    ! and logs); t12 = -2 t01 pointwise
+    TT = adaptive_integral(tri_integrand, 2, zero, 2.0_dp*pi)
+    TT022 = TT(2)
+    TT12 = -two*TT(1)
     
     res = (TT012 + two*TT022 + two*TT12*logl + TT22*logl**2)/TT22
   end function tri_2loop
 
   function chinf(qT1,qT2,MV) result(res)
     real(dp), intent(in) :: qT1(1:2), qT2(1:2),MV
-    real(dp) :: qTH(1:2), ptH, pt1, pt2, res
+    real(dp) :: qTH(1:2), ptH, pt1, pt2, res, lambda
     real(dp) :: q1rot(1:3), q2rot(1:3), cosphi, sinphi
     double precision, parameter :: z(1:3) = (/zero, zero, one/)
 
@@ -165,11 +166,23 @@ contains
 
     !    res = f1(pt1,pt2,ptH,MV)**2 - f2(pt1,pt2,ptH,MV)
 
+    ! Gluon-mass regulator lambda = nf_regfact * MV^2; the result does
+    ! not depend on it (the log(lambda/MV^2) terms of the 1-loop square
+    ! and the 2-loop term cancel)
+    lambda = nf_regfact * MV**2
     res = zero
-    if(oneloop_on) res = res + f1_analytic(pt1,pt2,ptH,MV)**2 
+    if(oneloop_on) res = res + (f1_analytic(pt1,pt2,ptH,MV) - log(lambda/MV**2))**2
 !    if(twoloop_on) res = res - f2(pt1,pt2,ptH,MV)
-    if(twoloop_on) res = res - tri_2loop(MV,q1rot(1),q2rot(1),q2rot(2),MV**2)
+    if(twoloop_on) res = res - tri_2loop(MV,q1rot(1),q2rot(1),q2rot(2),lambda)
   end function chinf
+
+  subroutine tri_integrand(x, res)
+    use nonfact_expressions
+    use incl_parameters, only: pi
+    real(dp), intent(in) :: x
+    real(dp), intent(out) :: res(:)
+    call tri_integrands(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x, res(1), res(2))
+  end subroutine tri_integrand
 
   ! Integral of a one-component integrand
   function scalar_integral(f, x0, x1) result(res)
@@ -289,19 +302,4 @@ contains
     err = abs((rk - rg)*h)
   end subroutine gauss_kronrod_15
 
-  subroutine t022_integrand(x, res)
-    use nonfact_expressions
-    use incl_parameters
-    real(dp), intent(in) :: x
-    real(dp), intent(out) :: res(:)
-    res(1) = t022(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end subroutine t022_integrand
-
-  subroutine t12_integrand(x, res)
-    use nonfact_expressions
-    use incl_parameters
-    real(dp), intent(in) :: x
-    real(dp), intent(out) :: res(:)
-    res(1) = t12(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end subroutine t12_integrand
 end module nonfact
