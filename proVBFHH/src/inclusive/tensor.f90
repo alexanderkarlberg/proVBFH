@@ -70,10 +70,10 @@ contains
 
     if(rank.lt.0) then
        print*, 'Negative rank. Exiting'
-       stop
+       error stop
     elseif(rank.gt.rankmax) then
        print*, 'rank not implemented', rank
-       stop
+       error stop
     endif
 
     tensor%rank = rank
@@ -103,7 +103,7 @@ contains
     type(tensors) :: tensor
     if(.not.tensor%initialised) then
        print*, 'Tensor not initialised. Exiting.'
-       stop
+       error stop
     endif
 
     tensor%values = zero
@@ -161,18 +161,18 @@ contains
     call CheckInitialised(tin2)
     if(index1.lt.1.or.index1.gt.tin1%rank) then
        print*, 'index1 out of bounds', index1, tin1%rank
-       stop
+       error stop
     endif
     if(index2.lt.1.or.index2.gt.tin2%rank) then
        print*, 'index2 out of bounds', index2, tin2%rank
-       stop
+       error stop
     endif
 
     rank = tin1%rank+tin2%rank-2
     if(rank.gt.rankmax) then
        print*, 'Trying to contract two tensors into a tensor of too high rank', &
             & tin1%rank, tin2%rank, rank
-       stop
+       error stop
     endif
 
     ! The routine assumes that the two indices are not in the same
@@ -180,7 +180,7 @@ contains
     if(tin1%up(index1).eqv.tin2%up(index2)) then
        print*, 'ERROR: Trying to contract two indices in the same position.', &
             & tin1%up(index1), tin2%up(index2)
-       stop
+       error stop
     endif
 
     ! Here we contract the tensors. Right now I don't see a smart way
@@ -328,7 +328,7 @@ contains
 
     if(.not.tensor%initialised) then
        print*, 'tensor not initialised. Exiting.'
-       stop
+       error stop
     endif
   end subroutine CheckInitialised
 
@@ -341,11 +341,11 @@ contains
     call CheckInitialised(tensor)
     if(.not.gmunu%initialised) then
        print*, 'Cannot ', operation, ' index. Metric not set (call SetMetric)'
-       stop
+       error stop
     endif
     if(index.lt.1.or.index.gt.tensor%rank) then
        print*, 'Cannot ', operation, ' index. Index out of bounds', index, tensor%rank
-       stop
+       error stop
     endif
   end subroutine CheckIndex
 
@@ -359,12 +359,12 @@ contains
 
     if(t1%rank.ne.t2%rank) then
        print*, 'Trying to ', operation, ' two tensors with different ranks', t1%rank, t2%rank
-       stop
+       error stop
     endif
     if(any(t1%up(1:t1%rank).neqv.t2%up(1:t1%rank))) then
        print*, 'Trying to ', operation, ' two tensors with different index structure', &
             & t1%up(1:t1%rank), t2%up(1:t1%rank)
-       stop
+       error stop
     endif
   end subroutine CheckSameStructure
 
@@ -428,7 +428,7 @@ contains
 
     if((t1%rank+t2%rank).gt.rankmax) then
        print*, 'Rank not supported!', t1%rank+t2%rank
-       stop
+       error stop
     endif
 
     res%rank = t1%rank+t2%rank
@@ -462,7 +462,7 @@ contains
 
     if(tensor%rank.ne.2) then
        print*, 'Trace only implemented for rank 2 tensor'
-       stop
+       error stop
     endif
     res = tensor%values(0,0) + tensor%values(1,1) + tensor%values(2,2) + tensor%values(3,3)
   end function TensorTrace

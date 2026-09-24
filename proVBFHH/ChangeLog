@@ -1,5 +1,9 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* src/inclusive/tensor.f90:
+	* src/inclusive/matrix_element.f90 (trace_matrix):
+	Use error stop, so that fatal errors give a non-zero exit status.
+
 	* src/inclusive/matrix_element.f90 (eval_matrix_element_tensor):
 	The tensor matrix element now combines the perturbative orders like
 	the analytic one (products of beam-1 order i and beam-2 order j with

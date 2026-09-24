@@ -1,6 +1,9 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
 	* src/inclusive/tensor.f90:
+	Use error stop, so that fatal errors give a non-zero exit status.
+
+	* src/inclusive/tensor.f90:
 	Replaced by the allocation-free version shared with proVBFHH and
 	proVBFH-inclusive (same interface and results; see the
 	proVBFH-inclusive ChangeLog and its "make check").

@@ -10,8 +10,13 @@
 ! Build and run from proVBFH-inclusive/ with "make check".
 !
 ! The two implementations perform the same floating-point operations
-! in the same order, so they are expected to agree exactly; the test
-! fails if any relative difference exceeds tol. The one intended
+! in the same order, so without fused multiply-adds (e.g. x86-64 with
+! default flags) they agree exactly; the test reports whether they do.
+! With FMA contraction (e.g. gcc on arm64) they differ by rounding, so
+! the checks use tolerances: tol relative to the cancellation-free
+! scale of each operation (sum of the absolute values of the terms),
+! and tol_chain, relative to the result, for the matrix-element chain,
+! which has cancellations between large terms. The one intended
 ! difference is the rank-2 x rank-1 contraction over the second index
 ! of the rank-2 tensor, which the legacy code got wrong (it is not used
 ! by any of the matrix elements); there the new code is checked
@@ -25,15 +30,17 @@ program test_tensor
        & lgmunu => gmunu, operator(+), operator(-), operator(*), operator(.otimes.)
   implicit none
 
-  real(dp), parameter :: tol = 1e-15_dp
+  real(dp), parameter :: tol = 1e-14_dp, tol_chain = 1e-9_dp
   integer,  parameter :: ntrials = 10000, nchain = 1000, ntime = 200000
   real(dp) :: maxdev_legacy, maxdev_formula, maxdev_chain
+  logical  :: identical
   integer  :: nfail, itrial
 
   nfail = 0
   maxdev_legacy = zero
   maxdev_formula = zero
   maxdev_chain = zero
+  identical = .true.
 
   call init_random()
   call SetMetric(1)
@@ -55,6 +62,11 @@ program test_tensor
   write(*,'(a,es10.3)') ' max rel. deviation from legacy code:      ', maxdev_legacy
   write(*,'(a,es10.3)') ' max rel. deviation from explicit formulae:', maxdev_formula
   write(*,'(a,es10.3)') ' max rel. deviation, matrix-element chain: ', maxdev_chain
+  if (identical) then
+     write(*,'(a)') ' results identical to the legacy code (no FMA contraction)'
+  else
+     write(*,'(a)') ' results differ from the legacy code by rounding (FMA contraction?)'
+  end if
 
   call time_chain()
 
@@ -72,6 +84,7 @@ contains
     type(tensors)  :: a, b, c
     type(ltensors) :: la, lb, lc
     complex(dp)    :: ref(0:3,0:3)
+    real(dp)       :: sc
     integer :: r1, r2, i1, i2, i, j, k
     logical :: up1(2), up2(2)
 
@@ -120,11 +133,13 @@ contains
                       end do
                    end do
                 end if
-                call check_formula(c, ref, r1+r2-2, 'ContractTensors')
+                ! cancellation-free scale: all terms bounded by max|a| max|b|, four per sum
+                sc = 4.0_dp * maxval(abs(a%values)) * maxval(abs(b%values))
+                call check_formula(c, ref, r1+r2-2, 'ContractTensors', sc)
                 call check_up(c, contracted_up(up1, r1, i1, up2, r2, i2), 'ContractTensors')
 
                 if (.not. (r1 == 2 .and. r2 == 1 .and. i1 == 2)) then
-                   call check_legacy(c, lc, 'ContractTensors')
+                   call check_legacy(c, lc, 'ContractTensors', sc)
                 end if
              end do
           end do
@@ -200,12 +215,12 @@ contains
        call check_legacy(c, lc, 'MultiplyWithScalar')
 
        c = z * a; lc = z * la
-       call check_formula(c, a%values * z, r, 'MultiplyWithComplexScalar')
-       call check_legacy(c, lc, 'MultiplyWithComplexScalar')
+       call check_formula(c, a%values * z, r, 'MultiplyWithComplexScalar', &
+            & 2.0_dp * maxval(abs(a%values)) * abs(z))
+       call check_legacy(c, lc, 'MultiplyWithComplexScalar', 2.0_dp * maxval(abs(a%values)) * abs(z))
 
        if (r == 2) then
-          if (reldev_scalar(TensorTrace(a), lTensorTrace(la)) > tol) call fail('TensorTrace')
-          maxdev_legacy = max(maxdev_legacy, reldev_scalar(TensorTrace(a), lTensorTrace(la)))
+          call note_legacy(abs(TensorTrace(a) - lTensorTrace(la)) / (4.0_dp * maxval(abs(a%values))), 'TensorTrace')
        end if
     end do
   end subroutine test_arithmetic
@@ -228,9 +243,9 @@ contains
           ref(i,j) = a%values(i,1) * b%values(j,1)
        end do
     end do
-    call check_formula(c, ref, 2, 'TensorProduct 1x1')
+    call check_formula(c, ref, 2, 'TensorProduct 1x1', 2.0_dp * maxval(abs(a%values)) * maxval(abs(b%values)))
     call check_up(c, (/ up1(1), up2(1) /), 'TensorProduct 1x1')
-    call check_legacy(c, lc, 'TensorProduct 1x1')
+    call check_legacy(c, lc, 'TensorProduct 1x1', 2.0_dp * maxval(abs(a%values)) * maxval(abs(b%values)))
 
     ! rank 0 x rank 1 and rank 1 x rank 0. The legacy code sets all
     ! indices of the result up here, so only the values are compared.
@@ -239,16 +254,16 @@ contains
     c = a .otimes. b; lc = la .otimes. lb
     ref = zero
     ref(:,1) = a%values(1,1) * b%values(:,1)
-    call check_formula(c, ref, 1, 'TensorProduct 0x1')
+    call check_formula(c, ref, 1, 'TensorProduct 0x1', 2.0_dp * abs(a%values(1,1)) * maxval(abs(b%values)))
     call check_up(c, up2, 'TensorProduct 0x1')
-    maxdev_legacy = max(maxdev_legacy, reldev(c%values(:,1:1), lc%values))
-    if (reldev(c%values(:,1:1), lc%values) > tol) call fail('TensorProduct 0x1 (legacy)')
+    call note_legacy(maxval(abs(c%values(:,1:1) - lc%values)) / (2.0_dp * abs(a%values(1,1)) * maxval(abs(b%values))), &
+         & 'TensorProduct 0x1 (legacy)')
 
     c = b .otimes. a; lc = lb .otimes. la
-    call check_formula(c, ref, 1, 'TensorProduct 1x0')
+    call check_formula(c, ref, 1, 'TensorProduct 1x0', 2.0_dp * abs(a%values(1,1)) * maxval(abs(b%values)))
     call check_up(c, up2, 'TensorProduct 1x0')
-    maxdev_legacy = max(maxdev_legacy, reldev(c%values(:,1:1), lc%values))
-    if (reldev(c%values(:,1:1), lc%values) > tol) call fail('TensorProduct 1x0 (legacy)')
+    call note_legacy(maxval(abs(c%values(:,1:1) - lc%values)) / (2.0_dp * abs(a%values(1,1)) * maxval(abs(b%values))), &
+         & 'TensorProduct 1x0 (legacy)')
   end subroutine test_products
 
   !----------------------------------------------------------------------
@@ -292,7 +307,8 @@ contains
     s_new = chain_new(q1, q2, P1, P2, k1, k2, F1, F2, cA, cB, cC)
     s_old = chain_legacy(q1, q2, P1, P2, k1, k2, F1, F2, cA, cB, cC)
     maxdev_chain = max(maxdev_chain, abs(s_new - s_old) / abs(s_old))
-    if (abs(s_new - s_old) > tol * abs(s_old)) call fail('matrix-element chain')
+    if (s_new /= s_old) identical = .false.
+    if (.not. (abs(s_new - s_old) <= tol_chain * abs(s_old))) call fail('matrix-element chain')
   end subroutine test_chain
 
   subroutine time_chain()
@@ -533,17 +549,17 @@ contains
     dot = p(0)*q(0) - sum(p(1:3)*q(1:3))
   end function dot
 
-  real(dp) function reldev(a, b)
+  real(dp) function reldev(a, b, scale)
     complex(dp), intent(in) :: a(:,:), b(:,:)
-    real(dp) :: scale
-    scale = max(maxval(abs(b)), tiny(one))
-    reldev = maxval(abs(a - b)) / scale
+    real(dp), intent(in), optional :: scale
+    real(dp) :: sc
+    if (present(scale)) then
+       sc = max(scale, tiny(one))
+    else
+       sc = max(maxval(abs(b)), tiny(one))
+    end if
+    reldev = maxval(abs(a - b)) / sc
   end function reldev
-
-  real(dp) function reldev_scalar(a, b)
-    complex(dp), intent(in) :: a, b
-    reldev_scalar = abs(a - b) / max(abs(b), tiny(one))
-  end function reldev_scalar
 
   ! The components of t that belong to its rank
   function used(t) result(v)
@@ -562,10 +578,23 @@ contains
     v = t%values
   end function lused
 
-  subroutine check_legacy(t, lt, what)
+  ! Relative deviation d of a legacy comparison: records it, and fails
+  ! above tol
+  subroutine note_legacy(d, what)
+    real(dp), intent(in) :: d
+    character(len=*), intent(in) :: what
+    maxdev_legacy = max(maxdev_legacy, d)
+    if (d /= zero) identical = .false.
+    if (.not. (d <= tol)) call fail(what)
+  end subroutine note_legacy
+
+  ! The deviations are relative to scale if given (the
+  ! cancellation-free size of the terms), else to the largest component
+  subroutine check_legacy(t, lt, what, scale)
     type(tensors),  intent(in) :: t
     type(ltensors), intent(in) :: lt
     character(len=*), intent(in) :: what
+    real(dp), intent(in), optional :: scale
     real(dp) :: d
     if (t%rank /= lt%rank) then
        call fail(what//' (rank differs from legacy)'); return
@@ -573,27 +602,27 @@ contains
     if (t%rank > 0) then
        if (any(t%up(1:t%rank) .neqv. lt%up(1:t%rank))) call fail(what//' (index positions differ from legacy)')
     end if
-    d = reldev(used(t), lused(lt))
-    maxdev_legacy = max(maxdev_legacy, d)
-    if (d > tol) call fail(what//' (values differ from legacy)')
+    d = reldev(used(t), lused(lt), scale)
+    call note_legacy(d, what//' (values differ from legacy)')
   end subroutine check_legacy
 
-  subroutine check_formula(t, ref, rank, what)
+  subroutine check_formula(t, ref, rank, what, scale)
     type(tensors), intent(in) :: t
     complex(dp),   intent(in) :: ref(0:3,0:3)
     integer,       intent(in) :: rank
     character(len=*), intent(in) :: what
+    real(dp), intent(in), optional :: scale
     real(dp) :: d
     if (t%rank /= rank) then
        call fail(what//' (wrong rank)'); return
     end if
     select case (rank)
-    case (0); d = reldev(t%values(1:1,1:1), ref(1:1,1:1))
-    case (1); d = reldev(t%values(:,1:1), ref(:,1:1))
-    case default; d = reldev(t%values, ref)
+    case (0); d = reldev(t%values(1:1,1:1), ref(1:1,1:1), scale)
+    case (1); d = reldev(t%values(:,1:1), ref(:,1:1), scale)
+    case default; d = reldev(t%values, ref, scale)
     end select
     maxdev_formula = max(maxdev_formula, d)
-    if (d > tol) call fail(what//' (values differ from explicit formula)')
+    if (.not. (d <= tol)) call fail(what//' (values differ from explicit formula)')
   end subroutine check_formula
 
   subroutine check_up(t, upv, what)

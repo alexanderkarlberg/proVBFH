@@ -1,5 +1,14 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
+	* tests/test_tensor.f90:
+	Tolerances relative to the cancellation-free size of each operation,
+	so that the test also passes with fused multiply-adds (gcc on arm64),
+	where the new and legacy code differ by rounding.
+
+	* src/tensor.f90:
+	* src/matrix_element_dihiggs.f90 (trace_matrix):
+	Use error stop, so that fatal errors give a non-zero exit status.
+
 	* src/matrix_element_dihiggs.f90 (eval_matrix_element_tensor,
 	VVtoHH_tensor):
 	The tensor matrix element ignored the coupling modifiers -cVVHfact,

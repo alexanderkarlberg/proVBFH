@@ -625,11 +625,11 @@ contains
 
     ! The index positions assumed above
     if(.not.(all(Ma%up).and.all(Mbstar%up)).or.Ma%rank.ne.2.or.Mbstar%rank.ne.2) then
-       stop 'trace_matrix: Ma and Mbstar must be rank 2 with both indices up'
+       error stop 'trace_matrix: Ma and Mbstar must be rank 2 with both indices up'
     endif
     do k = 1, 3
        if(any(G1(k)%up).or.any(G2(k)%up).or.G1(k)%rank.ne.2.or.G2(k)%rank.ne.2) then
-          stop 'trace_matrix: G1 and G2 must be rank 2 with both indices down'
+          error stop 'trace_matrix: G1 and G2 must be rank 2 with both indices down'
        endif
     enddo
 
