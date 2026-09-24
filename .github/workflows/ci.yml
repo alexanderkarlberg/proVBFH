@@ -59,7 +59,6 @@ jobs:
       LHAPDF_VERSION: ${{ needs.versions.outputs.lhapdf }}
       FASTJET_VERSION: ${{ needs.versions.outputs.fastjet }}
       PREFIX: ${{ github.workspace }}/../deps
-      RUNROOT: ${{ github.workspace }}/../ci-runs
     steps:
       - uses: actions/checkout@v5
 
@@ -89,14 +88,16 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: ci/install-deps.sh
+        run: ci/annotate.sh ci/install-deps.sh
 
       - name: Set up environment
         id: env
         run: |
           PREFIX=$(cd "$PREFIX" && pwd)
           echo "$PREFIX/bin" >> "$GITHUB_PATH"
-          mkdir -p "$RUNROOT"
+          # upload-artifact does not accept paths containing '..'
+          echo "RUNROOT=$RUNNER_TEMP/ci-runs" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/ci-runs"
 
       # Each package is built and tested independently, so a failure in
       # one does not hide the status of the others.
@@ -104,35 +105,35 @@ jobs:
         id: build-incl
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: proVBFH-inclusive
-        run: ./configure && make
+        run: ./configure && ../ci/annotate.sh make
 
       - name: Smoke tests proVBFH-inclusive
         if: ${{ !cancelled() && steps.build-incl.outcome == 'success' }}
-        run: ci/smoke-tests.sh proVBFH-inclusive
+        run: ci/annotate.sh ci/smoke-tests.sh proVBFH-inclusive
 
       - name: Tensor checks
         if: ${{ !cancelled() && steps.build-incl.outcome == 'success' }}
-        run: ci/tensor-checks.sh
+        run: ci/annotate.sh ci/tensor-checks.sh
 
       - name: Build proVBFH
         id: build-h
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: proVBFH
-        run: ./configure && make
+        run: ./configure && ../ci/annotate.sh make
 
       - name: Smoke tests proVBFH
         if: ${{ !cancelled() && steps.build-h.outcome == 'success' }}
-        run: ci/smoke-tests.sh proVBFH
+        run: ci/annotate.sh ci/smoke-tests.sh proVBFH
 
       - name: Build proVBFHH
         id: build-hh
         if: ${{ !cancelled() && steps.env.outcome == 'success' }}
         working-directory: proVBFHH
-        run: ./configure && make
+        run: ./configure && ../ci/annotate.sh make
 
       - name: Smoke tests proVBFHH
         if: ${{ !cancelled() && steps.build-hh.outcome == 'success' }}
-        run: ci/smoke-tests.sh proVBFHH
+        run: ci/annotate.sh ci/smoke-tests.sh proVBFHH
 
       - name: Upload run directories
         if: failure()

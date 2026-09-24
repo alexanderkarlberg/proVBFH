@@ -17,6 +17,9 @@ of `tensor.f90` are identical, and that with zero widths `provbfhh_incl`
 gives the same LO and NNLO cross section with the tensor (`-tensorME`)
 and the analytic matrix element.
 
+In the workflow each step runs through `ci/annotate.sh`, which reports
+the error lines of a failing step as annotations in the run summary.
+
 The scripts can also be run locally, from the repository root:
 
 ```
