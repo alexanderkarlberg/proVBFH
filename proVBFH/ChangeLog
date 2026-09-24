@@ -1,6 +1,9 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
 	* src/inclusive/nonfact.f90:
+	Same vector-valued adaptive integration routine as in proVBFHH.
+
+	* src/inclusive/nonfact.f90:
 	* src/inclusive/incl_parameters.f90:
 	* docs/*-doc.tex, docs/*-doc.pdf:
 	The azimuthal integrals of the non-factorisable corrections used RK4

@@ -1,6 +1,13 @@
 2026-09-24  Alexander Karlberg  <alexander.karlberg@mpp.mpg.de>
 
 	* src/inclusive/nonfact.f90:
+	* src/inclusive/nonfact_expressions.f (box_integrands):
+	The 1-loop and 2-loop box integrals (b01, b022), which share the
+	roots and logs, are computed together in one vector-valued adaptive
+	integration and cached for the second call with the same arguments.
+	HH NF runs are about 1.6 times faster again (7 times in total).
+
+	* src/inclusive/nonfact.f90:
 	* src/inclusive/incl_parameters.f90:
 	* docs/*-doc.tex, docs/*-doc.pdf:
 	The azimuthal integrals of the non-factorisable corrections used RK4

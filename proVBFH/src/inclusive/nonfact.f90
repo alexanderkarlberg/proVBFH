@@ -11,7 +11,7 @@ module nonfact
 
   private f1_integrand
 !  private f2_integrand
-  private adaptive_integral, gauss_kronrod_15
+  private adaptive_integral, gauss_kronrod_15, scalar_integral
 
   real(dp),save :: q1sq_rk,q2sq_rk,qHsq_rk
   real(dp),save :: p1x_rk, p2x_rk, p2y_rk, p3x_rk, p3y_rk
@@ -28,7 +28,7 @@ contains
     qHsq_rk = qHsq
     MVsq    = MV**2
 
-    res = adaptive_integral(f1_integrand,zero,one)
+    res = scalar_integral(f1_integrand,zero,one)
   end function f1
 
   function f1_analytic(q1sq,q2sq,qHsq,MV) result(res)
@@ -54,9 +54,9 @@ contains
      &   (-(MVsq*(q1sq - q2sq)**2) + delta1*delta2*qHsq)
   end function f1_analytic
   ! Eq. 9 + 10 of 1906.10899 
-  function f1_integrand(x) result(res)
+  subroutine f1_integrand(x, res)
     real(dp), intent(in) :: x
-    real(dp) :: res
+    real(dp), intent(out) :: res(:)
     ! Internal
     real(dp) :: delta1,delta2,r1,r2,r12
 
@@ -66,8 +66,8 @@ contains
     delta1 = q1sq_rk + MVsq
     delta2 = q2sq_rk + MVsq
 
-    res = delta1*delta2/r12**2 * (log(r12**2/(r2*MVsq)) + (r1 - r2)/r2)
-  end function f1_integrand
+    res(1) = delta1*delta2/r12**2 * (log(r12**2/(r2*MVsq)) + (r1 - r2)/r2)
+  end subroutine f1_integrand
 
 !  function f2(q1sq,q2sq,qHsq,MV) result(res)
 !    real(dp), intent(in) :: q1sq,q2sq,qHsq,MV
@@ -79,10 +79,10 @@ contains
 !    qHsq_rk = qHsq
 !    MVsq    = MV**2
 !!
-!    res = adaptive_integral(f2_integrand,zero,one)
+!    res = scalar_integral(f2_integrand,zero,one)
 !  end function f2
 !  ! Eq. 9 + 10 of 1906.10899 
-!  function f2_integrand(x) result(res)
+!  subroutine f2_integrand(x, res)
 !    real(dp), intent(in) :: x
 !    real(dp) :: res
 !    ! Internal
@@ -109,7 +109,7 @@ contains
 !         & (log(r12**2/(r2*MVsq)) + (r1 - r2)/r2)**2 &
 !         & - log(r12/r2)**2 - two*r12/r2*log(r12/r2) &
 !         & - two*Li2 - ((r1-r2)/r2)**2 + two*zeta2)
-!  end function f2_integrand
+!  end subroutine f2_integrand
 
     function tri_2loop(MV, p1x, p2x, p2y, lambda) result(res)
     use nonfact_expressions
@@ -126,10 +126,10 @@ contains
 
     TT012 = t012(MVsq, pi, p1x, p2x, p2y)
     TT22 = t22(MVsq, pi, p1x, p2x, p2y)
-    TT022 = adaptive_integral(t022_integrand,zero,2.0_dp*pi)
+    TT022 = scalar_integral(t022_integrand,zero,2.0_dp*pi)
     ! only needed for lambda /= MV^2
     TT12 = zero
-    if (logl /= zero) TT12 = adaptive_integral(t12_integrand,zero,2.0_dp*pi)
+    if (logl /= zero) TT12 = scalar_integral(t12_integrand,zero,2.0_dp*pi)
     
     res = (TT012 + two*TT022 + two*TT12*logl + TT22*logl**2)/TT22
   end function tri_2loop
@@ -171,61 +171,89 @@ contains
     if(twoloop_on) res = res - tri_2loop(MV,q1rot(1),q2rot(1),q2rot(2),MV**2)
   end function chinf
 
-  !----------------------------------------------------------------------
-  ! Integral of f over [x0,x1] by adaptive Gauss-Kronrod (7-point Gauss,
-  ! 15-point Kronrod) quadrature: the range is split into 4 intervals,
-  ! and the interval with the largest error estimate is bisected until
-  ! the summed error estimate is below nf_epsrel times the integral of
-  ! |f| (or maxint intervals are reached). The angular integrands are
-  ! smooth for typical kinematics, but have peaks of width ~ MV/pT at
-  ! large transverse momenta, which a fixed rule does not resolve.
-  function adaptive_integral(f, x0, x1) result(res)
-    use incl_parameters, only: nf_epsrel
+  ! Integral of a one-component integrand
+  function scalar_integral(f, x0, x1) result(res)
     real(dp), intent(in) :: x0, x1
-    real(dp) :: res
+    real(dp) :: res, r(1)
     interface
-       function f(x) result(res)
+       subroutine f(x, res)
          use helper
          implicit none
          real(dp), intent(in) :: x
-         real(dp) :: res
-       end function f
+         real(dp), intent(out) :: res(:)
+       end subroutine f
+    end interface
+    r = adaptive_integral(f, 1, x0, x1)
+    res = r(1)
+  end function scalar_integral
+
+  !----------------------------------------------------------------------
+  ! Integrals of the n components of f over [x0,x1] by adaptive
+  ! Gauss-Kronrod (7-point Gauss, 15-point Kronrod) quadrature: the range
+  ! is split into 4 intervals, and the interval with the largest error
+  ! estimate (relative to the integral of |f| of each component) is
+  ! bisected until, for every component, the summed error estimate is
+  ! below nf_epsrel times the integral of |f| (or maxint intervals are
+  ! reached). The angular integrands are smooth for typical kinematics,
+  ! but have peaks of width ~ MV/pT at large transverse momenta, which a
+  ! fixed rule does not resolve. Components that share the expensive
+  ! parts (roots, logs) are integrated together on the same nodes.
+  function adaptive_integral(f, n, x0, x1) result(res)
+    use incl_parameters, only: nf_epsrel
+    integer, intent(in) :: n
+    real(dp), intent(in) :: x0, x1
+    real(dp) :: res(n)
+    interface
+       subroutine f(x, res)
+         use helper
+         implicit none
+         real(dp), intent(in) :: x
+         real(dp), intent(out) :: res(:)
+       end subroutine f
     end interface
     integer, parameter :: ninit = 4, maxint = 200
-    real(dp) :: lo(maxint), hi(maxint), r(maxint), e(maxint), ra(maxint)
-    integer :: n, i, k
+    real(dp) :: lo(maxint), hi(maxint), r(n,maxint), e(n,maxint), ra(n,maxint)
+    real(dp) :: tol(n), worst(maxint)
+    integer :: nint, i, k
 
-    n = ninit
-    do i = 1, n
-       lo(i) = x0 + (x1 - x0)*(i-1)/n
-       hi(i) = x0 + (x1 - x0)*i/n
-       call gauss_kronrod_15(f, lo(i), hi(i), r(i), e(i), ra(i))
+    nint = ninit
+    do i = 1, nint
+       lo(i) = x0 + (x1 - x0)*(i-1)/nint
+       hi(i) = x0 + (x1 - x0)*i/nint
+       call gauss_kronrod_15(f, n, lo(i), hi(i), r(:,i), e(:,i), ra(:,i))
     enddo
-    do while (sum(e(1:n)) > nf_epsrel*sum(ra(1:n)) .and. n < maxint)
-       k = maxloc(e(1:n), 1)
-       n = n + 1
-       lo(n) = half*(lo(k) + hi(k))
-       hi(n) = hi(k)
-       hi(k) = lo(n)
-       call gauss_kronrod_15(f, lo(k), hi(k), r(k), e(k), ra(k))
-       call gauss_kronrod_15(f, lo(n), hi(n), r(n), e(n), ra(n))
+    do
+       tol = nf_epsrel*sum(ra(:,1:nint), dim=2)
+       if (all(sum(e(:,1:nint), dim=2) <= tol) .or. nint >= maxint) exit
+       do i = 1, nint
+          worst(i) = maxval(e(:,i)/max(tol, tiny(one)))
+       enddo
+       k = maxloc(worst(1:nint), 1)
+       nint = nint + 1
+       lo(nint) = half*(lo(k) + hi(k))
+       hi(nint) = hi(k)
+       hi(k) = lo(nint)
+       call gauss_kronrod_15(f, n, lo(k), hi(k), r(:,k), e(:,k), ra(:,k))
+       call gauss_kronrod_15(f, n, lo(nint), hi(nint), r(:,nint), e(:,nint), ra(:,nint))
     enddo
-    res = sum(r(1:n))
+    res = sum(r(:,1:nint), dim=2)
   end function adaptive_integral
 
-  ! 15-point Kronrod estimate of the integral of f over [a,b], the
-  ! difference to the embedded 7-point Gauss rule as error estimate,
-  ! and the integral of |f| (QUADPACK's qk15 nodes and weights)
-  subroutine gauss_kronrod_15(f, a, b, res, err, resabs)
+  ! 15-point Kronrod estimates of the integrals of the n components of f
+  ! over [a,b], the differences to the embedded 7-point Gauss rule as
+  ! error estimates, and the integrals of |f| (QUADPACK's qk15 nodes and
+  ! weights)
+  subroutine gauss_kronrod_15(f, n, a, b, res, err, resabs)
+    integer, intent(in) :: n
     real(dp), intent(in) :: a, b
-    real(dp), intent(out) :: res, err, resabs
+    real(dp), intent(out) :: res(n), err(n), resabs(n)
     interface
-       function f(x) result(res)
+       subroutine f(x, res)
          use helper
          implicit none
          real(dp), intent(in) :: x
-         real(dp) :: res
-       end function f
+         real(dp), intent(out) :: res(:)
+       end subroutine f
     end interface
     real(dp), parameter :: xgk(8) = (/ 0.991455371120812639206854697526329_dp, &
          & 0.949107912342758524526189684047851_dp, 0.864864423359769072789712788640926_dp, &
@@ -240,18 +268,18 @@ contains
     real(dp), parameter :: wg(4) = (/ 0.129484966168869693270611432679082_dp, &
          & 0.279705391489276667901467771423780_dp, 0.381830050505118944950369775488975_dp, &
          & 0.417959183673469387755102040816327_dp /)
-    real(dp) :: c, h, fc, f1, f2, rg, rk
+    real(dp) :: c, h, fc(n), f1(n), f2(n), rg(n), rk(n)
     integer :: j
 
     c = half*(a + b)
     h = half*(b - a)
-    fc = f(c)
+    call f(c, fc)
     rg = fc*wg(4)
     rk = fc*wgk(8)
     resabs = abs(fc)*wgk(8)
     do j = 1, 7
-       f1 = f(c - h*xgk(j))
-       f2 = f(c + h*xgk(j))
+       call f(c - h*xgk(j), f1)
+       call f(c + h*xgk(j), f2)
        rk = rk + wgk(j)*(f1 + f2)
        resabs = resabs + wgk(j)*(abs(f1) + abs(f2))
        if (mod(j,2) == 0) rg = rg + wg(j/2)*(f1 + f2)
@@ -261,19 +289,19 @@ contains
     err = abs((rk - rg)*h)
   end subroutine gauss_kronrod_15
 
-  function t022_integrand(x) result(res)
+  subroutine t022_integrand(x, res)
     use nonfact_expressions
     use incl_parameters
     real(dp), intent(in) :: x
-    real(dp) :: res
-    res = t022(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end function t022_integrand
+    real(dp), intent(out) :: res(:)
+    res(1) = t022(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
+  end subroutine t022_integrand
 
-  function t12_integrand(x) result(res)
+  subroutine t12_integrand(x, res)
     use nonfact_expressions
     use incl_parameters
     real(dp), intent(in) :: x
-    real(dp) :: res
-    res = t12(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
-  end function t12_integrand
+    real(dp), intent(out) :: res(:)
+    res(1) = t12(MVsq, pi, p1x_rk, p2x_rk, p2y_rk, x)
+  end subroutine t12_integrand
 end module nonfact

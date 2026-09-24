@@ -201,5 +201,37 @@ c.....................................................................
      $     2d0*p1x*p3x + p3x**2 + p3y**2))
       end function
 
+
+!     b01 and b022 at the same point, sharing the roots and logs. With
+!     D_k = Pi r_k prod_{j/=k} (r_k - r_j) and L_k = Log(-r_k/MV), the
+!     expressions above are b01 = -sum_k L_k/D_k and
+!     b022 = -2 sum_k L_k**2/D_k, k = 1, 3, 5 (b12 = -2 b01).
+      subroutine box_integrands(MV2, MVH2, pi, p1x, p2x, p2y, p3x, p3y,
+     $     xi, b01v, b022v)
+      real*8 MV, MV2, MVH2, pi, p1x, p2x, p2y, p3x, p3y, xi
+      real*8 b01v, b022v
+      complex*16 r(6), d, l, s1, s2
+      integer k, j
+      MV = sqrt(MV2)
+      r(1)=r1(MV2, p1x, xi)
+      r(2)=r2(MV2, p1x, xi)
+      r(3)=r3(MV2, p2x, p2y, xi)
+      r(4)=r4(MV2, p2x, p2y, xi)
+      r(5)=r5(MVH2, p1x, p3x, p3y, xi)
+      r(6)=r6(MVH2, p1x, p3x, p3y, xi)
+      s1 = 0d0
+      s2 = 0d0
+      do k = 1, 5, 2
+         d = Pi*r(k)
+         do j = 1, 6
+            if (j.ne.k) d = d*(r(k) - r(j))
+         enddo
+         l = Log(-(r(k)/MV))
+         s1 = s1 + l/d
+         s2 = s2 + l**2/d
+      enddo
+      b01v = -dble(s1)
+      b022v = -2d0*dble(s2)
+      end subroutine
 c......................................................................
       end module nonfact_expressions
