@@ -428,8 +428,8 @@ status 0 on errors (now \texttt{error stop}); the Fortran
 module-directory flag reached clang++; \texttt{-mcmodel=large} is not
 supported there (\commit{f706237}, \commit{b70d3af}). CI is green on
 both platforms. The dependency cache is saved right after installing
-(\commit{b8f1eb2}, \commit{91f8bbb}; the effect of the last fix was not
-yet confirmed at the time of writing). Also fixed on the way:
+(\commit{b8f1eb2}, \commit{91f8bbb}; the saved caches, 25\,MB on macOS
+and 39\,MB on Linux, are now in place). Also fixed on the way:
 \texttt{make -j} failed (\commit{44e051a}).
 
 %======================================================================
