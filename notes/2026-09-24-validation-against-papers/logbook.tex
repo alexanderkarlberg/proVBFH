@@ -1,0 +1,482 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{xspace}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[breaklinks=true,colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\setlist{itemsep=2pt,topsep=4pt}
+
+\newcommand{\provbfh}{\texttt{proVBFH}\xspace}
+\newcommand{\provbfhh}{\texttt{proVBFHH}\xspace}
+\newcommand{\provbfhinc}{\texttt{proVBFH-inclusive}\xspace}
+\newcommand{\hoppet}{\texttt{hoppet}\xspace}
+\newcommand{\commit}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\texttt{#1}}
+\newcommand{\MV}{M_V}
+\newcommand{\order}[1]{\ensuremath{\times 10^{#1}}}
+
+\title{Logbook: validation of \provbfh, \provbfhh and \provbfhinc against
+  the published results, the HH tensor matrix element, the
+  non-factorisable corrections, and CI}
+\author{}
+\date{24--25 September 2026}
+
+\begin{document}
+\maketitle
+
+\noindent This logbook summarises the work recorded in \file{README.md}
+in the same directory, which remains the detailed record (with the
+file-by-file description of \file{runs/}, \file{scripts/} and
+\file{patches/}). All work is on the branch \texttt{ci}, pushed to
+GitHub; commits are quoted by their short hashes (list in
+appendix~\ref{app:commits}).
+
+\tableofcontents
+
+%======================================================================
+\section{Setup}
+
+The goal was to set up continuous integration (CI), and before that to
+check that the current code, built against the latest dependency
+releases, reproduces the published numbers:
+\begin{itemize}
+\item 1506.02660 (VBF H at NNLO, fully differential),
+\item 1606.00840 (VBF H at N$^3$LO, inclusive),
+\item 1811.07906 (VBF HH at N$^3$LO, inclusive),
+\item 1811.07918 (VBF HH at NNLO, fully differential),
+\item 2005.11334 (non-factorisable corrections to VBF H and HH).
+\end{itemize}
+The PDFs of the papers are in \file{papers/}. Dependencies:
+\hoppet~2.3.0, LHAPDF~6.5.6, FastJet~3.5.1, gfortran~15.2 (Linux),
+i.e.\ the latest releases used by the CI.
+
+%======================================================================
+\section{\texorpdfstring{Inclusive cross sections (\provbfhinc)}{Inclusive cross sections (proVBFH-inclusive)}}
+
+Common flags: \texttt{-ncall1 1000000 -ncall2 4000000 -itmx1 3 -itmx2 3
+  -7scaleuncert}, one run per order. MC errors are $\pm0.0013$\,pb (H)
+and $\pm0.0011$\,fb (HH).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc@{\hspace{2em}}cc}
+\toprule
+ & \multicolumn{2}{c}{H, 13 TeV, 1606.00840 [pb]} & \multicolumn{2}{c}{HH, 14 TeV, 1811.07906 [fb]}\\
+order & this run & paper & this run & paper\\
+\midrule
+LO      & $4.0962^{+0.0543}_{-0.0643}$ & $4.099^{+0.051}_{-0.067}$ & $2.0749^{+0.1800}_{-0.1489}$ & $2.079^{+0.177}_{-0.152}$\\[2pt]
+NLO     & $3.9677^{+0.0274}_{-0.0201}$ & $3.970^{+0.025}_{-0.023}$ & $2.0616^{+0.0216}_{-0.0147}$ & $2.065^{+0.022}_{-0.018}$\\[2pt]
+NNLO    & $3.9294^{+0.0178}_{-0.0079}$ & $3.932^{+0.015}_{-0.010}$ & $2.0519^{+0.0046}_{-0.0025}$ & $2.056^{+0.003}_{-0.005}$\\[2pt]
+N$^3$LO & $3.9270^{+0.0071}_{-0.0000}$ & $3.928^{+0.005}_{-0.001}$ & $2.0514^{+0.0034}_{-0.0000}$ & $2.055^{+0.001}_{-0.001}$\\
+\bottomrule
+\end{tabular}
+\caption{Inclusive cross sections, $\mu=Q_i$. H: PDF4LHC15\_nnlo\_mc,
+  $M_H=125.09$, $M_W=80.385$; HH: PDF4LHC15\_nnlo\_mc, $M_H=125$,
+  $M_W=80.379$, $\Gamma_H=4.030\cdot10^{-3}$. HH at 27\,TeV, N$^3$LO:
+  $8.3945\pm0.0050$ vs $8.407$\,fb.}
+\end{table}
+
+The no-cuts columns of the differential papers ($\mu_0(p_t)$ scale)
+agree similarly. H (NNPDF30), LO and NLO: $4.0276$ and $3.9250$\,pb
+vs $4.032$ and $3.929$\,pb; HH (PDF4LHC15): $2.0135$ and $2.0470$\,fb
+vs $2.016$ and $2.049$\,fb.
+
+\paragraph{The small offset.}
+All inclusive numbers came out slightly low (H by 0.03--0.1\%, HH by
+about 0.18\%), by the same amount at every order including LO, so the
+cause is in the inputs rather than in the QCD corrections (halving the
+\hoppet $y$ grid spacing changes HH LO by $2\cdot10^{-6}$). Three
+changes since the papers account for it (LO, same seed, cumulative):
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+change relative to the paper-era code & shift of HH LO\\
+\midrule
+$Q_{\min}$: $\sqrt2 \to 1$\,GeV (the cut raised in \commit{bfdb73e}, 2025) & $+0.051\%$\\
+EW masses passed to \hoppet's \texttt{StartStrFct} ($\sin^2\theta_W$ of the $Z$ couplings) & $+0.038\%$\\
+old tensor matrix element (the 2.0.0 default) instead of the analytic one & $+0.023\%$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent For H, $Q_{\min}$ alone accounts for about half of the
+offset ($+0.037\%$ at $\mu=Q$, $+0.040\%$ at $\mu_0(p_{t,H})$). Averaged
+over four further seeds, HH LO is $2.07745\pm0.00054$\,fb with the
+current code and $2.07983\pm0.00055$\,fb in the paper-era configuration
+($Q_{\min}=1$, 2018 EW defaults of \hoppet, old tensor ME), vs $2.079$
+in the paper: the paper-era configuration reproduces 1811.07906. The
+EW-mass change is deliberate (the structure functions and the matrix
+element now use the same $M_W$).
+
+%======================================================================
+\section{\texorpdfstring{Differential cross sections with VBF cuts (\provbfh, \provbfhh)}{Differential cross sections with VBF cuts (proVBFH, proVBFHH)}}
+
+From \file{example/} with \texttt{runningscales 1}, the papers' PDFs and
+EW parameters (H: 13\,TeV, NNPDF30\_nnlo\_as\_0118; HH: 14\,TeV,
+PDF4LHC15\_nnlo\_mc). LO: 8 seeds with $10^7$ calls; NLO: 8 cores
+with \file{aux/runpar.sh}.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+process, order & this run & paper\\
+\midrule
+H LO   & $0.95722\pm0.00025$\,pb & $0.957$\,pb\\
+H NLO  & $0.8740\pm0.0014$\,pb   & $0.876$\,pb\\
+HH LO  & $0.79879\pm0.00018$\,fb & $0.799$\,fb\\
+HH NLO & $0.7310\pm0.0024$\,fb   & $0.726$\,fb\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Bug found (\commit{bc33959}).} Since \commit{828ff81} (March
+2025) the exclusive part of \provbfhh read \texttt{cVVHHfact},
+\texttt{cVVHfact} and \texttt{lambdafact} without a default; when absent
+from \file{powheg.input} (as in \file{example/}) they were $-10^6$, and
+all HH NLO/NNLO runs gave about $10^{20}$\,fb. LO and inclusive runs
+were unaffected. The smoke tests alone would not have caught this.
+
+%======================================================================
+\section{The HH tensor matrix element}
+
+\subsection{The two implementations}
+
+The HH matrix element contracts the hadronic tensors of the two beams
+with the $VV\to HH$ current,
+\begin{equation}
+  \sigma \propto W^{(1)}_{\mu\nu}\,W^{(2)}_{\rho\sigma}\,
+  M^{\mu\rho}M^{*\nu\sigma},\qquad
+  W_{\mu\nu} = F_1\,G^{(1)}_{\mu\nu} + F_2\,G^{(2)}_{\mu\nu} + F_3\,G^{(3)}_{\mu\nu},
+\end{equation}
+with the basis tensors
+\begin{equation}
+  G^{(1)}_{\mu\nu} = \frac{q_\mu q_\nu}{q^2} - g_{\mu\nu},\quad
+  G^{(2)}_{\mu\nu} = \frac{\hat P_\mu \hat P_\nu}{P\cdot q},\quad
+  G^{(3)}_{\mu\nu} = \frac{i\,\epsilon_{\mu\nu\rho\sigma}P^\rho q^\sigma}{2\,P\cdot q},\qquad
+  \hat P = P - \frac{P\cdot q}{q^2}\,q,
+\end{equation}
+and the current
+\begin{equation}
+  M^{\mu\nu} = A\,g^{\mu\nu} + B\,(2k_1+q_1)^\mu(k_2-k_1-q_1)^\nu
+             + C\,(2k_2+q_1)^\mu(k_1-k_2-q_1)^\nu ,
+\end{equation}
+where $A$ collects the triangle ($s$-channel Higgs), the quartic vertex
+and the $g^{\mu\nu}$ part of the $t$/$u$-channel boxes, and $B$, $C$ the
+remaining $t$/$u$-channel structures (with the coupling modifiers
+$c_V$, $c_{VV}$, $\lambda$). The default \texttt{eval\_matrix\_element}
+uses the analytic contraction (Mathematica expressions in
+\file{ME\_expressions.f}); \texttt{eval\_matrix\_element\_tensor}
+(\texttt{-tensorME}, \texttt{tensorME 1}) contracts numerically. The
+tensor version is the only one with the diagram switches, and the
+non-factorisable (NF) corrections always use it.
+
+\subsection{\texorpdfstring{The F$_3$ bug was in the tensor version}{The F3 bug was in the tensor version}}
+
+A first analysis (same-point comparison of the two implementations)
+took the tensor version as the reference and concluded that the
+$F_3\times F_3$ interference terms of the analytic \texttt{F3F3} were
+wrong. \textbf{That was backwards.} The tensor code stored the
+contravariant components of $q$, $P$ and $k_i$ in tensors declared with
+lower indices, i.e.\ it worked with the parity-flipped vectors, but
+built $\epsilon_{\mu\nu\rho\sigma}P^\rho q^\sigma$ from the unflipped
+ones. Everything without $\epsilon$ is parity invariant and came out
+right, as did $F_3\times F_3$ for $A$ alone; the $F_3\times F_3$
+interference of $A$ with $B$, $C$ did not.
+
+An independent calculation with explicit index handling at a physical
+phase-space point (\file{scripts/f3-check/}) settles it: the analytic
+\texttt{F3F3} coefficients (AA, AB, AC, BC) agree with it to all printed
+digits, the old tensor convention only for AA (AB is off by a factor
+39, AC by 4.4, BC by 22). Fixed in \commit{03adc62}: vectors are now
+lowered with the metric (\texttt{InitFourVector} in \file{tensor.f90}).
+The effect on the integrated HH cross section is at the $10^{-4}$ level
+(analytic/old tensor $-1 = (-1.5\pm0.9)\cdot10^{-4}$).
+
+\subsection{What remains: parity-odd width terms}
+
+With finite widths the tensor version contains $F_1F_3$ and $F_2F_3$
+terms, $\mathrm{Im}(AB^*)$ etc.\ times the $i\epsilon$ part of $W$,
+which the analytic version does not have. Each has a single $\epsilon$
+tensor, so they are parity odd and integrate to zero for $\sigma$ and
+every parity-even distribution. Same-point comparisons after the fixes
+(\file{scripts/dbg\_patch.py}, 0.6M points, HH at 14\,TeV):
+
+\begin{center}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+comparison & analytic/tensor $-1$ (integral) & pointwise\\
+\midrule
+zero widths, LO           & $(-2\pm9)\cdot10^{-16}$ & $\le1.4\cdot10^{-5}$ (rare points)\\
+zero widths, N$^3$LO      & $(+4\pm9)\cdot10^{-16}$ & $\le5.9\cdot10^{-6}$\\
+physical widths, LO       & $(-2.2\pm1.2)\cdot10^{-4}$ & up to 46\% of the scale\\
+widths, mirror-averaged tensor, LO & $+7\cdot10^{-16}$ & $\le1.4\cdot10^{-9}$ of the scale\\
+same, N$^3$LO             & $-1\cdot10^{-15}$ & $\le3.9\cdot10^{-9}$ of the scale\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent (The scale is the sum of the absolute values of all terms;
+``mirror-averaged'' means the tensor matrix element averaged over each
+point and its mirror image $y\to-y$, which removes its parity-odd
+part.)
+So the analytic version is correct for all parity-even observables.
+\textbf{Decision: the analytic matrix element stays the default}; the
+tensor one is needed for parity-odd observables, the diagram switches
+and the NF corrections.
+
+\subsection{Order combination}
+
+The analytic version expands strictly, $\sum_{n}\sum_{i+j=n+1}
+F^{(i)}_{\text{beam 1}}F^{(j)}_{\text{beam 2}}$. The old tensor version
+summed the structure functions over all orders first, which adds
+products beyond the working order and ignores \texttt{order\_start}:
+non-tensor/old tensor $-1$ without $F_3$ was $2\cdot10^{-15}$ (LO),
+$+2.7\cdot10^{-4}$ (NLO), $+0.65\cdot10^{-4}$ (NNLO) and
+$+0.06\cdot10^{-4}$ (N$^3$LO). Since $W$ is linear in the structure
+functions, the new version (\commit{edc7a24}) computes once per point
+and boson
+\begin{equation}
+  T_{kl} = \mathrm{Re}\left[G^{(k)}_{1,\mu\nu}\,G^{(l)}_{2,\rho\sigma}\,
+  M^{\mu\rho}M^{*\nu\sigma}\right],\qquad
+  \sigma \propto \sum_{n}\sum_{i+j=n+1}\sum_{k,l}
+  F_k^{(i)}F_l^{(j)}\,T_{kl},
+\end{equation}
+exactly the strict expansion, at no extra cost per order. With zero
+widths, same-seed runs with and without \texttt{-tensorME} now give
+identical results and MC errors at every order, also with coupling
+modifiers (which the \provbfhinc tensor version ignored before
+\commit{44d0d79}).
+
+\subsection{Code changes and performance}
+
+\begin{itemize}
+\item \commit{8d00b5d}: \file{tensor.f90} rewritten without allocatable
+  components (bit-identical results), the same file in all three
+  packages. The previous version is kept as the oracle in
+  \provbfhinc (\file{tests/}); \texttt{make check}
+  runs a unit test against it and against explicit formulae
+  (tolerances robust to fused multiply-adds since \commit{f706237}).
+\item \commit{af68ff5}: \provbfhh used \texttt{cmplx()} without
+  \texttt{kind=dp}, i.e.\ single-precision propagators
+  ($1.5\cdot10^{-8}$ effect).
+\item Timing of \texttt{provbfhh\_incl} (1M points, one core): old
+  tensor 7.4\,s (LO) / 9.1\,s (N$^3$LO), new tensor 4.4 / 6.1\,s,
+  analytic 2.7 / 4.4\,s.
+\end{itemize}
+
+%======================================================================
+\section{Non-factorisable corrections}
+
+\subsection{Validation against 2005.11334}
+
+Setup of 1506.02660 (13\,TeV, NNPDF30, $M_W=80.398$, $\Gamma_W=2.141$),
+\texttt{qcd\_order 1}, \texttt{nonfact 1}, central scale only. H:
+$\delta\sigma_{\rm NF}=-0.0030251\pm0.0000098$\,pb vs $-0.0030$\,pb
+($-0.316\%$ of LO vs $-0.32\%$). HH, table~2 of the paper, with the
+fixed tensor code (paper in brackets):
+
+\begin{center}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+ & $\sigma_{TT}$ & $\sigma_{BB}$ & $\sigma_{TB}$ & $\Sigma$\\
+\midrule
+Born [fb] & 10.368 (10.393) & 14.128 (14.172) & $-23.838$ ($-23.904$) & 0.6577 (0.662)\\
+1-loop NF & 0.342\% (0.339\%) & 0.303\% (0.300\%) & 0.320\% (0.318\%) & 0.283\% (0.286\%)\\
+2-loop NF & $-0.666\%$ ($-0.667\%$) & $-0.620\%$ ($-0.621\%$) & $-0.643\%$ ($-0.644\%$) & $-0.516\%$ ($-0.516\%$)\\
+full NF   & $-0.324\%$ ($-0.327\%$) & $-0.318\%$ ($-0.320\%$) & $-0.323\%$ ($-0.326\%$) & $-0.233\%$ ($-0.230\%$)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent MC errors: 0.2--0.5\% (relative) for TT, BB; for the
+$\Sigma$ column, which has a strong cancellation, $\pm0.010$, $\pm0.004$
+and $\pm0.011$ (absolute, in \%). With the old tensor code the
+$\Sigma$ column was 0.274\%, $-0.513\%$, $-0.239\%$ (compatible within
+errors); the Born TT result is unchanged to the last digit, as it must
+be (triangles have only the $g^{\mu\nu}$ structure, so the $A\times B$
+bug cannot affect them). The Born is 0.25--0.3\% below the paper with
+NNPDF30 and about as much above with PDF4LHC15; the paper does not
+state its HH PDF. This does not affect the NF percentages and was
+accepted as is.
+
+\subsection{Speed-up of the angular integrals}
+
+Each phase-space point needs integrals over the gluon azimuth
+$\xi\in[0,2\pi]$ of the eikonal integrands of
+\file{nonfact\_expressions.f} (HH: 8 per boson, H: 2). They were done
+with a Runge--Kutta routine with \texttt{niter}${}=100$ steps; since
+the integrands do not depend on $y$, this is Simpson's rule with the
+midpoint and the left endpoint evaluated twice, i.e.\ 400 calls per
+integral, half of them redundant.
+
+A study on 9000 argument sets dumped from real HH and H NF runs
+(in \file{scripts/}) showed that the integrands are smooth
+for typical kinematics, but at large transverse momenta develop peaks
+of width $\sim\MV/p_T$ where $\xi$ aligns with an external transverse
+momentum. No fixed rule copes (maximum error relative to $\int|f|$):
+
+\begin{center}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+rule (calls) & $b_{01}$ & $b_{022}$ & $t_{022}$\\
+\midrule
+RK4, \texttt{niter} 100 (400) & $1.9\cdot10^{-4}$ & $8.1\cdot10^{-5}$ & $1.6\cdot10^{-1}$\\
+trapezoidal (64) & $2.5\cdot10^{-3}$ & $1.1\cdot10^{-3}$ & $1.1$\\
+Gauss--Legendre (128) & $4.0\cdot10^{-5}$ & $1.8\cdot10^{-5}$ & $8.5\cdot10^{-3}$\\
+adaptive G--K, $\epsilon=10^{-8}$ (mean calls) & $1.0\cdot10^{-11}$ (82) & $9\cdot10^{-10}$ (77) & $1.0\cdot10^{-9}$ (114)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent For RK4 on $t_{022}$ the median error is $2\cdot10^{-15}$,
+the 99th percentile $2\cdot10^{-3}$. The changes:
+\begin{itemize}
+\item \commit{f37f0da}: the roots $r_1\ldots r_6$ were single-precision
+  complex (\texttt{complex*8}; effect at most $1.6\cdot10^{-4}$ on the
+  integrals).
+\item \commit{d593bb4}: adaptive Gauss--Kronrod (G7/K15, 4 initial
+  intervals, bisection of the worst interval) to a relative accuracy
+  \texttt{nf\_epsrel} (new input, default $10^{-8}$) of $\int|f|$;
+  \texttt{niter} is no longer used.
+\item The integrands have the structure (with
+  $L_k=\log(-r_k/\MV)$, $D_k=\pi r_k\prod_{j\ne k}(r_k-r_j)$)
+  \begin{equation}
+    b_{01}=-\sum_{k=1,3,5}\frac{L_k}{D_k},\quad
+    b_{022}=-2\sum_{k=1,3,5}\frac{L_k^2}{D_k},\quad
+    b_{12}=-2\,b_{01},
+  \end{equation}
+  and likewise $t_{01}$, $t_{022}$, $t_{12}=-2t_{01}$ for the triangle
+  with $k=1,3$ and $j\le4$. \commit{03a4587} integrates the 1- and
+  2-loop boxes together (shared roots, logs and peaks), and
+  \commit{1a53e5e} folds the triangle into the integration of the first
+  box of each boson (the box denominators are the triangle ones times
+  $(r_k-r_5)(r_k-r_6)$).
+\end{itemize}
+
+\noindent Full HH NF run (notes statistics, 8 runs in parallel on 12
+cores): $2332\,\mathrm{s}\to482\,\mathrm{s}$ with the adaptive
+integration, $437\,\mathrm{s}$ with the folding, i.e.\ about $5\times$
+faster. Every NF result (HH table, H) is identical to the old one in
+every printed digit.
+
+\paragraph{Impact on distributions.} The old integration was
+inaccurate only at rare, extreme kinematics. Comparing all histograms
+of the analysis bin by bin between the old and new runs (same seeds,
+otherwise the same code; 35 histograms for HH, 14 for H), the largest
+shift is 1.3\% in the $m_{HH}=3.2$--$3.4$\,TeV bin of the 1-loop HH
+run, 5\% of its MC error; for the full HH NF correction 0.4\%
+($p_{T,H}=780$--$810$\,GeV, 1.4\% of the MC error); for H
+$2\cdot10^{-5}$. The paper's figures show NF/LO as a function of
+$m_{jj}$ and $\Delta y_{jj}$ selection cuts: the cross sections above
+an $m_{jj}$ or $\Delta y_{jj}$ cut change by at most $10^{-5}$ (full HH
+NF), $1.4\cdot10^{-4}$ (1-loop HH, $m_{jj}>6.8$\,TeV) and
+$2\cdot10^{-8}$ (H). The 2D cut grid of the figures was not rebuilt.
+
+\subsection{Regulator independence}
+
+The gluon-mass regulator was hard-wired to $\lambda=\MV^2$, where
+$L\equiv\log(\lambda/\MV^2)=0$. With the identities above, the 1- and
+2-loop functions have the form
+\begin{equation}
+  \chi^{(1)}_a = f_a - L,\qquad \chi^{(2)}_a = C_a - 2f_aL + L^2,
+\end{equation}
+for each diagram class $a$, with $M_1=i\sum_a\chi^{(1)}_aX_a$ and
+$M_2=-\frac12\sum_a\chi^{(2)}_aX_a$, so that the $L$ terms cancel point
+by point in $|M_1|^2+2\,\mathrm{Re}(M_2M_0^*)$. \commit{fe67abd}
+therefore obtains $b_{12}$, $t_{12}$ from the 1-loop integrals and adds
+the input \texttt{nf\_regfact} ($\lambda=$\,\texttt{nf\_regfact}$\cdot\MV^2$,
+default 1). The 1-loop triangle is computed analytically
+(\texttt{chi\_tri1}); the numerical $-2\int t_{01}/t_{11}$ agrees with it
+to $1.7\cdot10^{-11}$, so $\lambda$ independence also tests the
+angular integration. Same-seed runs with \texttt{nf\_regfact}
+$0.01$, $1$ and $100$ give identical results in all printed digits (HH
+all diagrams, HH triangles only, H).
+
+%======================================================================
+\section{Continuous integration}
+
+\file{.github/workflows/ci.yml} builds the three packages on
+\texttt{ubuntu-latest} and \texttt{macos-latest} against the latest
+releases of \hoppet, LHAPDF and FastJet (on push/PR, weekly, on
+demand), with the logic in \file{ci/*.sh} so that it runs locally too:
+\begin{itemize}
+\item \file{smoke-tests.sh}: short runs of every program, checking for
+  complete and finite output (not a physics validation);
+\item \file{tensor-checks.sh}: \texttt{make check}, identical copies of
+  \file{tensor.f90}, and tensor vs analytic matrix element at zero
+  widths (LO and NNLO);
+\item \file{nf-checks.sh}: NF runs of \provbfh and \provbfhh with
+  $\lambda=\MV^2$ and $0.01\,\MV^2$, which must agree to $10^{-6}$ (a
+  deliberately wrong sign in $b_{12}=-2b_{01}$ changes the result by a
+  factor 100);
+\item \file{annotate.sh}: reports the error lines of a failing step as
+  annotations in the run summary.
+\end{itemize}
+The first macOS runs exposed: the unit test demanded bit-identical
+rounding (fails with FMA on arm64); the tensor module stopped with exit
+status 0 on errors (now \texttt{error stop}); the Fortran
+module-directory flag reached clang++; \texttt{-mcmodel=large} is not
+supported there (\commit{f706237}, \commit{b70d3af}). CI is green on
+both platforms. The dependency cache is saved right after installing
+(\commit{b8f1eb2}, \commit{91f8bbb}; the effect of the last fix was not
+yet confirmed at the time of writing). Also fixed on the way:
+\texttt{make -j} failed (\commit{44e051a}).
+
+%======================================================================
+\section{Open points}
+\begin{itemize}
+\item HH Born normalisation vs 2005.11334 (PDF not stated in the paper):
+  accepted as is.
+\item The 2018 HH papers used the old tensor code: their numbers
+  include the $F_3$ error and the beyond-accuracy order products, both
+  at the $10^{-4}$ level, far below the quoted uncertainties.
+\item Possible further NF speed-up: initial Gauss--Kronrod break
+  points at the known peak angles.
+\item \texttt{incl2pwhg.f} ignores \texttt{tensorME} (consistent with
+  keeping the analytic default).
+\item Merging \texttt{ci} into \texttt{main}.
+\end{itemize}
+
+%======================================================================
+\appendix
+\section{\texorpdfstring{Commits on the \texttt{ci} branch}{Commits on the ci branch}}
+\label{app:commits}
+{\small
+\begin{tabular}{@{}ll@{}}
+\commit{bc33959} & \provbfhh: default coupling modifiers to 1 in the exclusive code\\
+\commit{1326b19} & \provbfhinc: set rpath for \hoppet and LHAPDF\\
+\commit{44e051a} & \provbfh, \provbfhh: add missing \texttt{constants.o} dependency on \texttt{helper.o}\\
+\commit{8d00b5d} & \file{tensor.f90}: allocation-free rewrite, shared by all three packages\\
+\commit{03adc62} & HH tensor matrix element: fix the $F_3$ interference terms\\
+\commit{af68ff5} & \provbfhh: double-precision \texttt{cmplx} in the matrix elements\\
+\commit{edc7a24} & HH tensor matrix element: combine orders per order pair\\
+\commit{44d0d79} & \texttt{provbfhh\_incl}: coupling modifiers in the tensor matrix element\\
+\commit{caf5177} & Add continuous integration (GitHub Actions)\\
+\commit{8726b60} & Add \file{CLAUDE.md}\\
+\commit{7a2eafa} & notes: validation of the current code against the published results\\
+\commit{f706237} & tensor tests: robust to FMA; \texttt{error stop} in the tensor code\\
+\commit{eb4bc86} & CI: report errors as annotations; fix the artifact path\\
+\commit{b70d3af} & \provbfh, \provbfhh: fix the build on macOS\\
+\commit{f37f0da} & NF corrections: double-precision complex in \file{nonfact\_expressions.f}\\
+\commit{d593bb4} & NF corrections: adaptive Gauss--Kronrod for the azimuthal integrals\\
+\commit{03a4587} & NF corrections (HH): integrate the 1- and 2-loop boxes together\\
+\commit{b8f1eb2} & CI: save the dependency cache right after installing\\
+\commit{d6d42f0} & notes: NF speed-up study and revalidation\\
+\commit{fe67abd} & NF corrections: regulator input \texttt{nf\_regfact}; $b_{12}$, $t_{12}$ from the 1-loop integrals\\
+\commit{1a53e5e} & NF corrections (HH): fold the triangle into the box integration\\
+\commit{9f1d7c0} & CI: check that the NF corrections do not depend on the regulator\\
+\commit{9e08c09} & notes: NF regulator independence and triangle folding\\
+\commit{91f8bbb} & CI: fix the dependency cache; current action versions\\
+\end{tabular}}
+
+\end{document}

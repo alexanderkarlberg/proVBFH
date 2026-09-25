@@ -286,8 +286,8 @@ scale μ₀(p_t) (`runningscales 1`). NF runs use `qcd_order 1`,
 diagram classes (TT = triangle topologies, BB = boxes, TB = their
 interference = all − TT − BB), and `tri1_off`/`box1_off` or
 `tri2_off`/`box2_off` keep only the 2-loop or 1-loop pieces. The gluon
-mass is hard-wired to λ = M_V (`matrix_element.f90:959,1045`), as in the
-paper's table. The diagram switches exist only in the tensor code, so
+mass regulator is λ = M_V² (as in the paper's table; since fe67abd
+`nf_regfact` can change it, without effect on the result). The diagram switches exist only in the tensor code, so
 the HH Born breakdown uses `tensorME 1`. The NF path always uses the
 tensor code.
 
@@ -373,6 +373,20 @@ seeds, `runs/nonfact-adaptive/`) reproduces the HH table above
 in every printed digit. Wall times (8 runs in parallel on 12 cores):
 full HH NF 2332 s → 482 s, 2-loop runs 1720–1990 s → 370–440 s,
 1-loop runs 960–980 s → 410–445 s.
+
+Impact on distributions: the old integration was inaccurate only for
+rare, extreme kinematics, so its effect on distributions was checked
+bin by bin between `runs/nonfact-after-tensor-fix/` (old) and
+`runs/nonfact-adaptive/` (new), same seeds and otherwise the same code,
+over all histograms of the analysis (35 for HH, 14 for H). The largest
+shift is 1.3% relative, in the m_HH 3.2–3.4 TeV bin of the 1-loop HH
+run, i.e. 5% of that bin's MC error; for the full HH NF correction the
+largest shift is 0.4% (p_T,H 780–810 GeV, 1.4% of the MC error), for H
+2e-5. The paper's figures (2005.11334, Figs. 1, 2) show NF/LO as a
+function of m_jj and Δy_jj selection cuts: the cumulative cross
+sections above an m_jj or Δy_jj cut change by at most 1e-5 (full HH
+NF), 1.4e-4 (1-loop HH, m_jj > 6.8 TeV) and 2e-8 (H). The 2D cut grid
+of the figures was not rebuilt.
 
 **Regulator independence (fe67abd, 1a53e5e).** The integrands obey
 b12 = −2 b01 and t12 = −2 t01 point by point (1e-15 of the
@@ -469,6 +483,8 @@ since the NF validation does not depend on it.
   - `dbg_patch.py`: same-point debug harness for the current code
     (analytic, new tensor and old tensor matrix element on the same
     points; `NOF3`, `MIRROR` switches), used for the tables in the
-    correction above. They contain hard-coded scratch paths (`SP=...`) and
+    correction above.
+
+  The driver scripts contain hard-coded scratch paths (`SP=...`) and
   expect a dependency install made with `ci/install-deps.sh`, with
   `LHAPDF_DATA_PATH` pointing at it.
