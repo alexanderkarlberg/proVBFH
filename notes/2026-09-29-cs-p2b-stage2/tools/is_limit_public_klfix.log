@@ -1,0 +1,138 @@
+LHAPDF 6.5.6 loading /home/thA371a/akarlber/.local/share/LHAPDF/NNPDF30_nnlo_as_0118/NNPDF30_nnlo_as_0118_0000.dat
+NNPDF30_nnlo_as_0118 PDF set, member #0, version 2; LHAPDF ID = 261000
+  found input file powheg.input
+  opened powheg.input
+  powheginput keyword par_diexp            absent; set to   -1000000.0000000000     
+  powheginput keyword par_dijexp           absent; set to   -1000000.0000000000     
+  powheginput keyword par_2gsupp           absent; set to   -1000000.0000000000     
+  powheginput keyword ih1                  set to    1.0000000000000000     
+  powheginput keyword ih2                  set to    1.0000000000000000     
+  powheginput keyword lhans1               set to    261000.00000000000     
+  powheginput keyword lhans2               set to    261000.00000000000     
+  powheginput keyword lhapdf6maxsets       absent; set to   -1000000.0000000000     
+  check: alpha_s(Mz)=  0.11800230075848536     
+  alpha_s order (0,1,2):            2
+  Lambda 5 is   0.20839257465514974     
+  powheginput keyword ebeam1               set to    4000.0000000000000     
+  powheginput keyword ebeam2               set to    4000.0000000000000     
+  powheginput keyword bornktmin            absent; set to   -1000000.0000000000     
+  powheginput keyword ptsqmin              absent; set to   -1000000.0000000000     
+  vbfnloinput keyword CHARMMASS            set to    1.6499999999999999     
+  vbfnloinput keyword BOTTOMMASS           set to    4.8550000000000004     
+  powheginput keyword renscfact            set to    1.0000000000000000     
+  powheginput keyword facscfact            set to    1.0000000000000000     
+  powheginput keyword evenmaxrat           absent; set to   -1000000.0000000000     
+  powheginput keyword hdecaymode           absent; set to   -1000000.0000000000     
+ for processes including gluons:
+
+  all flavor channels are summed
+  powheginput keyword qq_exclude           absent; set to   -1000000.0000000000     
+
+  pure quark flavor channels are considered
+  powheginput keyword ckm_offdiag          set to    1.0000000000000000     
+  
+               Physics parameters
+ -----------------------------------------------
+  vbfnloinput keyword HMASS                set to    126.00000000000000     
+  vbfnloinput keyword HWIDTH               set to   -999.00000000000000     
+  vbfnloinput keyword TOPMASS              set to    172.40000000000001     
+  vbfnloinput keyword TAU_MASS             set to    1.7767999999999999     
+  vbfnloinput keyword FERMI_CONST          set to    1.1663700000000000E-005
+  vbfnloinput keyword WMASS                set to    80.397999999999996     
+  vbfnloinput keyword ZMASS                set to    91.187600000000003     
+  
+   Information on couplings, masses and widths
+ ===============================================
+  
+   SM coupling parameters 
+ ---------------------------
+   G_Fermi                         : 0.000011663700
+   SIN**2 of the weak mixing angle : 0.22264585
+   Q.E.D. fine structure constant  : 1/132.34070    
+   Q.C.D. NLO alfas(MZ)            : 0.11186752
+  
+      particle masses
+ ---------------------------
+   mass of the Z0 boson            :   91.1876
+   mass of the W+/- boson          :   80.3980
+   mass of the Higgs boson         :  126.0000
+   mass of the top quark           :  172.4000
+   mass of the bottom quark at MH  :    2.7659
+  (All other fermions have mass equal ZERO)
+  
+      particle widths
+ ---------------------------
+   total widths of Z0              :   2.505121 GeV
+   total widths of W+ or W-        :   2.095018 GeV
+   total widths of Higgs           :   0.004165 GeV
+   total widths of top quark       :   1.347310 GeV
+  
+  partial Higgs decay width 
+ ---------------------------
+   H -> WW                         : 0.940120D-03 GeV
+   H -> ZZ                         : 0.129511D-03 GeV
+   H -> bottom anti-bottom         : 0.234782D-02 GeV
+   H -> top anti-top               : 0.000000D+00 GeV
+   H -> charm anti-charm           : 0.139140D-03 GeV
+   H -> tau anti-tau               : 0.260760D-03 GeV
+   H -> mu anti-mu                 : 0.000000D+00 GeV
+   H -> gluon gluon                : 0.330223D-03 GeV
+   H -> gamma gamma                : 0.101791D-04 GeV
+   H -> Z gamma                    : 0.726020D-05 GeV
+  
+     branching ratios
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+ ---------------------------
+   W -> lepton anti-lepton         : 10.8534605 %
+   W -> massless quark anti-quark  : 33.7198092 %
+   W -> top bottom                 :  0.0000000 %
+  
+   Z -> neutrino anti-neutrino     :  6.6216916 %
+   Z -> charged lepton anti-lepton :  3.3504832 %
+   Z -> up-type quark anti-quark   : 11.9840804 %
+   Z -> down-type quark anti-quark : 15.3717717 %
+   Z -> top anti-top               :  0.0000000 %
+  
+   H -> WW                         : 22.5718649 %
+   H -> ZZ                         :  3.1095056 %
+   H -> bottom anti-bottom         : 56.3700066 %
+   H -> top anti-top               :  0.0000000 %
+   H -> charm anti-charm           :  3.3406804 %
+   H -> tau anti-tau               :  6.2607259 %
+   H -> mu anti-mu                 :  0.0000000 %
+   H -> gluon gluon                :  7.9285076 %
+   H -> gamma gamma                :  0.2443950 %
+   H -> Z gamma                    :  0.1743140 %
+  
+ *************************************
+ Z mass =    91.187600000000003     
+ Z width =    2.5051205715108065     
+ W mass =    80.397999999999996     
+ W width =    2.0950178320623332     
+ H mass =    126.00000000000000     
+ H width =    4.1650099966932313E-003
+ 1/alphaem =    132.34070151637243     
+ sthw2 =   0.22264585341299603     
+ (unit_e)^2 =    9.4954692474593969E-002
+ (g_w)^2 =   0.42648309420098718     
+ CKM matrix for events
+  0.97479999065399170       0.22249999642372131        3.5999999381601810E-003
+  0.22249999642372131       0.97399997711181641        4.1000001132488251E-002
+   8.9999996125698090E-003   4.0500000119209290E-002  0.99919998645782471     
+ *************************************
+  **** Minimum maxalr allowed:         1984  *********
+  **** Number of born graphs:           192
+  **** Number of real graphs:           856
+  **** Number of regular regions:           0
+  powheginput keyword softtest             set to    0.0000000000000000     
+  powheginput keyword colltest             set to    0.0000000000000000     
+ x =  0.9100  Higgs mass, K~^2 ^1/2:   126.000   611.769
+ Q = 2  kT =  1.0E+00  <R> =  7.075293E-08  B_g =  3.078735E-09  c =  0.996508
+ Q = 2  kT =  1.0E-01  <R> =  7.101951E-06  B_g =  3.078735E-09  c =  0.999965
+ Q = 2  kT =  1.0E-02  <R> =  7.102218E-04  B_g =  3.078735E-09  c =  1.000000
+ Q = 2  kT =  1.0E-03  <R> =  7.102216E-02  B_g =  3.078735E-09  c =  0.999999
+ Q = 1  kT =  1.0E+00  <R> =  9.096707E-08  B_g =  3.946188E-09  c =  0.999574
+ Q = 1  kT =  1.0E-01  <R> =  9.103250E-06  B_g =  3.946188E-09  c =  0.999996
+ Q = 1  kT =  1.0E-02  <R> =  9.103315E-04  B_g =  3.946188E-09  c =  1.000000
+ Q = 1  kT =  1.0E-03  <R> =  9.103310E-02  B_g =  3.946188E-09  c =  0.999999

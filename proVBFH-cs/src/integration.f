@@ -1,10 +1,14 @@
 c proVBFH-cs: copy of ../proVBFH/src/inclusive/integration.f with
-c MXDIM raised from 10 to 16 (the exclusive integrand has 13 dimensions).
+c MXDIM raised from 10 to 24 (the exclusive integrand has up to 20
+c dimensions), and dimensions j >= jfreeze not adapted: their grids stay
+c uniform, as needed where proVBFH-cs computes the sampling density itself
+c (the multichannel four-parton phase space).
 c     second version of vegas with double precision
 c...............
       module integration
       
       logical readin,writeout
+      integer :: jfreeze = 1000
       character*72 ingridfile,outgridfile, outgridtopfile
       common/gridinfo_logic/readin,writeout
       common/gridinfo_char/ingridfile,outgridfile,outgridtopfile
@@ -15,7 +19,7 @@ c...............
      >     tgral,sd,chi2a)
       INTEGER init,itmx,ncall,ndim,nprn,NDMX,MXDIM
       REAL*8 tgral,chi2a,sd,region(2*ndim),fxn,ALPH,TINY
-      PARAMETER (ALPH=1.5,NDMX=50,MXDIM=16,TINY=1.d-30)
+      PARAMETER (ALPH=1.5,NDMX=50,MXDIM=24,TINY=1.d-30)
       EXTERNAL fxn
 C     USES fxn,ran2,rebin
 C     
@@ -205,6 +209,7 @@ c---  read-in grid if necessary
             dt(j)=dt(j)+d(nd,j)
  25      enddo
          do 27 j=1,ndim
+            if (j.ge.jfreeze) goto 27
             rc=0.d0
             do 26 i=1,nd
                if(d(i,j).lt.TINY) d(i,j)=TINY

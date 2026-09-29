@@ -1,0 +1,14 @@
+point 1: s_Qg line 1 = 4.5012e+04, momentum conservation 1.80e+02 (the Higgs carries the rest)
+  gauge checks (should be ~1e-15): q J -> Q g 1.1e-12, Compton 6.9e-14
+  q g -> q g |M|^2 check (code, formula): (np.float64(12.584894470608603), np.float64(12.584894470608706))
+  LL: unitarity T (placement 1, 2) delta 1e-5: -0.41109 +0.44547  delta 1e-7: -0.41109 +0.44548   VBFNLO: -0.41109 +0.44548
+  LR: unitarity T (placement 1, 2) delta 1e-5: -0.41071 -0.43355  delta 1e-7: -0.41072 -0.43355   VBFNLO: -0.41072 -0.43355
+  RL: unitarity T (placement 1, 2) delta 1e-5: +0.41071 +0.43355  delta 1e-7: +0.41072 +0.43355   VBFNLO: +0.41072 +0.43355
+  RR: unitarity T (placement 1, 2) delta 1e-5: +0.41109 -0.44547  delta 1e-7: +0.41109 -0.44548   VBFNLO: +0.41109 -0.44548
+point 2: s_Qg line 1 = 1.3165e+05, momentum conservation 1.83e+02 (the Higgs carries the rest)
+  gauge checks (should be ~1e-15): q J -> Q g 6.6e-12, Compton 1.0e-12
+  q g -> q g |M|^2 check (code, formula): (np.float64(12.58489447060908), np.float64(12.584894470608889))
+  LL: unitarity T (placement 1, 2) delta 1e-5: -0.09526 +0.15015  delta 1e-7: -0.09527 +0.15015   VBFNLO: -0.09527 +0.15015
+  LR: unitarity T (placement 1, 2) delta 1e-5: -0.09505 -0.14864  delta 1e-7: -0.09505 -0.14864   VBFNLO: -0.09505 -0.14864
+  RL: unitarity T (placement 1, 2) delta 1e-5: +0.09505 +0.14864  delta 1e-7: +0.09505 +0.14864   VBFNLO: +0.09505 +0.14864
+  RR: unitarity T (placement 1, 2) delta 1e-5: +0.09526 -0.15015  delta 1e-7: +0.09527 -0.15015   VBFNLO: +0.09527 -0.15015

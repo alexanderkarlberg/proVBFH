@@ -1,0 +1,47 @@
+  found input file powheg.input
+  opened powheg.input
+  powheginput keyword hdecaymode           absent; set to   -1000000.0000000000     
+  powheginput keyword channel_type         absent; set to   -1000000.0000000000     
+ for processes including gluons:
+
+  all flavor channels are summed
+  powheginput keyword qq_exclude           absent; set to   -1000000.0000000000     
+
+  pure quark flavor channels are considered
+  vbfnloinput keyword NFLAVOUR             set to    5.0000000000000000     
+  powheginput keyword withfulltags         set to    1.0000000000000000     
+ done finalize
+  **** Minimum maxalr allowed:         4808  *********
+  **** Number of born graphs:           396
+  **** Number of real graphs:          2333
+  **** Number of regular regions:           0
+ nborn, nreal, nalr:          396        2333        4280
+ real 1334 alr flav  -5  -5****  -5  -5   1  -1 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1334 flav  -5  -5****  -5  -5   1  -1  number of regions:  1
+ real 1335 alr flav  -5  -5****  -5  -5   2  -2 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1335 flav  -5  -5****  -5  -5   2  -2  number of regions:  1
+ real 1336 alr flav  -5  -5****  -5  -5   3  -3 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1336 flav  -5  -5****  -5  -5   3  -3  number of regions:  1
+ real 1337 alr flav  -5  -5****  -5  -5   4  -4 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1337 flav  -5  -5****  -5  -5   4  -4  number of regions:  1
+ real 1338 alr flav  -5  -5****  -5  -5   5  -5 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1338 flav  -5  -5****  -5  -5   5  -5  number of regions:  1
+ real 1339 alr flav  -5  -4****  -5  -4   1  -1 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1339 flav  -5  -4****  -5  -4   1  -1  number of regions:  1
+ real 1340 alr flav  -5  -4****  -5  -4   2  -2 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1340 flav  -5  -4****  -5  -4   2  -2  number of regions:  1
+ real 1341 alr flav  -5  -4****  -5  -4   3  -3 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1341 flav  -5  -4****  -5  -4   3  -3  number of regions:  1
+ real 1342 alr flav  -5  -4****  -5  -4   4  -4 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1342 flav  -5  -4****  -5  -4   4  -4  number of regions:  1
+ real 1343 alr flav  -5  -4****  -5  -4   5  -5 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1343 flav  -5  -4****  -5  -4   5  -5  number of regions:  1
+ real 1344 alr flav  -5  -3****  -5  -3   1  -1 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1344 flav  -5  -3****  -5  -3   1  -1  number of regions:  1
+ real 1345 alr flav  -5  -3****  -5  -3   2  -2 tags   1   2   0   1   2  11  11  emitter  6  radiated leg  7
+ real 1345 flav  -5  -3****  -5  -3   2  -2  number of regions:  1
+ NC q -> q + pair entries on line 1:          500
+ selection 1: entries   500
+   initial-state regions 0, final-state regions 1: entries  500
+ selection 2: entries   160
+   initial-state regions 1, final-state regions 0: entries  160

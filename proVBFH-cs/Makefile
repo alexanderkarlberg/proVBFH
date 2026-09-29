@@ -46,21 +46,32 @@ INCL= incl_vbfh.o phase_space.o matrix_element.o incl_parameters.o \
 VBFNLO= brakets_new.o coeff.o dotproducts.o flavorsum.o \
 	hjjj_amp_aux_corrected.o dilog.o HtoWW.o kinematics_aux.o loops_aux.o \
 	parameters.o qqhqqj-born.o qqhqqj-virt.o qqh2q2g_me_new.o qqh4q_me_new.o \
-	Born.o convert_coup.o init_couplings.o calc_als.o vbfnloinput.o
+	Born.o convert_coup.o init_couplings.o calc_als.o vbfnloinput.o \
+	real_vbfnlo.o compreal_hqqqq_new.o init_processes.o virtual.o
 
 # the few POWHEG utilities these need (input reader, unit numbers, spinor
-# and boost routines; no integration machinery)
-PWGUTIL= powheginput.o newunit.o bra_ket_subroutines.o boostrot.o
+# and boost routines, tag encoding; no integration machinery)
+PWGUTIL= powheginput.o newunit.o bra_ket_subroutines.o boostrot.o cs_powheg_tags.o
 
 # analysis, from proVBFH
 ANAL= user_analysis.o pwhg_bookhist-multi.o fastjetfortran.o
 
 # this package
-CS= cs_glue.o cs_kinematics.o cs_exclusive.o cs_main.o
+CS= cs_glue.o cs_glue2.o cs_kinematics.o cs_dipoles.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 
 all: proVBFH-cs
+
+# unit tests of the kinematics (no matrix elements)
+tests/test_kinematics: cs_kinematics.o tests/test_kinematics.f90
+	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_kinematics.f90 $(OBJ)/cs_kinematics.o -o $@
+tests/test_four: cs_kinematics.o cs_dipoles.o tests/test_four.f90
+	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_four.f90 $(OBJ)/cs_kinematics.o $(OBJ)/cs_dipoles.o -o $@
+
+# development tool: proVBFH's real flavour list and tags
+tests/list_reals: $(OBJ) $(filter-out cs_main.o,$(OBJS)) tests/list_reals.f
+	$(FC) $(FFLAGS) $(INCLUDE) tests/list_reals.f $(patsubst %,$(OBJ)/%,$(filter-out cs_main.o,$(OBJS))) $(LIBS) $(CXXLIBS) -o $@
 
 $(OBJ):
 	mkdir -p $(OBJ)
@@ -85,8 +96,10 @@ nonfact.o: helper.o constants.o incl_parameters.o nonfact_expressions.o
 constants.o: helper.o
 phase_space.o: matrix_element.o incl_parameters.o
 cs_kinematics.o: incl_parameters.o
-cs_exclusive.o: cs_kinematics.o incl_parameters.o phase_space.o matrix_element.o
-cs_main.o: cs_exclusive.o incl_vbfh.o incl_parameters.o phase_space.o integration.o
+cs_dipoles.o: cs_kinematics.o
+cs_nlo2.o: cs_kinematics.o cs_dipoles.o
+cs_exclusive.o: cs_kinematics.o cs_nlo2.o incl_parameters.o phase_space.o matrix_element.o
+cs_main.o: cs_exclusive.o cs_nlo2.o incl_vbfh.o incl_parameters.o phase_space.o integration.o
 
 clean:
 	rm -rf $(OBJ)

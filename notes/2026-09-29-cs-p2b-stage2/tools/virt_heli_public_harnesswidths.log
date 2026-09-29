@@ -1,0 +1,145 @@
+LHAPDF 6.5.6 loading /home/thA371a/akarlber/.local/share/LHAPDF/NNPDF30_nnlo_as_0118/NNPDF30_nnlo_as_0118_0000.dat
+NNPDF30_nnlo_as_0118 PDF set, member #0, version 2; LHAPDF ID = 261000
+  found input file powheg.input
+  opened powheg.input
+  powheginput keyword par_diexp            absent; set to   -1000000.0000000000     
+  powheginput keyword par_dijexp           absent; set to   -1000000.0000000000     
+  powheginput keyword par_2gsupp           absent; set to   -1000000.0000000000     
+  powheginput keyword ih1                  set to    1.0000000000000000     
+  powheginput keyword ih2                  set to    1.0000000000000000     
+  powheginput keyword lhans1               set to    261000.00000000000     
+  powheginput keyword lhans2               set to    261000.00000000000     
+  powheginput keyword lhapdf6maxsets       absent; set to   -1000000.0000000000     
+  check: alpha_s(Mz)=  0.11800230075848536     
+  alpha_s order (0,1,2):            2
+  Lambda 5 is   0.20839257465514974     
+  powheginput keyword ebeam1               set to    4000.0000000000000     
+  powheginput keyword ebeam2               set to    4000.0000000000000     
+  powheginput keyword bornktmin            absent; set to   -1000000.0000000000     
+  powheginput keyword ptsqmin              absent; set to   -1000000.0000000000     
+  vbfnloinput keyword CHARMMASS            set to    1.3999999999999999     
+  vbfnloinput keyword BOTTOMMASS           set to    4.7500000000000000     
+  powheginput keyword renscfact            set to    1.0000000000000000     
+  powheginput keyword facscfact            set to    1.0000000000000000     
+  powheginput keyword evenmaxrat           absent; set to   -1000000.0000000000     
+  powheginput keyword hdecaymode           absent; set to   -1000000.0000000000     
+ for processes including gluons:
+
+  all flavor channels are summed
+  powheginput keyword qq_exclude           absent; set to   -1000000.0000000000     
+
+  pure quark flavor channels are considered
+  powheginput keyword ckm_offdiag          set to    1.0000000000000000     
+  
+               Physics parameters
+ -----------------------------------------------
+  vbfnloinput keyword HMASS                set to    125.00000000000000     
+  vbfnloinput keyword HWIDTH               set to    4.0299999999999997E-003
+  vbfnloinput keyword TOPMASS              set to    172.40000000000001     
+  vbfnloinput keyword TAU_MASS             set to    1.7767999999999999     
+  vbfnloinput keyword FERMI_CONST          set to    1.1663700000000000E-005
+  vbfnloinput keyword WMASS                set to    80.397999999999996     
+  vbfnloinput keyword ZMASS                set to    91.187600000000003     
+  
+   Information on couplings, masses and widths
+ ===============================================
+  
+   SM coupling parameters 
+ ---------------------------
+   G_Fermi                         : 0.000011663700
+   SIN**2 of the weak mixing angle : 0.22264585
+   Q.E.D. fine structure constant  : 1/132.34070    
+   Q.C.D. NLO alfas(MZ)            : 0.11183125
+  
+      particle masses
+ ---------------------------
+   mass of the Z0 boson            :   91.1876
+   mass of the W+/- boson          :   80.3980
+   mass of the Higgs boson         :  125.0000
+   mass of the top quark           :  172.4000
+   mass of the bottom quark at MH  :    2.6926
+  (All other fermions have mass equal ZERO)
+  
+      particle widths
+ ---------------------------
+   total widths of Z0              :   2.505101 GeV
+   total widths of W+ or W-        :   2.095002 GeV
+   total widths of Higgs           :   0.004030 GeV
+   total widths of top quark       :   1.347348 GeV
+  
+  partial Higgs decay width 
+ ---------------------------
+   H -> WW                         : 0.843634D-03 GeV
+   H -> ZZ                         : 0.111001D-03 GeV
+   H -> bottom anti-bottom         : 0.220802D-02 GeV
+   H -> top anti-top               : 0.000000D+00 GeV
+   H -> charm anti-charm           : 0.816175D-04 GeV
+   H -> tau anti-tau               : 0.258685D-03 GeV
+   H -> mu anti-mu                 : 0.000000D+00 GeV
+   H -> gluon gluon                : 0.323432D-03 GeV
+   H -> gamma gamma                : 0.983826D-05 GeV
+   H -> Z gamma                    : 0.668082D-05 GeV
+  
+     branching ratios
+Thanks for using LHAPDF 6.5.6. Please make sure to cite the paper:
+  Eur.Phys.J. C75 (2015) 3, 132  (http://arxiv.org/abs/1412.7420)
+ ---------------------------
+   W -> lepton anti-lepton         : 10.8535421 %
+   W -> massless quark anti-quark  : 33.7196868 %
+   W -> top bottom                 :  0.0000000 %
+  
+   Z -> neutrino anti-neutrino     :  6.6217433 %
+   Z -> charged lepton anti-lepton :  3.3505094 %
+   Z -> up-type quark anti-quark   : 11.9840404 %
+   Z -> down-type quark anti-quark : 15.3717204 %
+   Z -> top anti-top               :  0.0000000 %
+  
+   H -> WW                         : 20.9338346 %
+   H -> ZZ                         :  2.7543557 %
+   H -> bottom anti-bottom         : 54.7895685 %
+   H -> top anti-top               :  0.0000000 %
+   H -> charm anti-charm           :  2.0252483 %
+   H -> tau anti-tau               :  6.4189919 %
+   H -> mu anti-mu                 :  0.0000000 %
+   H -> gluon gluon                :  8.0256117 %
+   H -> gamma gamma                :  0.2441255 %
+   H -> Z gamma                    :  0.1657773 %
+  
+ *************************************
+ Z mass =    91.187600000000003     
+ Z width =    2.5051009974088321     
+ W mass =    80.397999999999996     
+ W width =    2.0950020798916542     
+ H mass =    125.00000000000000     
+ H width =    4.0299999999999997E-003
+ 1/alphaem =    132.34070151637243     
+ sthw2 =   0.22264585341299603     
+ (unit_e)^2 =    9.4954692474593969E-002
+ (g_w)^2 =   0.42648309420098718     
+ CKM matrix for events
+  0.97479999065399170       0.22249999642372131        3.5999999381601810E-003
+  0.22249999642372131       0.97399997711181641        4.1000001132488251E-002
+   8.9999996125698090E-003   4.0500000119209290E-002  0.99919998645782471     
+ *************************************
+  **** Minimum maxalr allowed:         1984  *********
+  **** Number of born graphs:           192
+  **** Number of real graphs:           856
+  **** Number of regular regions:           0
+  powheginput keyword softtest             set to    0.0000000000000000     
+  powheginput keyword colltest             set to    0.0000000000000000     
+ BKOPOU masses:         0.0000     91.1876     80.3980     80.3980      0.0000    125.0000
+ BKOPOU widths:         0.0000      2.5051      2.0950      2.0950      0.0000      0.0040
+ widths now:            0.0000      2.4952      2.1410      2.1410      0.0000      0.0040
+ point 1 hel  L L  V/B public:  -11.92976  NNLOJET - public - const:  1.039E-13  public - tested copy: -3.038E-13
+ point 1 hel  L R  V/B public:  -12.43306  NNLOJET - public - const:  8.082E-14  public - tested copy: -2.984E-13
+ point 1 hel  R L  V/B public:  -11.58310  NNLOJET - public - const:  2.576E-14  public - tested copy: -2.913E-13
+ point 1 hel  R R  V/B public:  -12.17456  NNLOJET - public - const: -1.066E-14  public - tested copy: -2.487E-13
+ point 2 hel  L L  V/B public:   -8.83627  NNLOJET - public - const:  2.587E-12  public - tested copy:  2.073E-12
+ point 2 hel  L R  V/B public:   -9.06369  NNLOJET - public - const:  4.684E-12  public - tested copy:  2.967E-13
+ point 2 hel  R L  V/B public:   -8.78445  NNLOJET - public - const:  2.500E-12  public - tested copy:  2.013E-12
+ point 2 hel  R R  V/B public:   -9.05391  NNLOJET - public - const:  4.603E-12  public - tested copy:  1.634E-13
+ point 3 hel  L L  V/B public:   -4.46129  NNLOJET - public - const: -1.860E-10  public - tested copy:  1.169E-10
+ point 3 hel  L R  V/B public:   -5.01256  NNLOJET - public - const: -1.757E-10  public - tested copy:  1.103E-10
+ point 3 hel  R L  V/B public:   -4.42355  NNLOJET - public - const: -1.849E-10  public - tested copy:  1.163E-10
+ point 3 hel  R R  V/B public:   -5.01041  NNLOJET - public - const: -1.766E-10  public - tested copy:  1.107E-10
+ max |NNLOJET - public - const|:  1.86E-10   max |public - tested copy|:  1.17E-10
