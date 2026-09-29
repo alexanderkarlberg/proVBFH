@@ -26,7 +26,23 @@ integrals against the analytic 1-loop triangle.
 In the workflow each step runs through `ci/annotate.sh`, which reports
 the error lines of a failing step as annotations in the run summary.
 
-The scripts can also be run locally, from the repository root:
+To check your current builds before pushing, run from the repository
+root:
+
+```
+ci/run-local.sh                # all checks, on the programs as currently built
+ci/run-local.sh proVBFHH       # only the checks of one package
+ci/run-local.sh --build        # run make first
+ci/run-local.sh --clean        # copy the working tree and build it from scratch, as CI does
+ci/run-local.sh --help
+```
+
+By default nothing is copied or rebuilt: it warns if sources are newer
+than an executable, and skips packages that are not built. Run
+directories and logs go to a temporary directory. All checks take about
+6 minutes.
+
+The individual scripts can also be run directly, from the repository root:
 
 ```
 ci/resolve-versions.sh                  # latest dependency versions

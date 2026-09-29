@@ -66,6 +66,8 @@ that runs complete with finite output. They are not physics validations.
 widths.
 `ci/nf-checks.sh` checks that the non-factorisable corrections do not depend on the gluon-mass
 regulator (`nf_regfact`).
+`ci/run-local.sh` runs all of these checks locally on the current builds (no copy, no rebuild by
+default; `--build`, `--clean`, `--committed` for the other cases).
 
 ## Running
 
