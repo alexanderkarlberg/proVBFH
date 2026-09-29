@@ -6,7 +6,7 @@
 !             2: exclusive part, (1,0) + (0,1) with counterevents
 !                (default)
 !   cs_npow   sampling power for 1-xp and z; 0 (default): logarithmic
-!   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-8)
+!   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-6)
 ! The two parts write separate histogram files, to be added.
 !----------------------------------------------------------------------
 program provbfh_cs

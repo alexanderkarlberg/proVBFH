@@ -64,6 +64,23 @@ counterevents already share their Born point. The FKS mismatch, between
 the H+4j real and its counterterm, appears only at NNLO, which is where
 the line-by-line approach should gain.
 
+## Technical cutoff
+
+Cutoff 1e-6 instead of 1e-8, with the same seeds and statistics
+(`runs/nlo-vbfcuts-log2-cut6`):
+- The exclusive part agrees with the 1e-8 run in every VBF-cut
+  histogram (χ²/n between 0.1 and 1.2): no cutoff dependence.
+- The errors are 0.57–0.84 times smaller for the same CPU (about 1.05 h
+  exclusive), because fewer points sit deep in the region where event
+  and counterevent cancel exactly.
+- σ(VBF cuts) = 0.8763 ± 0.0020 pb (current proVBFH 0.8740 ± 0.0014).
+- CPU × error² relative to the current code:
+  - σ(VBF cuts) 1.8 times better;
+  - pt,j1 1.7, yj1 2.9, pt,j2 3, R(j1,j2) 6 and M_jj 7 times better;
+  - pt,H about equal.
+
+The default is now 1e-6.
+
 ## Problems found on the way (corrections of earlier numbers)
 
 1. **VEGAS adaptation over all of phase space.** The first run adapted

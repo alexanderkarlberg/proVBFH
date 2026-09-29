@@ -33,7 +33,7 @@ module cs_exclusive
 
   logical, save :: excl_fill = .false.
   integer, save :: excl_npow = 0     ! 0: logarithmic sampling
-  real(dp), save :: excl_cutoff = 1d-8
+  real(dp), save :: excl_cutoff = 1d-6
   ! counters: points, line radiations rejected by the cutoff, NaN, points
   ! where neither event nor Born passes the cuts
   integer(8), save :: excl_stats(4) = 0
