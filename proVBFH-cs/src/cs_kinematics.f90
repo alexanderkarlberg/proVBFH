@@ -21,9 +21,11 @@
 !   kn_jacborn/(2 x1 x2 S) f(xi1) f(x2) |M(H+3j), line 1|^2 * wrad,
 !   wrad = Q^2/(16 pi^2) (1/xp) dxp/dr1 dz/dr2
 ! (dphi/(2 pi) = dr3).
-! Sampling: 1 - xp = (1 - xB) r1^npow;  z = (2 r2)^npow/2 for r2 < 1/2,
-! 1 - z = (2 (1-r2))^npow/2 otherwise. Events with 1-xp, z or 1-z below
-! cutoff are rejected (ok = .false.), as DISENT's invariant cutoff.
+! Sampling (npow > 0): 1 - xp = (1 - xB) r1^npow;  z = (2 r2)^npow/2 for
+! r2 < 1/2, 1 - z = (2 (1-r2))^npow/2 otherwise. npow = 0: logarithmic in
+! 1 - xp and min(z, 1-z) down to the cutoff (the default in proVBFH-cs).
+! Events with 1-xp, z or 1-z below cutoff are rejected (ok = .false.), as
+! DISENT's invariant cutoff.
 ! Momenta are (E, px, py, pz) with index 0:3.
 !----------------------------------------------------------------------
 module cs_kinematics
@@ -51,18 +53,36 @@ contains
     pin = 0; a = 0; b = 0; xp = 1; z = 0; wrad = 0
     Q2 = 2*mdot(pB, pOB)
     if (Q2 <= 0 .or. xB >= 1) return
-    ! xp in [xB, 1]
-    xp = 1 - (1 - xB)*r(1)**npow
-    jx = (1 - xB)*npow*r(1)**(npow-1)
-    ! z, symmetric about 1/2
-    if (r(2) < 0.5_dp) then
-       u = 2*r(2)
-       z = 0.5_dp*u**npow
+    if (npow > 0) then
+       ! power sampling: xp in [xB, 1], z symmetric about 1/2
+       xp = 1 - (1 - xB)*r(1)**npow
+       jx = (1 - xB)*npow*r(1)**(npow-1)
+       if (r(2) < 0.5_dp) then
+          u = 2*r(2)
+          z = 0.5_dp*u**npow
+       else
+          u = 2*(1 - r(2))
+          z = 1 - 0.5_dp*u**npow
+       endif
+       jz = npow*u**(npow-1)
     else
-       u = 2*(1 - r(2))
-       z = 1 - 0.5_dp*u**npow
+       ! logarithmic sampling of 1-xp in [cutoff, 1-xB] and of min(z,1-z)
+       ! in [cutoff, 1/2]: flattens the 1/((1-xp) z (1-z)) behaviour of the
+       ! matrix element exactly. (With power sampling the weights grow like
+       ! 1/sqrt(1-xp) and dominate the variance at large Q, where emissions
+       ! that are hard for the jet cuts have 1-xp ~ W^2/Q^2 << 1.)
+       if (1 - xB <= cutoff) return
+       u = log((1 - xB)/cutoff)
+       xp = 1 - cutoff*exp(u*r(1))
+       jx = (1 - xp)*u
+       if (r(2) < 0.5_dp) then
+          z = cutoff*exp(log(0.5_dp/cutoff)*2*r(2))
+          jz = 2*z*log(0.5_dp/cutoff)
+       else
+          z = 1 - cutoff*exp(log(0.5_dp/cutoff)*2*(1 - r(2)))
+          jz = 2*(1 - z)*log(0.5_dp/cutoff)
+       endif
     endif
-    jz = npow*u**(npow-1)
     if (1 - xp < cutoff .or. z < cutoff .or. 1 - z < cutoff) return
     phi = 2*pi*r(3)
     call transverse_basis(pB, pOB, e1, e2)

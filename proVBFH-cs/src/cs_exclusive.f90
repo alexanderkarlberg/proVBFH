@@ -32,10 +32,22 @@ module cs_exclusive
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
 
   logical, save :: excl_fill = .false.
-  integer, save :: excl_npow = 2
+  integer, save :: excl_npow = 0     ! 0: logarithmic sampling
   real(dp), save :: excl_cutoff = 1d-8
-  ! counters: points, rejected by cutoff, NaN
-  integer(8), save :: excl_stats(3) = 0
+  ! counters: points, line radiations rejected by the cutoff, NaN, points
+  ! where neither event nor Born passes the cuts
+  integer(8), save :: excl_stats(4) = 0
+  ! skip points where neither the events nor the Born pass the VBF cuts
+  ! (as proVBFH's phspcuts; exact for all VBF-cut histograms, and the
+  ! exclusive part does not contribute to histograms without cuts: the
+  ! Higgs momentum is unchanged by the projection); loose cuts (tagging
+  ! jet pt and mjj only) while building the grid
+  logical, public, save :: excl_phspcuts = .true.
+  ! debug: write per-point contributions to the VBF-cut cross section
+  ! (unit 77, file cs_dump.dat) when excl_dump is set
+  logical, public, save :: excl_dump = .false.
+  real(dp), save :: dxp(2), dz(2)
+  integer, save :: ndbg = 0
   ! debug: compare the class sums with an explicit flavour loop on the
   ! first excl_flavcheck points
   integer, save :: excl_flavcheck = 0
@@ -96,13 +108,23 @@ contains
     enddo
   end function pdfsum
 
+  ! VEGAS integrand. The histograms (pwhg_bookhist-multi) are normalised
+  ! by the number of pwhgaccumup calls, so every point must be
+  ! accumulated, also points that return early with zero weight.
   double precision function cs_excl_dsigma(xrand, vegas_weight)
+    real(dp), intent(in) :: xrand(13), vegas_weight
+    cs_excl_dsigma = excl_point(xrand, vegas_weight)
+    if (excl_fill) call pwhgaccumup
+  end function cs_excl_dsigma
+
+  double precision function excl_point(xrand, vegas_weight) result(cs_excl_dsigma)
     real(dp), intent(in) :: xrand(13), vegas_weight
     real(dp) :: pb(0:3,5), xb1, xb2, jacb, sbeams, common, ptH
     real(dp) :: Q1, Q2, mur(2), muf(2), as(2), fB(-6:6,2), fE(-6:6,2)
     real(dp) :: pin(0:3), a(0:3), b(0:3), xp, z, wrad(2), p6(0:3,6,2), w(2)
     real(dp) :: m1, m2, me
-    logical :: ok(2)
+    logical :: ok(2), need(2), pass(2), passB
+    logical, external :: cs_passes
     integer :: line, i1, i2, bflav(6)
     real(dp), external :: hoppetAlphaS
     integer vegas_ncall
@@ -138,6 +160,7 @@ contains
           excl_stats(2) = excl_stats(2) + 1
           cycle
        endif
+       dxp(line) = xp; dz(line) = z
        ! H+3j momenta in proVBFH's order: 1, 2 incoming, 3 H, 4, 5 outgoing
        ! quarks of lines 1, 2, 6 the extra parton (on this line)
        p6(:,1:5,line) = pb(:,1:5)
@@ -153,9 +176,24 @@ contains
        fE(:,line) = fE(:,line)/(merge(x1, x2, line == 1)/xp)
     enddo
 
+    ! cut decisions before the matrix elements: a line's weight is needed
+    ! only if its event or the Born event passes
+    need = ok
+    if (excl_phspcuts) then
+       passB = cs_passes(5, pb, .not. excl_fill)
+       do line = 1, 2
+          if (ok(line)) pass(line) = cs_passes(6, p6(:,:,line), .not. excl_fill)
+          need(line) = ok(line) .and. (pass(line) .or. passB)
+       enddo
+       if (.not. any(need)) then
+          excl_stats(4) = excl_stats(4) + 1
+          return
+       endif
+    endif
+
     w = 0
     do line = 1, 2
-       if (.not. ok(line)) cycle
+       if (.not. need(line)) cycle
        ! quark-initiated on the radiating line
        do i1 = 1, ncls
           do i2 = 1, ncls
@@ -189,21 +227,36 @@ contains
     enddo
     if (excl_flavcheck > 0) then
        excl_flavcheck = excl_flavcheck - 1
-       call flavour_check(p6, ok, fB, fE, common*wrad*as, w)
+       call flavour_check(p6, need, fB, fE, common*wrad*as, w)
     endif
     if (any(w /= w)) then
        excl_stats(3) = excl_stats(3) + 1
        return
     endif
 
+    if (excl_dump .and. excl_phspcuts) then
+       do line = 1, 2
+          if (ok(line) .and. (pass(line) .neqv. passB) .and. 1 - dxp(line) < 1d-3 .and. ndbg < 5) then
+             ndbg = ndbg + 1
+             write(6,'(a,i2,a,2es12.4,a,2l2)') ' DBG line', line, ' 1-xp, z = ', 1-dxp(line), dz(line), &
+                  & '  pass evt, Born:', pass(line), passB
+             call cs_debug_jets(5, pb)
+             call cs_debug_jets(6, p6(:,:,line))
+          endif
+       enddo
+    endif
+    if (excl_dump .and. excl_phspcuts) then
+       write(77,'(2l2,l3,4es14.6,2es14.6,2es12.4)') merge(pass, [.false.,.false.], ok), passB, &
+            & w, w(1)*(merge(1,0,pass(1).and.ok(1)) - merge(1,0,passB)), &
+            & w(2)*(merge(1,0,pass(2).and.ok(2)) - merge(1,0,passB)), dxp, dz, Q1, Q2
+    endif
     if (excl_fill) then
-       if (ok(1)) call cs_analysis(6, p6(:,:,1), w(1)*vegas_ncall*vegas_weight)
-       if (ok(2)) call cs_analysis(6, p6(:,:,2), w(2)*vegas_ncall*vegas_weight)
+       if (need(1)) call cs_analysis(6, p6(:,:,1), w(1)*vegas_ncall*vegas_weight)
+       if (need(2)) call cs_analysis(6, p6(:,:,2), w(2)*vegas_ncall*vegas_weight)
        call cs_analysis(5, pb, -(w(1) + w(2))*vegas_ncall*vegas_weight)
-       call pwhgaccumup
     endif
     cs_excl_dsigma = abs(w(1)) + abs(w(2))
-  end function cs_excl_dsigma
+  end function excl_point
 
   ! explicit loop over all flavour combinations (diagonal CKM, no top),
   ! independent of the classes, compared with the class sums wcls

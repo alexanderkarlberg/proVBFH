@@ -122,3 +122,53 @@ c     used by pwhg_bookhist-multi.f on errors
       integer i
       call exit(i)
       end
+c---------------------------------------------------------------------
+c do the n momenta p (1, 2 incoming, 3 Higgs, the rest partons) pass
+c the VBF cuts of the analysis (buildjets, vbfcuts in user_analysis.f)?
+c With loose = .true. only the tagging-jet pt and mjj cuts are applied,
+c as proVBFH does while building grids (phspcuts.f).
+      logical function cs_passes(n,p,loose)
+      implicit none
+      integer n
+      double precision p(0:3,n)
+      logical loose
+      integer maxjet
+      parameter (maxjet=4)
+      double precision ptj(maxjet),yj(maxjet),pj(0:3,4),mjj
+      integer njets
+      logical passed
+      include 'phspcuts.h'
+      external mjj
+      logical ini
+      data ini/.true./
+      save ini
+      if (ini) then
+         call setup_vbf_cuts
+         ini = .false.
+      endif
+      call cs_fill_phep(n,p)
+      call buildjets(pj,njets,ptj,yj)
+      call vbfcuts(pj,njets,ptj,yj,passed)
+      if (loose) passed = njets.ge.2 .and.
+     $     min(ptj(1),ptj(2)).gt.ptjetmin .and.
+     $     mjj(pj(0,1),pj(0,2)).gt.mjjmin
+      cs_passes = passed
+      end
+c---------------------------------------------------------------------
+c debug: print the partons and the jets the analysis builds
+      subroutine cs_debug_jets(n,p)
+      implicit none
+      integer n,j
+      double precision p(0:3,n)
+      integer maxjet
+      parameter (maxjet=4)
+      double precision ptj(maxjet),yj(maxjet),pj(0:3,4)
+      integer njets
+      call cs_fill_phep(n,p)
+      do j=1,n
+         write(6,'(a,i2,4es13.5)') '   p',j,p(0,j),p(1,j),p(2,j),p(3,j)
+      enddo
+      call buildjets(pj,njets,ptj,yj)
+      write(6,'(a,i2,a,4es11.3)') '   njets',njets,'  pt:',(ptj(j),j=1,min(njets,4))
+      write(6,'(a,4es11.3)') '             y: ',(yj(j),j=1,min(njets,4))
+      end

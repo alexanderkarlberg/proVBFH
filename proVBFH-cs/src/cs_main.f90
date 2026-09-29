@@ -5,7 +5,7 @@
 !   cs_part   1: inclusive part (structure functions, Born-level events),
 !             2: exclusive part, (1,0) + (0,1) with counterevents
 !                (default)
-!   cs_npow   sampling power for 1-xp and z (default 2)
+!   cs_npow   sampling power for 1-xp and z; 0 (default): logarithmic
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-8)
 ! The two parts write separate histogram files, to be added.
 !----------------------------------------------------------------------
@@ -43,9 +43,14 @@ program provbfh_cs
   call inclusive_init()          ! parameters, PDFs, alpha_s, scales
   call cs_init_vbfnlo()          ! VBFNLO couplings from vbfnlo.input
   call cs_excl_setup()
-  if (powheginput('#cs_npow') > 0) excl_npow = nint(powheginput('#cs_npow'))
+  if (powheginput('#cs_npow') >= 0) excl_npow = nint(powheginput('#cs_npow'))
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
+  if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.
+  if (powheginput('#cs_dump') == 1) then
+     excl_dump = .true.
+     open(77, file='cs_dump.dat', status='replace')
+  endif
   call set_beams(sqrts)
 
   region(1:ndim) = 0
@@ -70,6 +75,6 @@ program provbfh_cs
   endif
   call cpu_time(t1)
   write(6,'(a,es13.5,a,es10.3,a)') ' proVBFH-cs exclusive part: sum |w1|+|w2| = ', integ, ' +- ', err, ' pb'
-  write(6,'(a,3i14)') ' points, rejected by cutoff (per line), NaN: ', excl_stats
+  write(6,'(a,4i14)') ' points, line radiations cut off, NaN, points failing all cuts: ', excl_stats
   write(6,'(a,f12.1,a)') ' proVBFH-cs exclusive part: CPU ', t1 - t0, ' s'
 end program provbfh_cs
