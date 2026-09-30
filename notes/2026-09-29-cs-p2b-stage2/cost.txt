@@ -1,0 +1,16 @@
+c4: 25 CPU-h (thserv18) for 10 seeds x 5.2M points
+   sig(all VBF cuts 2 jets)   bins  1: median error/NLO 0.0025, median (2,0)+(0,2)/NLO -0.0257; CPU-h for 1% per bin:        2
+   ptj1-vbf                   bins 13: median error/NLO 0.0128, median (2,0)+(0,2)/NLO -0.0294; CPU-h for 1% per bin:       41
+   ptj2-vbf                   bins 11: median error/NLO 0.0076, median (2,0)+(0,2)/NLO -0.0575; CPU-h for 1% per bin:       14
+   ptH-vbf                    bins 15: median error/NLO 0.0080, median (2,0)+(0,2)/NLO -0.0107; CPU-h for 1% per bin:       16
+   yj1-vbf                    bins 18: median error/NLO 0.0122, median (2,0)+(0,2)/NLO -0.0274; CPU-h for 1% per bin:       37
+   M_jj-vbf                   bins 15: median error/NLO 0.0143, median (2,0)+(0,2)/NLO -0.0308; CPU-h for 1% per bin:       51
+   phi(j1,j2)-vbf             bins 10: median error/NLO 0.0089, median (2,0)+(0,2)/NLO -0.0241; CPU-h for 1% per bin:       20
+c6: 25 CPU-h (thserv18) for 10 seeds x 5.2M points
+   sig(all VBF cuts 2 jets)   bins  1: median error/NLO 0.0072, median (2,0)+(0,2)/NLO -0.0188; CPU-h for 1% per bin:       13
+   ptj1-vbf                   bins 13: median error/NLO 0.0206, median (2,0)+(0,2)/NLO -0.0242; CPU-h for 1% per bin:      105
+   ptj2-vbf                   bins 11: median error/NLO 0.0197, median (2,0)+(0,2)/NLO -0.0507; CPU-h for 1% per bin:       96
+   ptH-vbf                    bins 15: median error/NLO 0.0132, median (2,0)+(0,2)/NLO -0.0059; CPU-h for 1% per bin:       43
+   yj1-vbf                    bins 18: median error/NLO 0.0213, median (2,0)+(0,2)/NLO -0.0182; CPU-h for 1% per bin:      112
+   M_jj-vbf                   bins 15: median error/NLO 0.0339, median (2,0)+(0,2)/NLO -0.0439; CPU-h for 1% per bin:      284
+   phi(j1,j2)-vbf             bins 10: median error/NLO 0.0138, median (2,0)+(0,2)/NLO -0.0207; CPU-h for 1% per bin:       47

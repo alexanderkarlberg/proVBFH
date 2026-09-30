@@ -386,3 +386,74 @@ all cuts before any matrix element.
    30 jobs, nice 10): the O(alpha_s^2) part alone at cutoffs 1e-4, 1e-5
    and 1e-6, 10 seeds x 5.2M points each. Comparison with
    `tools/cutoff_compare.py` (seed-scatter errors besides VEGAS's).
+4. **The first cutoff study was aborted** (`runs/stage2-cut-aborted`,
+   commit a552b94). This corrects item 3, which described it as running.
+   - After one iteration of VEGAS adaptation, 5 of the 10 seeds at 1e-6
+     and 2 at 1e-5 hit single points with weights up to 1e13, and their
+     grids collapsed. The one seed that finished (c6/s3) is garbage:
+     sigma(VBF cuts) = -8e-6 pb, with 88% of the points failing all cuts.
+   - Reproduced locally (`runs/stage2-spike`, spike dump `cs_spikes.dat`)
+     and replayed. At the spike point, k1 is collinear to the incoming
+     parton to s_a1/Q^2 = 2.5e-11, far below the cutoff, and k3 is
+     extremely soft (1.4e-6 of the beam energy).
+   - The FI paths that cover the initial-state collinear region exclude
+     the point (their z is below the cutoff). Only the FF path with y ~ 1
+     reaches it, with a tiny density (weight 283).
+   - The IF dipoles, still active, cancel only half of R: the soft
+     spectator is softer than the collinear recoil it absorbs.
+   - Cause (mine): the generator's support is "all six maps at least the
+     cutoff away from their singular limits", but the real and dipoles
+     were evaluated wherever other paths placed a point.
+   - **Fix (9310f3e): a consistent technical cut.** The whole four-parton
+     point (real and all counterevents) is dropped if any map has FF y, z,
+     1-z or FI 1-x, z, 1-z below the cutoff. R - sum D is integrable, so
+     this costs O(c) up to logs; the cutoff study tests it.
+   - With the cut, the c6/s1 warm-up is stable (136 +- 6, 143 +- 2) with
+     no spike. 43% of the four-parton points are dropped: for narrow
+     final-state jets, the FI variable 1-x = s_ij/(2 pa.(pi+pj)) acts
+     like a cut on s_ij/Q^2.
+5. **Cutoff study, second attempt** (`runs/stage2-cut2`, commit 9310f3e,
+   thserv18, 30 jobs, nice 10, started 2026-09-30 03:06): same set-up as
+   item 3.
+
+## Cutoff study with the technical cut (2026-09-30)
+
+Report page: https://claude.ai/artifact/K9dmJhRDs5Sd97fb49CevZ (source `report.html`; tables `compare.txt`, `cost.txt`).
+
+Set-up: `runs/stage2-cut2`, commit 9310f3e, thserv18, nice 10. 13 TeV,
+VBF cuts, NNPDF30_nnlo_as_0118, mu = Q_i per line. O(alpha_s^2) (2,0) +
+(0,2) exclusive part alone (`cs_only2 1`). Cutoffs 1e-4, 1e-5, 1e-6, with
+10 seeds x 5.2M points each (warm-up 2 x 200k, production 3 x 1.6M).
+
+Running:
+- All 30 jobs finished, with no spikes (no point above 10 pb in
+  `cs_spikes.dat`).
+- 8881 s CPU per job (1.7 ms per point on thserv18; 0.9 ms on thA371a).
+- The technical cut drops 4.6-4.8M four-parton points per job (of
+  10.4M line evaluations).
+
+| cutoff | sigma(VBF cuts) [pb] | error, seed scatter | error, VEGAS |
+|--------|----------------------|---------------------|--------------|
+| 1e-4   | -0.02253             | 0.00219             | 0.00203      |
+| 1e-5   | -0.02284             | 0.00228             | 0.00255      |
+| 1e-6   | -0.01649             | 0.00632             | 0.00559      |
+
+- **No cutoff dependence.** sigma agrees within 1 sigma. Over all
+  histograms (226 bins), chi2/n with seed-scatter errors is 267, 262 and
+  254/226 for 1e-4 vs 1e-5, 1e-4 vs 1e-6 and 1e-5 vs 1e-6. With variances
+  from 10 seeds, about 1.1-1.3 is expected. The VEGAS errors agree with
+  the seed scatter.
+- **Size:** -2.6% of sigma_NLO(VBF cuts) = 0.878 pb (stage 1). In the VBF
+  distributions it is typically -1% (pt,H) to -6% (pt,j2) of NLO per bin.
+- **Cost** (`cost.txt`; median bin with at least 2% of the peak, error
+  relative to the NLO bin):
+  - At 1e-4, 1% per bin needs 14 (pt,j2), 16 (pt,H), 20 (phi_jj), 37
+    (y_j1), 41 (pt,j1) and 51 (M_jj) CPU-h on thserv18. sigma(VBF cuts)
+    reaches 0.25% of NLO with 25 CPU-h.
+  - At 1e-6 the same costs 3-6 times more, because the variance grows
+    with the logs of the cutoff.
+  - So the (2,0) + (0,2) part fits comfortably on the thservs, far from
+    the "10k one-week runs" of the old code. The (1,1) part and scale
+    variations come on top. Tails (high pt, M_jj) will need more.
+- **Default cutoff for stage 2: 1e-4** (cutoff-independent at this
+  precision and cheapest). Recheck when the precision is pushed further.

@@ -1,0 +1,111 @@
+<title>proVBFH-cs stage 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --bg: #f4f6f5; --surface: #ffffff; --text: #18201d; --muted: #56625d; --line: #d9e0dc;
+  --accent: #1f6b5a; --accent-soft: #e4f1ec; --bad: #a3332b; --bad-soft: #fbeceb;
+  --good: #1f6b3f; --good-soft: #e5f3ea; --code-bg: #edf1ef;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1412; --surface: #161d1a; --text: #e2e8e5; --muted: #98a59f; --line: #29322e;
+    --accent: #7fcdb6; --accent-soft: #19302a; --bad: #f08a80; --bad-soft: #3a2120;
+    --good: #86d0a3; --good-soft: #163022; --code-bg: #1b2320;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1412; --surface: #161d1a; --text: #e2e8e5; --muted: #98a59f; --line: #29322e;
+  --accent: #7fcdb6; --accent-soft: #19302a; --bad: #f08a80; --bad-soft: #3a2120;
+  --good: #86d0a3; --good-soft: #163022; --code-bg: #1b2320;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+main { max-width: 760px; margin: 0 auto; padding-block: 36px 64px; display: flex; flex-direction: column; gap: 34px; }
+h1, h2, h3 { margin: 0; line-height: 1.25; text-wrap: balance; }
+h1 { font-size: 1.75rem; font-weight: 600; }
+h2 { font-size: 1.25rem; font-weight: 600; }
+h3 { font-size: 1rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 0.05em 0.35em; border-radius: 4px; }
+.overline { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
+header { display: flex; flex-direction: column; gap: 12px; }
+section { display: flex; flex-direction: column; gap: 12px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+thead th { font-size: 0.82rem; font-weight: 600; color: var(--muted); background: var(--accent-soft); }
+tbody tr:last-child td { border-bottom: none; }
+td.n { font-family: var(--mono); text-align: right; white-space: nowrap; }
+ul { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
+.caption { font-size: 0.86rem; color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.tag { font-family: var(--mono); font-size: 0.78rem; font-weight: 500; border-radius: 4px; padding: 1px 7px; align-self: flex-start; }
+.tag.fix { color: var(--bad); background: var(--bad-soft); }
+.tag.ok { color: var(--good); background: var(--good-soft); }
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.formula { font-family: var(--mono); font-size: 0.9rem; padding: 12px 16px; background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; overflow-x: auto; }
+footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<main>
+<header>
+  <div class="overline">proVBFH-cs &middot; stage 2 &middot; 2026-09-30</div>
+  <h1>The (2,0) + (0,2) part works and is cheap</h1>
+  <p>The NLO correction of the radiating line (one loop + I + K&thinsp;+&thinsp;P, and H+4j real minus Catani&ndash;Seymour dipoles, all projected to the VBF Born) now integrates stably. It does not depend on the technical cutoff. At a cutoff of 10<sup>&minus;4</sup> it reaches 1% of NLO per bin in the VBF distributions with 14&ndash;51 CPU-hours, so it fits on the thservs.</p>
+</header>
+
+<section>
+  <h2>Cutoff study</h2>
+  <p>O(&alpha;<sub>s</sub><sup>2</sup>) (2,0)&thinsp;+&thinsp;(0,2) exclusive part alone. 13&nbsp;TeV, VBF cuts, NNPDF30, &mu;&nbsp;=&nbsp;Q<sub>i</sub> per line. 10 seeds &times; 5.2M points per cutoff on thserv18, 2.5 CPU-hours per seed.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>cutoff</th><th>&sigma;(VBF cuts) [pb]</th><th>error (seed scatter)</th><th>error (VEGAS)</th></tr></thead>
+    <tbody>
+      <tr><td class="n">10<sup>&minus;4</sup></td><td class="n">&minus;0.0225</td><td class="n">0.0022</td><td class="n">0.0020</td></tr>
+      <tr><td class="n">10<sup>&minus;5</sup></td><td class="n">&minus;0.0228</td><td class="n">0.0023</td><td class="n">0.0026</td></tr>
+      <tr><td class="n">10<sup>&minus;6</sup></td><td class="n">&minus;0.0165</td><td class="n">0.0063</td><td class="n">0.0056</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>All histograms (226 bins): &chi;<sup>2</sup>/n = 267, 262 and 254 per 226 for the three pairs of cutoffs. With variances from 10 seeds, about 1.1&ndash;1.3 is expected, so there is no cutoff dependence.</li>
+    <li>Size: &minus;2.6% of &sigma;<sub>NLO</sub>(VBF cuts), typically &minus;1% (p<sub>t,H</sub>) to &minus;6% (p<sub>t,j2</sub>) of NLO per bin.</li>
+    <li>Cost of 1% of NLO per bin (median bin, cutoff 10<sup>&minus;4</sup>): 14 (p<sub>t,j2</sub>), 16 (p<sub>t,H</sub>), 20 (&phi;<sub>jj</sub>), 37 (y<sub>j1</sub>), 41 (p<sub>t,j1</sub>) and 51 (M<sub>jj</sub>) CPU-hours. &sigma;(VBF cuts) reaches 0.25% of NLO with 25 CPU-hours. At 10<sup>&minus;6</sup> everything costs 3&ndash;6 times more.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Problems found and fixed on the way</h2>
+  <div class="cards">
+    <div class="card"><span class="tag fix">bug, mine</span><h3>Line 1's real used line 2's kinematics</h3><p>The four-parton point lives in module state, and the driver set up both lines before evaluating either. Found in the first 40k-point test (&Sigma;|w| = 494&nbsp;&plusmn;&nbsp;242&nbsp;pb, then 134&nbsp;&plusmn;&nbsp;13 after the fix). No earlier result used this path.</p></div>
+    <div class="card"><span class="tag fix">bug, mine</span><h3>Real evaluated outside the generator's support</h3><p>Points far beyond the cutoff (s<sub>a1</sub>/Q<sup>2</sup>&nbsp;=&nbsp;2.5&times;10<sup>&minus;11</sup>) were reached by the wrong sampling path with a tiny density: weights up to 10<sup>13</sup>. They ruined the VEGAS grids of the first cutoff study, which I aborted. Fix: a consistent technical cut that drops the whole four-parton point if any dipole map is closer to its singular limit than the cutoff.</p></div>
+    <div class="card"><span class="tag ok">understood</span><h3>Remaining variance: double-unresolved corners</h3><p>In soft-collinear corners a final&ndash;final dipole can leave the merged gluon far softer than the real pair, so the dipole exceeds the real by up to 300&times;. This is the known behaviour of CS dipoles there. It cancels against the Born projection and sets the variance. My first guess (spin correlations) was wrong: replacing them by their azimuthal average changed the dipole by 2%.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Also settled this week</h2>
+  <ul>
+    <li><b>T-odd term:</b> VBFNLO is right. An independent unitarity calculation agrees with it to five digits. The difference to NNLOJET was my harness giving NNLOJET the line flavours in the wrong order; with the right order they agree to 2&times;10<sup>&minus;12</sup>.</li>
+    <li><b>n<sub>f</sub>&nbsp;=&nbsp;4 in ffunc:</b> an inconsistency introduced in proVBFH's own copy. The public POWHEG code has n<sub>f</sub>&nbsp;=&nbsp;4 in both places, which is correct.</li>
+    <li><b>Public POWHEG VBF_HJJJ:</b> the pair-type swap and the missing initial-state FKS region are both present and demonstrated on the public build (bug report draft sent to you separately).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Next: stage 3, the (1,1) part</h2>
+  <p>With the line-level DIS dipoles (which keep q<sub>i</sub> and map exactly onto the VBF Born of their line), the (1,1) exclusive part is, per point:</p>
+  <div class="formula">(R<sub>1</sub>, B<sub>2</sub>): H<sub>3</sub> f<sub>1</sub>(&xi;<sub>1</sub>) [ (V<sub>2</sub>+I<sub>2</sub>) f<sub>2</sub>(x<sub>2</sub>) + (K+P)&otimes;f<sub>2</sub> &minus; K<sub>2</sub> f<sub>2</sub>(&xi;<sub>2</sub>) ]<br>(B<sub>1</sub>, R<sub>2</sub>): the same with 1&nbsp;&harr;&nbsp;2<br>(R<sub>1</sub>, R<sub>2</sub>): H<sub>4</sub> f<sub>1</sub>(&xi;<sub>1</sub>) f<sub>2</sub>(&xi;<sub>2</sub>)<br>VBF Born: minus the sum</div>
+  <ul>
+    <li>The three-parton points of stage 1 are reused. The double-dipole term lies at the Born and cancels with its own projection.</li>
+    <li>New ingredients: the H+4j matrix element with one parton on each line; the H+3j vertex correction of the non-radiating line (VBFNLO already has it); the DIS I and K&thinsp;+&thinsp;P of a line.</li>
+    <li>Validation of the line-level pieces: one line's NLO from dipoles must reproduce its NLO structure functions.</li>
+  </ul>
+</section>
+
+<footer>Code: branch 2026-09-cs-p2b, commits a552b94 and 9310f3e (local, not pushed). Logbook: notes/2026-09-29-cs-p2b-stage2/README.md.</footer>
+</main>

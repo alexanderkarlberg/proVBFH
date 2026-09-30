@@ -1,0 +1,55 @@
+sigma(VBF cuts), O(alpha_s^2) (2,0)+(0,2) exclusive part [pb]:
+  c4            10 seeds: -0.02253 +- 0.00219 (seed scatter), VEGAS 0.00203
+  c5            10 seeds: -0.02284 +- 0.00228 (seed scatter), VEGAS 0.00255
+  c6            10 seeds: -0.01649 +- 0.00632 (seed scatter), VEGAS 0.00559
+
+c4 vs c5 (scatter errors):
+  sig incl cuts                chi2/n =     0.4/  1   max|pull|  0.66
+  ptH-incl                     chi2/n =    60.3/ 50   max|pull|  3.23
+  yH-incl                      chi2/n =    21.7/ 19   max|pull|  2.86
+  sig(all VBF cuts 2 jets)     chi2/n =     0.0/  1   max|pull|  0.10
+  ptj1-vbf                     chi2/n =    20.8/ 14   max|pull|  2.45
+  ptj2-vbf                     chi2/n =    16.7/ 14   max|pull|  2.23
+  ptH-vbf                      chi2/n =    17.7/ 15   max|pull|  1.81
+  yj1-vbf                      chi2/n =    19.4/ 18   max|pull|  2.24
+  yj2-vbf                      chi2/n =    19.6/ 18   max|pull|  1.76
+  yH-vbf                       chi2/n =    13.4/ 19   max|pull|  1.55
+  M_jj-vbf                     chi2/n =    45.5/ 27   max|pull|  2.32
+  rap(j1,j2)-vbf               chi2/n =     5.5/  9   max|pull|  1.76
+  phi(j1,j2)-vbf               chi2/n =    18.1/ 10   max|pull|  3.34
+  R(j1,j2)-vbf                 chi2/n =     8.0/ 11   max|pull|  1.58
+  all                          chi2/n =   267.0/226
+
+c4 vs c6 (scatter errors):
+  sig incl cuts                chi2/n =     5.1/  1   max|pull|  2.25
+  ptH-incl                     chi2/n =    71.9/ 50   max|pull|  3.40
+  yH-incl                      chi2/n =    34.2/ 19   max|pull|  3.04
+  sig(all VBF cuts 2 jets)     chi2/n =     0.8/  1   max|pull|  0.90
+  ptj1-vbf                     chi2/n =    25.2/ 14   max|pull|  2.78
+  ptj2-vbf                     chi2/n =    21.8/ 14   max|pull|  2.55
+  ptH-vbf                      chi2/n =     9.4/ 15   max|pull|  1.61
+  yj1-vbf                      chi2/n =    15.7/ 18   max|pull|  1.78
+  yj2-vbf                      chi2/n =    10.2/ 18   max|pull|  1.73
+  yH-vbf                       chi2/n =    12.2/ 19   max|pull|  1.53
+  M_jj-vbf                     chi2/n =    25.5/ 27   max|pull|  2.07
+  rap(j1,j2)-vbf               chi2/n =    16.1/  9   max|pull|  3.06
+  phi(j1,j2)-vbf               chi2/n =     7.7/ 10   max|pull|  1.57
+  R(j1,j2)-vbf                 chi2/n =     6.1/ 11   max|pull|  1.39
+  all                          chi2/n =   261.9/226
+
+c5 vs c6 (scatter errors):
+  sig incl cuts                chi2/n =     4.3/  1   max|pull|  2.08
+  ptH-incl                     chi2/n =    72.4/ 50   max|pull|  3.35
+  yH-incl                      chi2/n =    29.8/ 19   max|pull|  2.83
+  sig(all VBF cuts 2 jets)     chi2/n =     0.9/  1   max|pull|  0.95
+  ptj1-vbf                     chi2/n =    16.5/ 14   max|pull|  2.27
+  ptj2-vbf                     chi2/n =    14.7/ 14   max|pull|  1.67
+  ptH-vbf                      chi2/n =    12.9/ 15   max|pull|  1.64
+  yj1-vbf                      chi2/n =    10.4/ 18   max|pull|  1.58
+  yj2-vbf                      chi2/n =    18.4/ 18   max|pull|  2.34
+  yH-vbf                       chi2/n =    16.5/ 19   max|pull|  1.66
+  M_jj-vbf                     chi2/n =    27.2/ 27   max|pull|  2.14
+  rap(j1,j2)-vbf               chi2/n =     7.7/  9   max|pull|  1.97
+  phi(j1,j2)-vbf               chi2/n =    14.8/ 10   max|pull|  1.82
+  R(j1,j2)-vbf                 chi2/n =     8.1/ 11   max|pull|  1.60
+  all                          chi2/n =   254.4/226
