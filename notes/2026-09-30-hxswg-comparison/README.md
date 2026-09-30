@@ -288,3 +288,28 @@ h = 0 run on thserv18; the 12 + 12 seed test on thserv19 is the clean one.
   CPU 3.88e-3 against 4.77e-3 (gain 1.23 for this total without cuts).
   (The watcher's parser failed on VEGAS's "integral =-0.99E-01+/-"
   without a space; parsed from the "sum |w1|+|w2|" line instead.)
+
+### NNLO tests at 13.6 TeV (23:35) and a separate fraction for the second emission
+
+`runs/hxswg-hard/compare-nnlo.txt`, 8 seeds each against h = 0
+(`hxswg-timing/nnlo-s*`, 18.5 CPU-h); gains in error^2 x CPU:
+
+| | first emission only (h = 0.3; 20.3 CPU-h) | both emissions (h = 0.3; 24.0 CPU-h) |
+|---|---|---|
+| total, ptj > 20 | 1.8 | 0.28 |
+| total, ptj > 30 | 0.7 | 0.42 |
+| ptj2 400-600 / 600-1000 | 4.1 / 7.5 | 9.3 / 3.3 |
+| ptHjj 100-1000 | 41 | 13 |
+| median over 946 bins | 0.73 | 0.62 |
+
+At NNLO the variance comes mostly from the double-unresolved corners of
+(2,0)+(0,2); a hard channel for the second emission takes points from
+there and costs a factor 2.5-3.5 on the totals. The first emission's
+channel helps the tails and is neutral on the totals (the 8-seed factors
+are uncertain by about 50%). Both variants agree with h = 0 within the
+errors. The second step now has its own fraction, `cs_hardfrac2`
+(default 0; `four_hard2`); `cs_hardfrac` alone is bitwise identical to
+the first-emission-only build (checked), and the default to the original.
+test_four covers (0, 0), (0.3, 0), (0.3, 0.3). The 1506.02660 run with
+both emissions at 0.3 (`nnlo-p1506-h03`) will show whether the 4-jet
+observables need a small second-step fraction.

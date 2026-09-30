@@ -55,7 +55,10 @@ computed and histogrammed at the VBF Born kinematics as in proVBFH.
    hard, p_T² = Q² z(1 − z)(1 − x_p)/x_p, small x_p), which the
    logarithmic map hardly samples and which dominate the high-p_T tails;
    the weight uses the combined density. The same channel is used in the
-   first step of the four-parton generator (`gen_four`, `four_weight`).
+   first step of the four-parton generator (`gen_four`, `four_weight`);
+   its second emission has its own fraction (`cs_hardfrac2`, default 0:
+   at NNLO a hard channel there costs more in the double-unresolved
+   corners than it gains in the tails).
 3. Weights:
    - w_i = |M_{H+3j}|² for emission from line i × PDFs(ξ_i, x_j) × flux ×
      phase space;

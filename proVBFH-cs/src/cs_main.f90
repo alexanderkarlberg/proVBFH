@@ -7,7 +7,10 @@
 !                (default)
 !   cs_npow   sampling power for 1-xp and z; 0 (default): logarithmic
 !   cs_hardfrac  fraction of the line radiations in the hard channel (small
-!             xp, z ~ 1/2; for the high-pT tails); default 0
+!             xp, z ~ 1/2; for the high-pT tails), also the first step of
+!             the four-parton generator; default 0
+!   cs_hardfrac2  the same for the second emission of the four-parton
+!             generator; default 0
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-6)
 !   cs_order  1: the O(alpha_s) exclusive part (NLO, default);
 !             2: also the O(alpha_s^2) (2,0) + (0,2) (stage 2)
@@ -23,7 +26,7 @@ program provbfh_cs
   use integration
   use cs_exclusive
   use cs_nlo2, only: nlo2_ncount, nlo2_ncut
-  use cs_dipoles, only: spin_avg, four_hard
+  use cs_dipoles, only: spin_avg, four_hard, four_hard2
   use matrix_element, only: incl_only11
   implicit none
   integer, parameter :: maxdim = 20
@@ -58,6 +61,7 @@ program provbfh_cs
   if (powheginput('#cs_npow') >= 0) excl_npow = nint(powheginput('#cs_npow'))
   if (powheginput('#cs_hardfrac') > 0) excl_hardfrac = powheginput('#cs_hardfrac')
   four_hard = excl_hardfrac
+  if (powheginput('#cs_hardfrac2') > 0) four_hard2 = powheginput('#cs_hardfrac2')
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.

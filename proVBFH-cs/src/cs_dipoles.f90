@@ -56,11 +56,13 @@ module cs_dipoles
 
   ! diagnostic output of four_weight (per path)
   logical, public, save :: fw_verbose = .false.
-  ! fraction of each step in its hard channel (cs_hardfrac); 0:
-  ! logarithmic only. First step (Born -> three partons): line_radiation.
-  ! Second step: y uniform (FF) or ln x uniform in [ln xi3, 0] (FI), and z
-  ! uniform, instead of logarithmic y (1-x) and z
-  real(dp), public, save :: four_hard = 0
+  ! fraction of each step in its hard channel; 0: logarithmic only.
+  ! four_hard (cs_hardfrac), first step (Born -> three partons):
+  ! line_radiation. four_hard2 (cs_hardfrac2), second step: y uniform (FF)
+  ! or ln x uniform in [ln xi3, 0] (FI), and z uniform, instead of
+  ! logarithmic y (1-x) and z (at NNLO the second step's hard channel costs
+  ! more in the double-unresolved corners than it gains, 2026-09-30)
+  real(dp), public, save :: four_hard = 0, four_hard2 = 0
   ! diagnostic: azimuthally averaged spin correlations (not for physics runs)
   logical, public, save :: spin_avg = .false.
 
@@ -204,14 +206,14 @@ contains
     else
        e = b; o = a
     endif
-    hard2 = four_hard > 0 .and. r(5) >= 1 - four_hard
+    hard2 = four_hard2 > 0 .and. r(5) >= 1 - four_hard2
     if (hard2) then
-       s = (r(5) - (1 - four_hard))/four_hard
+       s = (r(5) - (1 - four_hard2))/four_hard2
        z = r(6)
        if (min(z, 1 - z) < cutoff) return
     else
        s = r(5)
-       if (four_hard > 0) s = r(5)/(1 - four_hard)
+       if (four_hard2 > 0) s = r(5)/(1 - four_hard2)
        z = symlog(r(6), cutoff)
     endif
     phi = 2*pi*r(7)
@@ -269,8 +271,8 @@ contains
           if (ityp == 0) then
              call map_ff(k(:,i), k(:,j), k(:,l), ptij, ptk, y, z)
              if (y < cutoff .or. min(z, 1 - z) < cutoff) cycle
-             if (four_hard > 0) then
-                ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)/((1 - four_hard)/((y*lc)*(2*min(z, 1 - z)*lh)) + four_hard)
+             if (four_hard2 > 0) then
+                ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)/((1 - four_hard2)/((y*lc)*(2*min(z, 1 - z)*lh)) + four_hard2)
              else
                 ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)*(y*lc)*(2*min(z, 1 - z)*lh)
              endif
@@ -280,9 +282,9 @@ contains
              ptk = k(:,l)
              xi3 = xB*pta(0)/pB(0)
              if (1 - x < cutoff .or. min(z, 1 - z) < cutoff .or. 1 - xi3 <= cutoff) cycle
-             if (four_hard > 0) then
-                ws = 2*mdot(ptij, pa)/(16*pi**2)/((1 - four_hard)/(((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)) &
-                     & + four_hard/(x*log(1/xi3)))
+             if (four_hard2 > 0) then
+                ws = 2*mdot(ptij, pa)/(16*pi**2)/((1 - four_hard2)/(((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)) &
+                     & + four_hard2/(x*log(1/xi3)))
              else
                 ws = 2*mdot(ptij, pa)/(16*pi**2)*((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)
              endif
