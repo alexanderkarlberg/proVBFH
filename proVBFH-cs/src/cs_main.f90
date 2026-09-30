@@ -23,7 +23,7 @@ program provbfh_cs
   use integration
   use cs_exclusive
   use cs_nlo2, only: nlo2_ncount, nlo2_ncut
-  use cs_dipoles, only: spin_avg
+  use cs_dipoles, only: spin_avg, four_hard
   use matrix_element, only: incl_only11
   implicit none
   integer, parameter :: maxdim = 20
@@ -57,6 +57,7 @@ program provbfh_cs
   call set_beams(sqrts)
   if (powheginput('#cs_npow') >= 0) excl_npow = nint(powheginput('#cs_npow'))
   if (powheginput('#cs_hardfrac') > 0) excl_hardfrac = powheginput('#cs_hardfrac')
+  four_hard = excl_hardfrac
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.

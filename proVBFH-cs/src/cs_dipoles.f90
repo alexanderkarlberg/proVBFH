@@ -56,6 +56,9 @@ module cs_dipoles
 
   ! diagnostic output of four_weight (per path)
   logical, public, save :: fw_verbose = .false.
+  ! fraction of the first step (Born -> three partons, line_radiation) in
+  ! its hard channel (cs_hardfrac); 0: logarithmic only
+  real(dp), public, save :: four_hard = 0
   ! diagnostic: azimuthally averaged spin correlations (not for physics runs)
   logical, public, save :: spin_avg = .false.
 
@@ -186,7 +189,7 @@ contains
     integer :: ipath, iperm, islot, ityp
     integer, parameter :: perm(3,6) = reshape([1,2,3, 1,3,2, 2,1,3, 2,3,1, 3,1,2, 3,2,1], [3,6])
     ok = .false.; pa = 0; k = 0; w = 0
-    call line_radiation(pB, pOB, xB, r(1:3), 0, cutoff, pin, a, b, xp, z3, wrad, ok)
+    call line_radiation(pB, pOB, xB, r(1:3), 0, cutoff, pin, a, b, xp, z3, wrad, ok, four_hard)
     if (.not. ok) return
     ok = .false.
     ipath = min(int(24*r(4)), 23)
@@ -258,7 +261,13 @@ contains
           xp3 = 1 - mdot(ptij, ptk)/mdot(pta, ptij + ptk)
           z3 = mdot(pta, ptij)/mdot(pta, ptij + ptk)
           if (1 - xp3 < cutoff .or. min(z3, 1 - z3) < cutoff .or. 1 - xB <= cutoff) cycle
-          wr = Q2/(16*pi**2)/xp3*((1 - xp3)*log((1 - xB)/cutoff))*(2*min(z3, 1 - z3)*lh)
+          if (four_hard > 0) then
+             ! the density of line_radiation with its hard channel
+             wr = Q2/(16*pi**2)/xp3/((1 - four_hard)/(((1 - xp3)*log((1 - xB)/cutoff))*(2*min(z3, 1 - z3)*lh)) &
+                  & + four_hard/(xp3*log(1/xB)))
+          else
+             wr = Q2/(16*pi**2)/xp3*((1 - xp3)*log((1 - xB)/cutoff))*(2*min(z3, 1 - z3)*lh)
+          endif
           ! 2 orders of (i,j) x 2 slots of the split parton, each 1/24
           dens = dens + 4/(24*wr*ws)
           if (fw_verbose) write(6,'(a,i2,a,i2,a,es10.3,a,es10.3,a,es10.3,a,2es10.2)') '     path pair', ip, ' typ', ityp, &

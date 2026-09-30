@@ -12,6 +12,7 @@
 !                              dPhi_3(W),
 !      pa = pB/u, W^2 = Q^2 (1-u)/u, dPhi_3 flat (RAMBO) in the rest
 !      frame of pa + q.
+! Run with four_hard = 0 and 0.3 (the hard channel of the first step).
 ! Exits with status 1 if a check fails.
 !----------------------------------------------------------------------
 program test_four
@@ -25,10 +26,13 @@ program test_four
   real(dp) :: y, z, x, u, ptij(0:3), ptk(0:3), pta(0:3)
   real(dp) :: s1(2), s2(2), f(2), m1(2), m2(2), sig1(2), sig2(2), pull
   logical :: ok, fail
-  integer :: ipt, n, i, nev, ifn
+  integer :: ipt, n, i, nev, ifn, ih
   fail = .false.; errmax = 0
   cutoff = 1d-4
   call random_seed()
+  do ih = 1, 2
+  four_hard = merge(0.0_dp, 0.3_dp, ih == 1)
+  write(*,'(a,f4.1)') ' four_hard =', four_hard
   do ipt = 1, 6
      call random_number(rr)
      xB = 0.02_dp + 0.5_dp*rr(1)
@@ -91,6 +95,7 @@ program test_four
              & s1(ifn), ' +- ', sig1(ifn), '  flat ', s2(ifn), ' +- ', sig2(ifn), '  pull ', pull
         if (abs(pull) > 4) fail = .true.
      enddo
+  enddo
   enddo
   write(*,'(a,4es10.2)') ' max errors (maps, q, weight, momenta): ', errmax
   if (maxval(errmax) > 1d-8) fail = .true.
