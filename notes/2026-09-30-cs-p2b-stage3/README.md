@@ -377,3 +377,38 @@ the missing ISR region's 1.3e-4 per e-fold). Cutoff 1e-8 does not run:
 all six jobs stop at the start with "cs_dipoles: no transverse basis"
 (the guard for a degenerate transverse basis); the cutoff studies so far
 went to 1e-6.
+
+## 60 seeds against 1506.02660, and the 3- and 4-jet rates (19:35)
+
+`runs/nnlo-p1506`: 30 more seeds (iseed 7101-7130; 14 on thserv18, 16
+on thserv09) with the paper's analysis (`proVBFH-cs-p1506`), no spikes;
+inclusive part rerun with that analysis (`runs/nnlo-incl-p1506`, same
+cards and seeds as nnlo-incl). `nnlo-p1506/combine60.py` (seed-scatter
+errors):
+
+| sig(VBF cuts) [pb] | proVBFH-cs | 1506.02660 files | difference |
+|---|---|---|---|
+| 2 jets, p1506 (30 seeds) | 0.84197 +- 0.00255 | 0.84383 +- 0.00046 | -0.7 sigma (-0.22%) |
+| 2 jets, nnlo-full (30) | 0.83854 +- 0.00156 | | -3.3 sigma (-0.63%) |
+| 2 jets, all 60 | 0.84026 +- 0.00161 | | -2.1 sigma (-0.42%) |
+| >= 3 jets (p1506) | 0.12919 +- 0.00157 | 0.13324 +- 0.00006 | -2.6 sigma (-3.0%) |
+| >= 4 jets (p1506) | 0.01772 +- 0.00124 | 0.01688 +- 0.00001 | +0.7 sigma |
+
+- The two halves agree with each other (1.2 sigma): the -3.3 sigma of
+  the first 30 seeds was partly a fluctuation (correction of the
+  -2.7 sigma quoted above with the "max" errors).
+- The 3-jet deficit (-0.0040 pb) is as large as the 2-jet one (-0.0036):
+  the exactly-2-jet part agrees (+0.0004), the difference sits in the
+  H+3j region, where the old code's missing ISR region (issue 2) acts
+  (three hard jets and a parton collinear to the beam). At +1.26e-4 pb
+  per e-fold (2-jet rate), about 32 e-folds would be needed; POWHEG
+  sampling the collinear variable down to about machine precision would
+  give about 37. Coefficient for the 3-jet rate: `runs/estimate-coll-p1506`.
+- Distributions: 2-jet ones fine; 3-jet ones follow the paper within
+  our (much larger) errors, apart from the normalisation. min{rap(j1,j3),
+  rap(j3,j2)} has chi2 151.8/45, of which 96 from the last bin, where the
+  paper file has 2.4e-17 +- 2.5e-18 (a combine_runs.f zero-bin artefact)
+  and ours is 0: 55.8/44 without it.
+- Our errors for the 3- and 4-jet observables are 40-190 times the
+  paper's (the old code needs no subtraction there at LO and its errors
+  are trimmed); the hard-emission channel should help.

@@ -221,3 +221,21 @@ seeds x 1.65M points each (thserv19; more seeds for stable tail errors),
 NNLO exclusive h = 0.3 (8 seeds, as `hxswg-timing/nnlo-s*`, thserv21).
 Compared with `tools/sampling_compare.py` (per-bin and integrated-range
 gains in error^2 x CPU, and consistency).
+
+### NLO result: h = 0.3 vs h = 0 (12 seeds x 1.65M each, thserv19, 19:35)
+
+`hxswg-hard/nlo12/compare.txt`, gains in error^2 x CPU (same CPU,
+2.6 CPU-h each):
+- fiducial totals (NLO exclusive part): 2.3 (ptj > 20), 2.7 (ptj > 30);
+- ptj2 0-200: 2.9; 600-1000: 4.7; ptHjj 100-1000: 3.7;
+- ptj2 1000-2000: h = 0 finds almost nothing (-2.5e-8 +- 1.2e-8), h = 0.3
+  gives +2.5e-7 +- 0.6e-7 (the study implies about +4e-7 for the
+  exclusive part there);
+- worse: mjj 3-5 TeV 0.8, ptH > 500 GeV 0.15 (Born-level high pT with
+  soft/collinear cancellations; 30% fewer points in the logarithmic
+  channel gives 0.7);
+- median over all bins 1.27 (seed scatter), 1.22 (VEGAS errors).
+- Consistency: chi2 1201/934 between the variants, all of the excess in
+  the hard-tail histograms (ptj2-STXS 285/99, ptHjj 88/50 each, ptj1-STXS
+  120/99), where h = 0 misses rare configurations and underestimates its
+  errors; the other histograms 410/499.
