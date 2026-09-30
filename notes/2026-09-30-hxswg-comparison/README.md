@@ -187,3 +187,37 @@ collinear limits, so hard emissions get few points. Not a physics
 difference as far as can be told, but a sampling weakness to fix (hard-
 radiation sampling in the warm-up / channel study) before production, and
 the old code's radiation sampling is better per point in these bins.
+
+## Hard-emission sampling (AK: "improve the hard-emission sampling while we wait", 18:45)
+
+Cause of the under-sampled tails: a line's two partons have pT^2 =
+Q^2 z (1-z) (1-xp)/xp, so a 500 GeV jet at Q ~ MW needs xp of a few
+1e-2, near the lower end of [xB, 1]; the logarithmic map in 1-xp puts
+about 0.3% of the points at xp < 0.04, and about 6% have z in [0.25,
+0.75].
+
+Change (commits 04525fd, 93ab2e9; default off, bitwise unchanged):
+`cs_hardfrac h` adds a second channel to `line_radiation` with
+probability h: ln xp uniform in [ln xB, 0], z uniform; weight 1/g with
+g = (1-h) g_log(xp) g_log(z) + h g_hard(xp) g_hard(z). The same in the
+first step of `gen_four` and in `four_weight` (module variable
+`four_hard`). Checks:
+- `tests/test_kinematics` now covers npow 2, logarithmic, and logarithmic
+  with h = 0.3 (pointwise and phase-space volume). The pointwise checks
+  failed at 3e-9 with h = 0.3 against a tolerance of 1e-10 relative to
+  Q^2: round-off, as the hard channel reaches xp ~ xB where pin = pB/xp
+  is large compared with sqrt(Q^2) (relative to E_max^2 the errors are
+  1e-15 for both samplings); the mass, xp and z checks are now relative
+  to kappa = E_max^2/Q^2.
+- `tests/test_four` with four_hard = 0 and 0.3: weight of gen_four =
+  four_weight exactly, integrals of the test functions against the flat
+  RAMBO reference within |pull| < 1.5.
+- With the option off, the NNLO smoke run (incl. (2,0)) is bitwise
+  identical to the earlier build.
+
+Tests running (13.6 TeV study set-up): NLO exclusive h = 0.2, 0.5 (4
+seeds, as `hxswg-timing/nlo-s*`, thserv22), NLO h = 0 and 0.3 with 12
+seeds x 1.65M points each (thserv19; more seeds for stable tail errors),
+NNLO exclusive h = 0.3 (8 seeds, as `hxswg-timing/nnlo-s*`, thserv21).
+Compared with `tools/sampling_compare.py` (per-bin and integrated-range
+gains in error^2 x CPU, and consistency).

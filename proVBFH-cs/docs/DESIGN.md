@@ -48,6 +48,14 @@ computed and histogrammed at the VBF Born kinematics as in proVBFH.
 2. For each line i = 1, 2, a three-parton final state is generated from 3
    more variables (ξ_i ≥ x_i, z_i, φ_i) in that line's Breit frame, keeping
    q_i. The other line and the Higgs are not changed.
+   Sampling (`line_radiation`): 1 − x_p and min(z, 1 − z) logarithmic down
+   to the cutoff (soft and collinear limits). Optionally (`cs_hardfrac` h,
+   2026-09-30) a second channel with probability h: ln x_p uniform in
+   [ln x_B, 0] and z uniform, for hard emissions (both partons of the line
+   hard, p_T² = Q² z(1 − z)(1 − x_p)/x_p, small x_p), which the
+   logarithmic map hardly samples and which dominate the high-p_T tails;
+   the weight uses the combined density. The same channel is used in the
+   first step of the four-parton generator (`gen_four`, `four_weight`).
 3. Weights:
    - w_i = |M_{H+3j}|² for emission from line i × PDFs(ξ_i, x_j) × flux ×
      phase space;
