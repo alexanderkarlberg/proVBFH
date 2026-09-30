@@ -104,3 +104,86 @@ over pt ranges (0-200, 200-500, 500-1000, >1000 GeV) all agree to 1%,
 ten VBF-cut distributions have the same binning as ours (names without
 `-vbf`: `combine_parts.py --strip=-vbf`). The comparison with nnlo-full
 + nnlo-incl runs when nnlo-full is done.
+
+## The raw per-seed data (AK, 16:30): 9940 of the 9999 stage-2 seeds
+
+`proVBFH/13.6TeV_NNLO/{HH,11,22}.tgz`, each 9940 files `pwg-NNNN-NNLO.top`
+(95 histograms, 988 bins). Unpacked outside cernbox; loader and an exact
+re-implementation of `combine_runs.f` in `tools/rawload.py` (set RAWDIR).
+
+- **Reproduction:** `combine_runs` (limit 10, with the off-by-one) on
+  the 9940 central files gives `results/nnlo-central.top` in all 946
+  non-empty bins to 5e-8 (the precision of the files).
+- **sig incl cuts (ptj > 20):** plain mean 2.09614 +- 0.00649 (seed
+  scatter); study (trimmed) 2.08980 +- 0.00075; trimmed without the
+  off-by-one 2.08964. Scatter of the seeds 0.65 pb against a VEGAS error
+  of 0.072 per seed. 94 seeds dropped (41 low, 53 high). ptj > 30:
+  plain 1.65531 +- 0.00671, trimmed 1.65130 +- 0.00068.
+- **All bins:** plain - trimmed is positive in 59% of the bins, median
+  +0.5% (+0.43 plain errors); the quoted errors are a median 4.2 times
+  smaller than the plain seed-scatter errors.
+- **Tails:** power laws on both sides, Hill index alpha = 1.0-1.6 (top
+  20-100 seeds): infinite variance, and a mean that barely exists. The
+  largest seed (61.3 pb, median 2.09) moves the plain mean by 0.3%, as
+  much as the trimming; the running plain mean wanders by 0.5%.
+- **The spikes are single events:** all of a big seed's excess sits in
+  one bin of every histogram: 2 jets, mjj 300-700 GeV, dy_jj 2-5, ptH
+  80-120 GeV, ptHjj < 20 GeV (the third parton soft or collinear), both
+  signs (+59, +15, -11 pb). An unsubtracted singular region, as expected
+  from issue 2 (missing ISR region) and the NC gg pair type.
+- **Consequences:** the study's (and 1506.02660's, combined the same way)
+  quoted errors do not include the tails, and the trimmed mean is biased
+  by an unknown amount (here -0.3% relative to the plain mean). The
+  off-by-one is negligible (+0.00016 pb, 0.2 quoted errors).
+
+## Timing on thserv18 (15:30-18:20, 16 jobs at the same time, nice 10)
+
+| run | points | CPU [s] | per point |
+|---|---|---|---|
+| old code stage 2, study card, study grid | 200k | 2034, 2038 | |
+| old code stage 2 | 1M | 10064, 10023 | 10.0 ms (difference), 34 s set-up |
+| proVBFH-cs NNLO exclusive (8 seeds) | 2.2M | 8215-8416 | 3.8 ms |
+| proVBFH-cs NLO exclusive (4 seeds) | 6.6M | 2306-2466 | 0.36 ms |
+
+- Old code, one study job (ncall2 5M x itmx2 3 = 15M points): 34 + 15M x
+  10.0 ms = 1.50e5 s = 42 CPU-h; 9999 jobs: 1.50e9 s = 417,000 CPU-h
+  (thserv18 equivalent; stage 1 not counted). The old code runs with
+  `testplots 1` (the analysis is called for every real flavour region).
+- proVBFH-cs, 8 NNLO seeds (66,580 CPU-s): per bin, the CPU needed to
+  reach the study's errors, C = 66,580 s x (err_ours/err_study)^2:
+  - quoted (trimmed) errors: median over 946 bins 3,600 CPU-h, speed-up
+    median 116 (16-84%: 7-486), total bin (ptj > 20) 139;
+  - plain seed-scatter errors: median 170 CPU-h, speed-up median 2,500
+    (16-84%: 130-35,000), total bin 10,500.
+  - With 8 seeds the errors are uncertain by about 25% per bin (50% in
+    CPU); the inclusive part (a few CPU-min) is not included.
+
+## 13.6 TeV NLO and NNLO from the timing runs (18:30)
+
+Inclusive part `runs/hxswg-incl{2,3}` (4 seeds each, thA371a) + exclusive
+part from `runs/hxswg-timing` (NLO 4 seeds, NNLO 8 seeds); `--error max`.
+
+| | proVBFH-cs [pb] | study [pb] | pull |
+|---|---|---|---|
+| NLO, ptj > 20 | 2.18262 +- 0.00313 | 2.17937 +- 0.00026 (`nlo-central`) | +1.0 |
+| NLO, ptj > 30 | 1.74104 +- 0.00288 | 1.73978 +- 0.00017 | +0.4 |
+| NNLO, ptj > 20 | 2.0977 +- 0.0096 | 2.0898 (trimmed) / 2.0961 +- 0.0065 (plain) | +0.8 / +0.1 |
+| NNLO, ptj > 30 | 1.6507 +- 0.0115 | 1.6513 / 1.6553 +- 0.0067 | -0.05 / -0.35 |
+
+(The spreadsheet's NLO 2176.39 fb is an older run; `nlo-central.top`,
+July 2024, is 2179.37 fb.) With 8 NNLO seeds the NNLO check is at the
+0.5% level only.
+
+Distributions: about 1 per bin except in the far tails: NLO ptj2-STXS
+chi2 4234/99 and ptHjj 759/50, from bins with ptj2 > 540 GeV or ptHjj >
+880 GeV. There the exclusive part dominates (hard real emission makes the
+second jet; the study's K factor is 1.2 at ptj2 400-600, 1.8 at 600-1000,
+3.0 at 1-2 TeV), and our exclusive part is badly under-sampled with 4
+seeds (errors 40-80%, and underestimated): ours 1.5, 1.6, 0.83 for the
+same K factors, while our inclusive part agrees with the study's LO to
+0.1-0.5% there. VEGAS adapts to sum |w|, dominated by the bulk, and the
+radiation variables are sampled logarithmically towards the soft and
+collinear limits, so hard emissions get few points. Not a physics
+difference as far as can be told, but a sampling weakness to fix (hard-
+radiation sampling in the warm-up / channel study) before production, and
+the old code's radiation sampling is better per point in these bins.

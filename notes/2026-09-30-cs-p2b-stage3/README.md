@@ -359,3 +359,21 @@ AK's paper files `runs/ref-1506.02660/11.top` (mu_0; `HH`, `22` = 0.5,
   rates. Same seed and card: the 2-jet results are bitwise identical to
   the current analysis. sigma(>= 3 jets) has no counterevents and no
   inclusive part, so it compares the H+3j NLO directly.
+
+## Size of the NC gg pair-type bug (`runs/estimate-gg`, cs_estimate 5)
+
+1506.02660 set-up (nnlo-full card), E3 with the original line minus E3
+fixed, as event and Born counterevent, unsubtracted; thserv21, 6 seeds x
+5.2M points, about 1.7 CPU-h per job.
+
+| cutoff | sig(VBF cuts 2 jets) [pb] | sig(VBF cuts 3 jets) [pb] |
+|---|---|---|
+| 1e-4 | +6.1e-6 +- 0.1e-6 | +8.9e-6 |
+| 1e-6 | +9.2e-6 +- 0.1e-6 | +1.34e-5 |
+
+(first 3 and 5 seeds). Slope about 7e-7 pb per e-fold of the cutoff:
+negligible against the 0.0053 pb difference with 1506.02660 (and against
+the missing ISR region's 1.3e-4 per e-fold). Cutoff 1e-8 does not run:
+all six jobs stop at the start with "cs_dipoles: no transverse basis"
+(the guard for a degenerate transverse basis); the cutoff studies so far
+went to 1e-6.
