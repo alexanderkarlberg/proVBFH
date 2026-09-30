@@ -239,3 +239,27 @@ gains in error^2 x CPU, and consistency).
   the hard-tail histograms (ptj2-STXS 285/99, ptHjj 88/50 each, ptj1-STXS
   120/99), where h = 0 misses rare configurations and underestimates its
   errors; the other histograms 410/499.
+
+### Second emission of gen_four (19:45, commit f215582)
+
+The 4-jet histograms at the 1506.02660 set-up (chi2 107/34; most bins
+10-30% low with small errors, a few spikes) show that the second
+emission also needs a hard channel: a 4th jet above 25 GeV needs it hard,
+and z of the second step is logarithmic towards both ends (about 6% of
+the points at z in [0.25, 0.75]). With probability four_hard the second
+step now takes y uniform (FF) or ln x uniform in [ln xi3, 0] (FI) and z
+uniform; four_weight uses the combined density; the cutoff checks are
+applied in the hard branch only (the logarithmic maps cannot go below
+the cutoff), so the default stays bitwise identical (checked).
+test_four with four_hard = 0.3: weight = four_weight exactly, integrals
+|pull| < 2.6 (reruns 1.0, 1.9). With h = 0.3 fewer points fail all cuts
+(12,346 vs 15,755 of 25k in the smoke run), so the CPU per point rises
+by about 36%; the gains are per CPU.
+
+NNLO tests with the full channel (h = 0.3), started 19:45: 13.6 TeV set-up
+(8 seeds as hxswg-timing/nnlo-s*, thserv19) and 1506.02660 set-up with the
+paper's analysis (16 seeds, iseed 7301-7316, thserv18; against the 30
+h = 0 seeds of nnlo-p1506, including the 3- and 4-jet rates). The
+h = 0.2/0.5 NLO test on thserv22 runs at about half speed (the machine
+is loaded to 75 by others), so its CPU times are not comparable with the
+h = 0 run on thserv18; the 12 + 12 seed test on thserv19 is the clean one.
