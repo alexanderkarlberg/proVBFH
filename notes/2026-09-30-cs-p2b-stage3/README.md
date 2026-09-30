@@ -437,3 +437,22 @@ Delta = 19 gives chi2/n about 1. The 4-jet histograms (not affected by
 issue 2) have chi2 107/34 from our under-sampling (most bins 10-30% low
 with small errors, a few spikes with large errors): the second emission
 of gen_four is sampled logarithmically only.
+
+### More seeds (23:50): the difference is established
+
+`nnlo-p1506-h03` (16 seeds, hard channel h = 0.3 on both emissions, iseed
+7301-7316; unbiased like the others, see the line-NLO check in the
+hxswg notes) pooled with nnlo-p1506 (30) and, for the 2-jet rate,
+nnlo-full (30); weighted means of the seed-scatter results:
+
+| sig(VBF cuts) | proVBFH-cs [pb] | 1506.02660 files | difference |
+|---|---|---|---|
+| 2 jets (76 seeds) | 0.83913 +- 0.00130 | 0.84383 +- 0.00046 | -0.56% (-3.4 sigma) |
+| >= 3 jets (46 seeds) | 0.12729 +- 0.00107 | 0.13324 +- 0.00006 | -4.5% (-5.5 sigma) |
+| >= 4 jets (46 seeds) | 0.01764 +- 0.00055 | 0.01688 +- 0.00001 | +1.4 sigma |
+
+(Update of the 60-seed -2.1 sigma above.) The 2-jet difference is
+-0.0047, the 3-jet one -0.0059: again all of it in the >= 3-jet region
+(exactly 2 jets: +0.0012 +- 0.0017). In terms of the missing ISR
+region: 19 e-folds from the 3-jet rate, 37 from the 2-jet rate (ratio
+of the differences 0.79 +- 0.25 against 0.41 predicted, 1.5 sigma).

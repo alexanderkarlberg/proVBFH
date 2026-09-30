@@ -313,3 +313,17 @@ the first-emission-only build (checked), and the default to the original.
 test_four covers (0, 0), (0.3, 0), (0.3, 0.3). The 1506.02660 run with
 both emissions at 0.3 (`nnlo-p1506-h03`) will show whether the 4-jet
 observables need a small second-step fraction.
+
+### 1506.02660 set-up with both emissions at h = 0.3 (23:47)
+
+`nnlo-p1506-h03` (16 seeds, 62.6 CPU-h) against nnlo-p1506 (30 seeds,
+h = 0, 84.0 CPU-h): gains 2.06 (2-jet total), 1.53 (3-jet), 5.5 (4-jet),
+yj4 5.7, min{rap(j1,j3),rap(j3,j2)} 2.4; median over 351 bins 1.12;
+chi2 378/351 between the two. So with the tighter 1506.02660 cuts the
+second emission's channel helps everything, while with the study's
+looser cuts it cost 2.5-3.5 on the totals (8 seeds): the best
+cs_hardfrac2 depends on the set-up. Overnight tuning (`runs/hard-tune`,
+16 jobs each on thserv09, 21 (13.6 TeV) and 19, 22 (1506.02660), mixed
+variants per machine so the CPU is comparable): 13.6 TeV (0,0) 8 seeds,
+(0.3,0) 8, (0.3,0.1) 16 (plus the earlier 8+8); 1506.02660 (0.3,0) 16,
+(0.3,0.1) 16.
