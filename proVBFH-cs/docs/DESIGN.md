@@ -99,3 +99,60 @@ Same observables, cuts, PDFs and scales as the current proVBFH at NLO:
 
 From these, estimate the NNLO cost on the thservs. If it does not fit,
 tell AK, who will provide access to a Slurm cluster.
+
+## Stage 3: the (1,1) contribution (design, 2026-09-30)
+
+In the factorised approximation, the (1,1) part is line 1 at O(alpha_s)
+times line 2 at O(alpha_s). Per line, the O(alpha_s) pieces are those of
+NLO DIS with Catani-Seymour subtraction:
+- V + I at the line's Born;
+- (K + P) (x) f at the line's Born;
+- R at the line's three-parton point;
+- -D at the Born.
+
+The line's IF and FI dipoles keep q_i. Their map is exactly the
+projection to the VBF Born of stage 1, and the stage-1 radiation variables
+(1 - xp, z) are the dipole variables (x, u). So every D_i lies at the
+Born point of the line.
+
+Products whose kinematics are the VBF Born on both lines cancel with their
+own projection and are left out. That leaves, per point:
+
+| event | kinematics | weight |
+|---|---|---|
+| E1 | line 1 radiated, line 2 Born | H3(R1) f1(xi1) [(V2 + I2) f2(x2) + (K+P)_2 (x) f2 (x2) - K2 f2(xi2) J2] |
+| E2 | line 1 Born, line 2 radiated | the same with 1 <-> 2 |
+| E3 | both radiated | H4(R1, R2) f1(xi1) f2(xi2) J1 J2 |
+| Born | VBF Born | -(E1 + E2 + E3) |
+
+Notation:
+- H3(R1) is the H+3j tree with the extra parton on line 1 (stage 1).
+- V2 is the vertex correction of line 2 in the H+3j virtual,
+  CF (-8 - L^2 - 3 L), L = ln(mu^2/Q_2^2), which stage 2 removes from the
+  (2,0) virtual.
+- I2 and (K+P)_2 are the DIS I operator and K + P of line 2.
+- K2 J2 is line 2's dipole (IF + FI kernels over 2 p.p x) times the
+  radiation Jacobian, at line 2's three-parton point.
+- H4(R1, R2) is the H+4j tree with one extra parton on each line: the
+  class-12 entries of the real flavour list, via their tags.
+
+The four-parton event E3 uses the three-parton points of both lines from
+stage 1 (random numbers 8:13): no new phase space. In the single limits
+(line 2 unresolved), E3 cancels the K2 term of E1. In the double limit,
+E1 + E2 + E3 -> -H2 K1 K2 at Born-like kinematics, which cancels against
+the projection event by event.
+
+Validation, before the (1,1) runs:
+1. Line-level dipoles against H3 in the singular limits of each line
+   (q -> q g: x -> 1, u -> 0, u -> 1; g -> q qbar: u -> 0, 1).
+2. **Structure functions.** With the dipole pieces of one line and the
+   other line at Born level,
+   int [(V + I) B f + B (K+P) (x) f + (R - D)]
+   summed over both lines must equal sigma_NLO - sigma_LO of the
+   inclusive (structure-function) code without cuts. This tests the DIS I
+   and K + P constants. They share their structure with the stage-2
+   `nlo2_ifin`/`nlo2_kp`, whose constants are otherwise tested only by the
+   comparison with the old code.
+3. E3 against H3 x line-2 dipole in line 2's singular limits, including
+   the normalisation for two gluons on different lines (no symmetry
+   factor, distinguishable lines).

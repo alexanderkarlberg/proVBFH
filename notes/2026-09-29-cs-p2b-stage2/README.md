@@ -421,7 +421,7 @@ all cuts before any matrix element.
 Report page: https://claude.ai/artifact/K9dmJhRDs5Sd97fb49CevZ (source `report.html`; tables `compare.txt`, `cost.txt`).
 
 Set-up: `runs/stage2-cut2`, commit 9310f3e, thserv18, nice 10. 13 TeV,
-VBF cuts, NNPDF30_nnlo_as_0118, mu = Q_i per line. O(alpha_s^2) (2,0) +
+VBF cuts, NNPDF30_nnlo_as_0118, mu = mu0(pt,H) of 1506.02660 (`runningscales 1`, i.e. scale_choice 3; corrected, I first wrote mu = Q_i per line). O(alpha_s^2) (2,0) +
 (0,2) exclusive part alone (`cs_only2 1`). Cutoffs 1e-4, 1e-5, 1e-6, with
 10 seeds x 5.2M points each (warm-up 2 x 200k, production 3 x 1.6M).
 

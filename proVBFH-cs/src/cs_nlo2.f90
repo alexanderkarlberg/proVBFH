@@ -42,6 +42,7 @@ module cs_nlo2
   implicit none
   private
   public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp, nlo2_test_limits
+  public :: nlo2_kp_dis, nlo2_ifin_dis
   public :: nlo2_ngroups, nlo2_ncount, nlo2_debug_is, nlo2_debug_is4, nlo2_debug_isg, nlo2_debug_point
   ! read by cs_exclusive's diagnostic dump only
   public :: mvar, mz, cur_w4
@@ -647,9 +648,7 @@ contains
   subroutine nlo2_kp(xi, pa, p1, p2, muf, fq, fg)
     real(dp), intent(in) :: xi, pa(0:3), p1(0:3), p2(0:3), muf
     real(dp), intent(out) :: fq(-6:6), fg
-    real(dp) :: kqf, kgf, lsc, lsg, lm, dl, zm, z, wz, l, f(-6:6), f1(-6:6), fsum
-    real(dp) :: qqp, qqr, gqr, qgr, ggp, ggr, qqd, ggd, s1, s2, sq
-    integer :: ip, iq, a
+    real(dp) :: kqf, kgf, lsc, lsg, s1, s2
     ! colour factors (as DISENT's COLFOR and VIRTHR)
     kqf = (1.5_dp*(CF - CA/2) + 0.5_dp*gam_g)/CF
     kgf = 1.5_dp
@@ -658,6 +657,39 @@ contains
     ! log(scale) + PQF = -sum_I T_I.T_a/T_a^2 ln(muf^2/(2 pa.pI))
     lsc = -((CA/2 - CF)/CF*s1 - CA/(2*CF)*s2)
     lsg = 0.5_dp*(s1 + s2)
+    call kp_core(xi, muf, kqf, kgf, lsc, lsg, fq, fg)
+  end subroutine nlo2_kp
+
+  ! K + P for a DIS line (stage 3): Born with incoming quark pa and
+  ! outgoing quark pb (colour: T_a.T_b = -CF), so kqf = -sum_I
+  ! T_I.T_a gamma_I/(T_I^2 T_a^2) = 3/2 and lsc = ln(muf^2/(2 pa.pb)).
+  ! fq(a') as in nlo2_kp (the line's contribution is alpha_s/(2 pi) B
+  ! fq(a') in place of B f_a'(xi)).
+  subroutine nlo2_kp_dis(xi, pa, pb, muf, fq)
+    real(dp), intent(in) :: xi, pa(0:3), pb(0:3), muf
+    real(dp), intent(out) :: fq(-6:6)
+    real(dp) :: lsc, fg
+    lsc = log(muf**2/(2*mdot(pa, pb)))
+    call kp_core(xi, muf, 1.5_dp, 1.5_dp, lsc, lsc, fq, fg)
+  end subroutine nlo2_kp_dis
+
+  ! finite part of the I operator of a DIS line (incoming quark pa,
+  ! outgoing quark pb), normalised as nlo2_ifin:
+  !   2 [CF L^2/2 + gamma_q L + gamma_q + K_q - CF pi^2/3], L = ln(mur2/(2 pa.pb))
+  real(dp) function nlo2_ifin_dis(pa, pb, mur2) result(res)
+    real(dp), intent(in) :: pa(0:3), pb(0:3), mur2
+    real(dp) :: l
+    l = log(mur2/(2*mdot(pa, pb)))
+    res = 2*(CF*l**2/2 + gam_q*l + gam_q + K_q - CF*pi**2/3)
+  end function nlo2_ifin_dis
+
+  ! the convolutions of nlo2_kp for given colour-dependent factors
+  subroutine kp_core(xi, muf, kqf, kgf, lsc, lsg, fq, fg)
+    real(dp), intent(in) :: xi, muf, kqf, kgf, lsc, lsg
+    real(dp), intent(out) :: fq(-6:6), fg
+    real(dp) :: lm, dl, zm, z, wz, l, f(-6:6), f1(-6:6), fsum
+    real(dp) :: qqp, qqr, gqr, qgr, ggp, ggr, qqd, ggd, sq
+    integer :: ip, iq, a
     ! the delta terms (with the integral of the plus distributions from 0 to xi)
     lm = log(1 - xi)
     dl = li2(1 - xi)
@@ -701,7 +733,7 @@ contains
     enddo
     sq = 0
     fq(0) = 0
-  end subroutine nlo2_kp
+  end subroutine kp_core
 
   ! dilogarithm Li2(x), 0 <= x <= 1
   real(dp) function li2(x)

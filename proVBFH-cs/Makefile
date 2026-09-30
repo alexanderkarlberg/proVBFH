@@ -57,7 +57,7 @@ PWGUTIL= powheginput.o newunit.o bra_ket_subroutines.o boostrot.o cs_powheg_tags
 ANAL= user_analysis.o pwhg_bookhist-multi.o fastjetfortran.o
 
 # this package
-CS= cs_glue.o cs_glue2.o cs_kinematics.o cs_dipoles.o cs_nlo2.o cs_exclusive.o cs_main.o
+CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 

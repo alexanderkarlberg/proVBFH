@@ -64,13 +64,18 @@ program provbfh_cs
   endif
   if (powheginput('#cs_estimate') > 0) excl_estimate = nint(powheginput('#cs_estimate'))
   if (powheginput('#cs_estimu') > 0) excl_estimu = nint(powheginput('#cs_estimu'))
-  if (excl_order >= 2 .or. powheginput('#cs_testlimits') >= 1 .or. powheginput('#cs_testvirt') == 1) then
+  if (excl_order >= 2 .or. powheginput('#cs_testlimits') >= 1 .or. powheginput('#cs_testvirt') == 1 &
+       & .or. powheginput('#cs_testborn2') == 1) then
      call cs_excl_setup2(.true.)
      call cpu_time(t1)
      write(6,'(a,f10.2,a)') ' proVBFH-cs stage-2 set-up: CPU ', t1 - t0, ' s'
   endif
   if (powheginput('#cs_testlimits') >= 1) then
      call cs_excl_testlimits(nint(powheginput('#cs_testlimits')))
+     stop
+  endif
+  if (powheginput('#cs_testborn2') == 1) then
+     call cs_excl_testborn2()
      stop
   endif
   if (powheginput('#cs_testvirt') == 1) then
