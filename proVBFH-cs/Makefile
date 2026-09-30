@@ -7,6 +7,8 @@
 # them.
 #
 # "make" builds proVBFH-cs; "make clean" removes object files.
+# "make ANALYSIS=hxswg136" builds proVBFH-cs-hxswg136 with the analysis
+# analysis/hxswg136_analysis.f instead of proVBFH's user_analysis.f.
 #############################################################################
 
 # external tools (hoppet, LHAPDF, FastJet), as configured for proVBFH
@@ -34,7 +36,7 @@ INCLUDE= -I$(SRC) -I$(PV)/src -I$(PV)/src/inclusive -I$(PV)/src/exclusive \
 	-I$(PWG) -I$(PWG)/include -I$(PV)/analysis -I$(HJJJ) -I$(HJJJ)/vbfnlo-files
 MODDIR= -J$(OBJ)
 
-VPATH= ./:$(SRC)/:$(PV)/src/inclusive/:$(PV)/src/exclusive/:$(PV)/src/exclusive/vbfnlo-files/
+VPATH= ./:$(SRC)/:analysis/:$(PV)/src/inclusive/:$(PV)/src/exclusive/:$(PV)/src/exclusive/vbfnlo-files/
 VPATH+=:$(PV)/analysis/:$(PWG)/:$(HJJJ)/:$(HJJJ)/vbfnlo-files/:$(OBJ)/
 
 # inclusive part (structure functions, VBF Born phase space), from proVBFH
@@ -53,15 +55,21 @@ VBFNLO= brakets_new.o coeff.o dotproducts.o flavorsum.o \
 # and boost routines, tag encoding; no integration machinery)
 PWGUTIL= powheginput.o newunit.o bra_ket_subroutines.o boostrot.o cs_powheg_tags.o
 
-# analysis, from proVBFH
+# analysis, from proVBFH, or analysis/<ANALYSIS>_analysis.f
+ifdef ANALYSIS
+ANAL= $(ANALYSIS)_analysis.o pwhg_bookhist-multi.o fastjetfortran.o
+EXE= proVBFH-cs-$(ANALYSIS)
+else
 ANAL= user_analysis.o pwhg_bookhist-multi.o fastjetfortran.o
+EXE= proVBFH-cs
+endif
 
 # this package
 CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 
-all: proVBFH-cs
+all: $(EXE)
 
 # unit tests of the kinematics (no matrix elements)
 tests/test_kinematics: cs_kinematics.o tests/test_kinematics.f90
@@ -76,7 +84,7 @@ tests/list_reals: $(OBJ) $(filter-out cs_main.o,$(OBJS)) tests/list_reals.f
 $(OBJ):
 	mkdir -p $(OBJ)
 
-proVBFH-cs: $(OBJ) $(OBJS)
+$(EXE): $(OBJ) $(OBJS)
 	$(FC) $(F90FLAGS) $(patsubst %,$(OBJ)/%,$(OBJS)) $(LIBS) $(CXXLIBS) -o $@
 
 %.o: %.f | $(OBJ)
