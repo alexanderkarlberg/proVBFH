@@ -263,3 +263,20 @@ h = 0 seeds of nnlo-p1506, including the 3- and 4-jet rates). The
 h = 0.2/0.5 NLO test on thserv22 runs at about half speed (the machine
 is loaded to 75 by others), so its CPU times are not comparable with the
 h = 0 run on thserv18; the 12 + 12 seed test on thserv19 is the clean one.
+
+### NLO h = 0.2, 0.5 (4 seeds, thserv22 at half speed) and a bias check (20:20)
+
+- h = 0.2 and 0.5 against h = 0 (4 seeds each; the CPU of the h > 0 runs
+  is inflated by about 40% by the load on thserv22): hard tails improve
+  as with h = 0.3 (ptHjj 100-1000 gain 6-9, mjj 3-5 TeV 3-11, ptj2
+  400-600 37-88, ptj2 1-2 TeV found); median gains 0.99 and 0.92 before
+  the CPU correction.
+- NLO exclusive total (ptj > 20) against the value the study's NLO
+  implies with our inclusive part (-0.20441 +- 0.00128): h = 0 +1.6
+  sigma, h = 0.2 +1.9, h = 0.3 (12 seeds) -1.4, h = 0.5 -1.1 (ptj > 30:
+  +0.8, +1.4, -2.2, -1.3). No sign of a bias of the hard channel, but the
+  4-seed errors are not reliable.
+- Exact check started: the line-NLO validation (cs_order 11, no cuts,
+  30 seeds x 3.3M, as `stage3-validnlo`: -0.102618 +- 0.00033 against
+  the structure functions' -0.102623 +- 0.000068) with h = 0.3:
+  `runs/stage3-validnlo-h03`, thserv09.
