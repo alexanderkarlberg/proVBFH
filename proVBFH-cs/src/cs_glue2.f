@@ -136,3 +136,11 @@ c on the radiating line and the vertex correction of the other line
       call cs_clear_borntags
       st_muren2 = save
       end
+c---------------------------------------------------------------------
+c number of real entries (after cs_init_reals)
+      integer function cs_nreal()
+      implicit none
+      include 'nlegborn.h'
+      include 'pwhg_flst.h'
+      cs_nreal = flst_nreal
+      end

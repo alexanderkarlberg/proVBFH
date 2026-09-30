@@ -39,13 +39,24 @@ module cs_exclusive
   implicit none
   private
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
-  public :: excl_order, excl_only2, excl_dump2, dump2_min, cs_excl_replay, cs_excl_testborn2, cs_excl_setup2, cs_excl_testlimits, cs_excl_testvirt
+  public :: excl_order, excl_only2, excl_no20, excl_dump2, dump2_min, cs_excl_replay, cs_excl_testborn2, cs_excl_testlines, cs_excl_testlines11, cs_excl_setup2, cs_excl_testlimits, cs_excl_testvirt
 
   ! 1: (1,0) + (0,1) (NLO); 2: also (2,0) + (0,2)
   integer, save :: excl_order = 1
   ! with excl_order = 2: keep only the (2,0) + (0,2) weights (tests of the
   ! O(alpha_s^2) part alone: cutoff independence, variance)
   logical, save :: excl_only2 = .false.
+  ! with excl_order = 3: leave out the (2,0) + (0,2) weights (tests of the
+  ! (1,1) part alone)
+  logical, save :: excl_no20 = .false.
+  ! stage 3: for each pair of line states (1..8: q -> q g of class cls(s);
+  ! 9..12: g -> q qbar of gcls(s-8)) the class-12 real entry, the leg of
+  ! line 1's extra parton in it (6 or 7), and a normalisation factor
+  integer, save :: e3_entry(12,12) = 0, e3_leg1(12,12) = 0
+  real(dp), save :: e3_fac(12,12) = 1
+  ! g -> q qbar on a line with the antiquark in the outgoing slot (4 or 5)
+  ! and the quark as the extra parton (the NC gg entries have this on line 1)
+  logical, save :: e3_swap(2,12,12) = .false.
   ! with excl_order = 2: write points whose signed contribution to the
   ! first histogram (sigma with the inclusive cuts) exceeds dump2_min pb
   ! to unit 79 (file cs_dump2.dat)
@@ -202,6 +213,157 @@ contains
     write(6,'(a,es10.2)') ' testborn2: worst |ratio - 1| at delta 1e-7:', worst
   end subroutine cs_excl_testborn2
 
+  ! stage 3 check: the line-level DIS dipoles against the H+3j tree in the
+  ! line's singular limits (x -> 1 at u = 0.3; u -> 0 at x = 0.6; for
+  ! g -> q qbar also u -> 1), ratio R/(sum of dipoles) -> 1, for every
+  ! class pair, both lines, at the stage-2 test Born points
+  subroutine cs_excl_testlines()
+    use cs_dipoles, only: split_if, h_if_qg, h_fi_qg
+    real(dp) :: pb(0:3,5), p6(0:3,6), pt(0:3), pk(0:3), pa(0:3), m1, m2, me, d, x, u, lam, r(3), worst(3)
+    real(dp) :: xs, us, kq, kg, twopi
+    real(dp), external :: cs_born2
+    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
+    integer :: it, i1, i2, line, id, ilim, bflav(6), b5(5), ig
+    character(len=12) :: lname(3) = ['x -> 1      ', 'u -> 0      ', 'u -> 1      ']
+    twopi = 8*atan(1.0_dp)
+    worst = 0
+    do it = 1, tb_n
+       pb = tb_pb(:,:,it)
+       do line = 1, 2
+          ! quark-initiated classes
+          do i1 = 1, ncls
+             do i2 = 1, ncls
+                if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
+                bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
+                do ilim = 1, 2
+                   do id = 1, 3
+                      lam = 10.0_dp**(-1 - 2*id)
+                      xs = merge(1 - lam, 0.6_dp, ilim == 1); us = merge(0.3_dp, lam, ilim == 1)
+                      call split_if(pb(:,3+line), pb(:,line), xs, us, 0.7_dp, pt, pk, pa)
+                      p6(:,1:5) = pb; p6(:,line) = pa; p6(:,3+line) = pk; p6(:,6) = pt
+                      call cs_hjjj_lines(p6, bflav, m1, m2)
+                      me = merge(m1, m2, line == 1)
+                      x = 1 - mdot(pt, pk)/mdot(pa, pt + pk); u = mdot(pa, pt)/mdot(pa, pt + pk)
+                      kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
+                      d = kq*cs_born2(pb, bflav(1:5))
+                      r(id) = me/d
+                   enddo
+                   worst(ilim) = max(worst(ilim), abs(r(3) - 1))
+                   if (it == 1 .and. (i1 <= 2 .or. i1 >= 5)) write(6,'(a,i2,a,5i4,a,a,a,3f12.7)') ' testlines line', line, &
+                        & ' q flav', bflav(1:5), '  ', lname(ilim), ' R/D (lam 1e-3, 1e-5, 1e-7):', r
+                enddo
+             enddo
+          enddo
+          ! gluon-initiated classes: g -> q (pk) qbar (pt)
+          do ig = 1, ngcls
+             do i2 = 1, ncls
+                if (.not. compatible(gcls(ig)%w, cls(i2)%w)) cycle
+                if (line == 1) then
+                   bflav = [0, cls(i2)%a, 25, gcls(ig)%q, cls(i2)%b, gcls(ig)%qb]
+                else
+                   bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(ig)%q, gcls(ig)%qb]
+                endif
+                do ilim = 2, 3
+                   do id = 1, 3
+                      lam = 10.0_dp**(-1 - 2*id)
+                      us = merge(lam, 1 - lam, ilim == 2)
+                      call split_if(pb(:,3+line), pb(:,line), 0.6_dp, us, 0.7_dp, pt, pk, pa)
+                      p6(:,1:5) = pb; p6(:,line) = pa; p6(:,3+line) = pk; p6(:,6) = pt
+                      call cs_hjjj_lines(p6, bflav, m1, m2)
+                      me = merge(m1, m2, line == 1)
+                      x = 1 - mdot(pt, pk)/mdot(pa, pt + pk)
+                      kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
+                      b5 = [cls(i2)%a, cls(i2)%a, 25, cls(i2)%b, cls(i2)%b]
+                      b5(line) = -gcls(ig)%qb; b5(3+line) = gcls(ig)%q
+                      d = kg/(2*mdot(pa, pt))*cs_born2(pb, b5)
+                      b5(line) = -gcls(ig)%q; b5(3+line) = gcls(ig)%qb
+                      d = d + kg/(2*mdot(pa, pk))*cs_born2(pb, b5)
+                      r(id) = me/d
+                   enddo
+                   worst(ilim) = max(worst(ilim), abs(r(3) - 1))
+                   if (it == 1) write(6,'(a,i2,a,6i4,a,a,a,3f12.7)') ' testlines line', line, &
+                        & ' g flav', bflav, '  ', lname(ilim), ' R/D (lam 1e-3, 1e-5, 1e-7):', r
+                enddo
+             enddo
+          enddo
+       enddo
+    enddo
+    write(6,'(a,3es10.2)') ' testlines: worst |R/D - 1| at lam 1e-7 (x -> 1, u -> 0, u -> 1):', worst
+  end subroutine cs_excl_testlines
+
+  ! stage 3 check: the class-12 H+4j (both lines radiated) against the H+3j
+  ! (line lm radiated at a moderate point) times the other line's dipoles,
+  ! with the other line in its singular limits; ratio -> 1 for every pair
+  ! of line states with an entry (fixes e3_fac)
+  subroutine cs_excl_testlines11()
+    use cs_dipoles, only: split_if, h_if_qg, h_fi_qg
+    real(dp) :: pb(0:3,5), p6(0:3,6,2), pe(0:3,7), pt(0:3), pk(0:3), pa(0:3), me, m1, m2, d, x, u, lam, r(3)
+    real(dp) :: us, xs, kq, kg, twopi, me3(8), worst, p7t(0:3,7)
+    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
+    integer :: lm, lt, s1, s2, sm, st, id, ilim, j, l1, ib, jq, jqb, ig
+    character(len=8) :: lname(3) = ['x -> 1  ', 'u -> 0  ', 'u -> 1  ']
+    twopi = 8*atan(1.0_dp)
+    worst = 0
+    pb = tb_pb(:,:,1)
+    do lm = 1, 2              ! the line at a moderate point
+       lt = 3 - lm            ! the line in its singular limits
+       call split_if(pb(:,3+lm), pb(:,lm), 0.7_dp, 0.4_dp, 0.9_dp, pt, pk, pa)
+       p6(:,1:5,lm) = pb; p6(:,lm,lm) = pa; p6(:,3+lm,lm) = pk; p6(:,6,lm) = pt
+       do s1 = 1, ncls + ngcls
+          do s2 = 1, ncls + ngcls
+             j = e3_entry(s1,s2)
+             if (j == 0) cycle
+             sm = merge(s1, s2, lm == 1); st = merge(s2, s1, lm == 1)
+             ! the H+3j with line lm radiated (state sm) and line lt at Born level (class ib)
+             me3 = 0
+             do ib = 1, ncls
+                if (.not. compatible(state_w(sm), cls(ib)%w)) cycle
+                call cs_hjjj_lines(p6(:,:,lm), h3_flav(lm, sm, ib), m1, m2)
+                me3(ib) = merge(m1, m2, lm == 1)
+             enddo
+             do ilim = 1, 3
+                if (st <= ncls .and. ilim == 3) cycle
+                if (st > ncls .and. ilim == 1) cycle
+                do id = 1, 3
+                   lam = 10.0_dp**(-1 - 2*id)
+                   xs = merge(1 - lam, 0.6_dp, ilim == 1)
+                   us = 0.3_dp
+                   if (ilim == 2) us = lam
+                   if (ilim == 3) us = 1 - lam
+                   call split_if(pb(:,3+lt), pb(:,lt), xs, us, 0.7_dp, pt, pk, pa)
+                   p6(:,1:5,lt) = pb; p6(:,lt,lt) = pa; p6(:,3+lt,lt) = pk; p6(:,6,lt) = pt
+                   ! the H+4j in the entry's leg order
+                   p7t(:,1) = p6(:,1,1); p7t(:,2) = p6(:,2,2); p7t(:,3) = pb(:,3)
+                   p7t(:,4) = p6(:,4,1); p7t(:,5) = p6(:,5,2); p7t(:,6) = p6(:,6,1); p7t(:,7) = p6(:,6,2)
+                   call e3_momenta(s1, s2, p7t, pe)
+                   call cs_real_me(j, pe, me)
+                   me = me*e3_fac(s1,s2)
+                   x = 1 - mdot(pt, pk)/mdot(pa, pt + pk); u = mdot(pa, pt)/mdot(pa, pt + pk)
+                   if (st <= ncls) then
+                      kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
+                      d = kq*me3(st)
+                   else
+                      ig = st - ncls
+                      kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
+                      jq = 0; jqb = 0
+                      do ib = 1, ncls
+                         if (cls(ib)%a == -gcls(ig)%qb .and. cls(ib)%b == gcls(ig)%q) jq = ib
+                         if (cls(ib)%a == -gcls(ig)%q .and. cls(ib)%b == gcls(ig)%qb) jqb = ib
+                      enddo
+                      d = kg/(2*mdot(pa, pt))*me3(jq) + kg/(2*mdot(pa, pk))*me3(jqb)
+                   endif
+                   r(id) = me/d
+                enddo
+                worst = max(worst, abs(r(3) - 1))
+                write(6,'(a,i2,a,2i3,a,i5,a,a,a,3f12.7)') ' testlines11 limit line', lt, ' states', s1, s2, &
+                     & ' entry', j, '  ', lname(ilim), ' R4/(R3 D) (lam 1e-3,1e-5,1e-7):', r
+             enddo
+          enddo
+       enddo
+    enddo
+    write(6,'(a,es10.2)') ' testlines11: worst |ratio - 1| at lam 1e-7:', worst
+  end subroutine cs_excl_testlines11
+
   ! replay: the points listed in cs_replay.dat (20 random numbers each)
   subroutine cs_excl_replay()
     real(dp) :: xr(20), r
@@ -232,6 +394,8 @@ contains
     logical :: ok(2), need(2), pass(2), passB
     logical :: okr(2), dok(6,2), needr(2), passr(2), passd(6,2)
     real(dp) :: prt(0:3,7), pdt(0:3,6,6), csig, dmv(6,2), dmz(6,2), dw4(2)
+    real(dp) :: p7(0:3,7), e12(2), e3
+    logical :: ok3, need3, pass3
     logical :: dokt(6), okt
     integer :: m
     logical, external :: cs_passes
@@ -293,23 +457,43 @@ contains
        cs_excl_dsigma = line_nlo_point(pb, [x1, x2], fB, p6, ok, wrad, fE, mur, muf, [Q1, Q2], as, common)
        return
     endif
+    ! stage-3 validation (cs_order 13): the complete (1,1) term, signed, no
+    ! events, against the product of the lines' O(alpha_s) structure functions
+    if (excl_order == 13) then
+       cs_excl_dsigma = nlo11_valid_point(pb, [x1, x2], fB, p6, ok, wrad, fE, mur, muf, [Q1, Q2], common)
+       return
+    endif
 
     ! four-parton events and their dipole counterevents
     okr = .false.; dok = .false.
-    if (excl_order >= 2) then
+    if (excl_order >= 2 .and. .not. excl_no20) then
        do line = 1, 2
           call nlo2_real_kin(line, pb, [x1, x2], xrand(14:20), excl_cutoff, pr(:,:,line), &
                & pd(:,:,:,line), dok(:,line), okr(line))
           if (.not. ok(line)) okr(line) = .false.
        enddo
     endif
+    ! stage 3: the (1,1) four-parton event, both lines radiated (their
+    ! three-parton points; proVBFH order: 4, 5 outgoing quarks, 6, 7 the
+    ! extra partons of lines 1, 2)
+    ok3 = excl_order >= 3 .and. ok(1) .and. ok(2)
+    if (ok3) then
+       p7(:,1) = p6(:,1,1); p7(:,2) = p6(:,2,2); p7(:,3) = pb(:,3)
+       p7(:,4) = p6(:,4,1); p7(:,5) = p6(:,5,2); p7(:,6) = p6(:,6,1); p7(:,7) = p6(:,6,2)
+    endif
 
     ! cut decisions before the matrix elements: a line's weight is needed
     ! only if its event or the Born event passes
     need = ok
     needr = okr
+    need3 = ok3
+    pass3 = .false.
     if (excl_phspcuts) then
        passB = cs_passes(5, pb, .not. excl_fill)
+       if (ok3) then
+          pass3 = cs_passes(7, p7, .not. excl_fill)
+          need3 = pass3 .or. passB
+       endif
        do line = 1, 2
           if (ok(line)) pass(line) = cs_passes(6, p6(:,:,line), .not. excl_fill)
           need(line) = ok(line) .and. (pass(line) .or. passB)
@@ -322,7 +506,7 @@ contains
              needr(line) = passr(line) .or. any(passd(:,line)) .or. passB
           endif
        enddo
-       if (.not. any(need) .and. .not. any(needr)) then
+       if (.not. any(need) .and. .not. any(needr) .and. .not. need3) then
           excl_stats(4) = excl_stats(4) + 1
           return
        endif
@@ -416,7 +600,7 @@ contains
 
     ! (2,0) and (0,2)
     wv = 0; wr = 0; wd = 0; dmv = 0; dmz = 0; dw4 = 0
-    if (excl_order >= 2) then
+    if (excl_order >= 2 .and. .not. excl_no20) then
        do line = 1, 2
           if (need(line)) wv(line) = virt_point(line, p6(:,:,line), fB, fE(:,line), xi3(line), &
                & mur(line), muf(line), merge(Q2, Q1, line == 1))*common*wrad(line)*as(line)**2
@@ -433,12 +617,24 @@ contains
           endif
        enddo
     endif
+    ! (1,1): E1, E2 (a line radiated, the other's O(alpha_s) pieces) and E3
+    e12 = 0; e3 = 0
+    if (excl_order >= 3) then
+       if (need(1)) e12(1) = nlo11_e12(1, pb, [x1, x2], fB, p6(:,:,1), fE(:,1), wrad(1), ok(2), &
+            & p6(:,:,2), fE(:,2), wrad(2), mur, muf, [Q1, Q2], common)
+       if (need(2)) e12(2) = nlo11_e12(2, pb, [x1, x2], fB, p6(:,:,2), fE(:,2), wrad(2), ok(1), &
+            & p6(:,:,1), fE(:,1), wrad(1), mur, muf, [Q1, Q2], common)
+       if (need3) e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7)
+    endif
+    if (excl_no20) then
+       wv = 0; wr = 0; wd = 0
+    endif
     if (excl_only2) w = 0
     if (excl_flavcheck > 0) then
        excl_flavcheck = excl_flavcheck - 1
        call flavour_check(p6, need, fB, fE, common*wrad*as, w)
     endif
-    if (any(w /= w) .or. any(wv /= wv) .or. any(wr /= wr) .or. any(wd /= wd)) then
+    if (any(w /= w) .or. any(wv /= wv) .or. any(wr /= wr) .or. any(wd /= wd) .or. any(e12 /= e12) .or. e3 /= e3) then
        excl_stats(3) = excl_stats(3) + 1
        return
     endif
@@ -461,9 +657,10 @@ contains
     endif
     if (excl_dump2 .and. excl_phspcuts .and. excl_fill) then
        csig = 0
-       if (passB) csig = -(sum(w) + sum(wv) + sum(wr) + sum(wd))
+       if (passB) csig = -(sum(w) + sum(wv) + sum(wr) + sum(wd) + sum(e12) + e3)
+       if (need3 .and. pass3) csig = csig + e3
        do line = 1, 2
-          if (need(line) .and. pass(line)) csig = csig + w(line) + wv(line)
+          if (need(line) .and. pass(line)) csig = csig + w(line) + wv(line) + e12(line)
           if (needr(line)) then
              if (passr(line)) csig = csig + wr(line)
              do m = 1, 6
@@ -479,7 +676,7 @@ contains
     endif
     if (excl_fill) then
        do line = 1, 2
-          if (need(line)) call cs_analysis(6, p6(:,:,line), (w(line) + wv(line))*vegas_ncall*vegas_weight)
+          if (need(line)) call cs_analysis(6, p6(:,:,line), (w(line) + wv(line) + e12(line))*vegas_ncall*vegas_weight)
           if (needr(line)) then
              call cs_analysis(7, pr(:,:,line), wr(line)*vegas_ncall*vegas_weight)
              do m = 1, 6
@@ -487,9 +684,10 @@ contains
              enddo
           endif
        enddo
-       call cs_analysis(5, pb, -(sum(w) + sum(wv) + sum(wr) + sum(wd))*vegas_ncall*vegas_weight)
+       if (need3) call cs_analysis(7, p7, e3*vegas_ncall*vegas_weight)
+       call cs_analysis(5, pb, -(sum(w) + sum(wv) + sum(wr) + sum(wd) + sum(e12) + e3)*vegas_ncall*vegas_weight)
     endif
-    cs_excl_dsigma = abs(w(1) + wv(1)) + abs(w(2) + wv(2)) + abs(wr(1) + sum(wd(:,1))) &
+    cs_excl_dsigma = abs(w(1) + wv(1) + e12(1)) + abs(w(2) + wv(2) + e12(2)) + abs(e3) + abs(wr(1) + sum(wd(:,1))) &
          & + abs(wr(2) + sum(wd(:,2)))
     if (excl_order >= 2 .and. cs_excl_dsigma*vegas_weight > spike_min .and. .not. excl_verbose) then
        write(80,'(es12.4,6es11.3,2x,20es24.16)') cs_excl_dsigma*vegas_weight, (w + wv)*vegas_weight, &
@@ -497,6 +695,68 @@ contains
        flush(80)
     endif
   end function excl_point
+
+  ! stage 3 validation: the complete (1,1) term at a point,
+  !   sum_{c1,c2} B2 (A1 - J1 D1)(A2 - J2 D2) + E1 + E2 + E3,
+  ! A_i: line i's Born-level O(alpha_s) factor [(V + I) f + (K + P) (x) f]
+  ! per class, D_i: its dipoles per Born class at its three-parton point
+  ! (J_i its radiation weight); the first sum holds the Born-kinematics
+  ! terms that the projection removes from the exclusive part
+  real(dp) function nlo11_valid_point(pb, xb, fB, p6, ok, wrad, fE, mur, muf, Qs, common) result(tot)
+    use cs_dipoles, only: h_if_qg, h_fi_qg
+    real(dp), intent(in) :: pb(0:3,5), xb(2), fB(-6:6,2), p6(0:3,6,2), wrad(2), fE(-6:6,2)
+    real(dp), intent(in) :: mur(2), muf(2), Qs(2), common
+    logical, intent(in) :: ok(2)
+    real(dp), external :: cs_born2, hoppetAlphaS
+    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
+    real(dp) :: twopi, lo, vi, fq(-6:6), xa(8,2), x, u, pa(0:3), pk(0:3), pt(0:3), kq, kg, b2, e3, p7(0:3,7)
+    integer :: l, c, c1, c2, ig, jq, jqb, ib
+    twopi = 8*atan(1.0_dp)
+    xa = 0
+    do l = 1, 2
+       lo = log(mur(l)**2/Qs(l)**2)
+       vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,l), pb(:,3+l), mur(l)**2)/twopi
+       call nlo2_kp_dis(xb(l), pb(:,l), pb(:,3+l), muf(l), fq)
+       do c = 1, ncls
+          xa(c,l) = vi*pdfsum(fB(:,l), cls(c)) + pdfsum(fq, cls(c))/twopi
+       enddo
+       if (.not. ok(l)) cycle
+       pa = p6(:,l,l); pk = p6(:,3+l,l); pt = p6(:,6,l)
+       x = 1 - mdot(pt, pk)/mdot(pa, pt + pk)
+       u = mdot(pa, pt)/mdot(pa, pt + pk)
+       kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
+       kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
+       do c = 1, ncls
+          xa(c,l) = xa(c,l) - wrad(l)*kq*pdfsum(fE(:,l), cls(c))
+       enddo
+       do ig = 1, ngcls
+          jq = 0; jqb = 0
+          do ib = 1, ncls
+             if (cls(ib)%a == -gcls(ig)%qb .and. cls(ib)%b == gcls(ig)%q) jq = ib
+             if (cls(ib)%a == -gcls(ig)%q .and. cls(ib)%b == gcls(ig)%qb) jqb = ib
+          enddo
+          xa(jq,l) = xa(jq,l) - wrad(l)*kg/(2*mdot(pa, pt))*gcls(ig)%n*fE(0,l)
+          xa(jqb,l) = xa(jqb,l) - wrad(l)*kg/(2*mdot(pa, pk))*gcls(ig)%n*fE(0,l)
+       enddo
+    enddo
+    tot = 0
+    do c1 = 1, ncls
+       do c2 = 1, ncls
+          if (.not. compatible(cls(c1)%w, cls(c2)%w)) cycle
+          b2 = cs_born2(pb, [cls(c1)%a, cls(c2)%a, 25, cls(c1)%b, cls(c2)%b])
+          tot = tot + b2*xa(c1,1)*xa(c2,2)
+       enddo
+    enddo
+    tot = tot*common*hoppetAlphaS(mur(1))*hoppetAlphaS(mur(2))
+    if (ok(1)) tot = tot + nlo11_e12(1, pb, xb, fB, p6(:,:,1), fE(:,1), wrad(1), ok(2), &
+         & p6(:,:,2), fE(:,2), wrad(2), mur, muf, Qs, common)
+    if (ok(2)) tot = tot + nlo11_e12(2, pb, xb, fB, p6(:,:,2), fE(:,2), wrad(2), ok(1), &
+         & p6(:,:,1), fE(:,1), wrad(1), mur, muf, Qs, common)
+    if (ok(1) .and. ok(2)) then
+       e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7)
+       tot = tot + e3
+    endif
+  end function nlo11_valid_point
 
   ! stage 3: the O(alpha_s) correction of each line (the other at Born
   ! level) from the line's Catani-Seymour pieces, for the validation
@@ -704,7 +964,216 @@ contains
     enddo
     if (tb_n < 2) stop 'cs_excl_setup2: no test points'
     call nlo2_init(tb_pb, tb_xb, excl_cutoff, verbose)
+    call nlo11_init()
   end subroutine cs_excl_setup2
+
+  ! stage 3: map pairs of line states to the class-12 real entries
+  ! (tags 1, 2 on the lines' legs 1/4 and 2/5; the two extra partons at
+  ! legs 6, 7 with tags 1 and 2 in either order)
+  subroutine nlo11_init()
+    integer, external :: cs_nreal
+    integer :: j, flav(7), tags(7), l1, s1, s2, nf, nmiss
+    logical :: sw1, sw2
+    e3_entry = 0; e3_leg1 = 0; e3_fac = 1
+    do j = 1, cs_nreal()
+       call cs_get_real(j, flav, tags)
+       if (tags(1) /= 1 .or. tags(2) /= 2 .or. tags(4) /= 1 .or. tags(5) /= 2) cycle
+       if (tags(6) == 1 .and. tags(7) == 2) then
+          l1 = 6
+       elseif (tags(6) == 2 .and. tags(7) == 1) then
+          l1 = 7
+       else
+          cycle
+       endif
+       s1 = line_state(flav(1), flav(4), flav(l1), sw1)
+       s2 = line_state(flav(2), flav(5), flav(13 - l1), sw2)
+       if (s1 == 0 .or. s2 == 0) cycle
+       if (e3_entry(s1,s2) /= 0) cycle
+       e3_entry(s1,s2) = j; e3_leg1(s1,s2) = l1
+       e3_swap(:,s1,s2) = [sw1, sw2]
+    enddo
+    ! normalisation: the tagged entries give the full matrix element for
+    ! the two lines' extra partons (no symmetry factor for two gluons on
+    ! different lines; checked by cs_testlines11, which gave 2 with a
+    ! factor 2 -- my first guess of a 1/2 in setreal was wrong)
+    e3_fac = 1
+    nf = 0; nmiss = 0
+    do s1 = 1, ncls + ngcls
+       do s2 = 1, ncls + ngcls
+          if (.not. compatible(state_w(s1), state_w(s2))) cycle
+          if (e3_entry(s1,s2) > 0) then
+             nf = nf + 1
+          else
+             nmiss = nmiss + 1
+             write(6,'(a,2i3)') ' nlo11_init: no class-12 entry for line states', s1, s2
+          endif
+       enddo
+    enddo
+    write(6,'(a,i4,a,i4)') ' nlo11_init: class-12 entries for pairs of line states:', nf, ', missing:', nmiss
+  end subroutine nlo11_init
+
+  ! state of a line from its incoming, outgoing and extra flavour
+  integer function line_state(a, b, e, swap) result(st)
+    integer, intent(in) :: a, b, e
+    logical, intent(out) :: swap
+    integer :: i
+    st = 0; swap = .false.
+    if (e == 0 .and. a /= 0) then
+       do i = 1, ncls
+          if (cls(i)%a == a .and. cls(i)%b == b) st = i
+       enddo
+    elseif (a == 0) then
+       do i = 1, ngcls
+          if (gcls(i)%q == b .and. gcls(i)%qb == e) st = ncls + i
+       enddo
+       if (st == 0) then
+          do i = 1, ngcls
+             if (gcls(i)%q == e .and. gcls(i)%qb == b) then
+                st = ncls + i; swap = .true.
+             endif
+          enddo
+       endif
+    endif
+  end function line_state
+
+  integer function state_w(st)
+    integer, intent(in) :: st
+    if (st <= ncls) then
+       state_w = cls(st)%w
+    else
+       state_w = gcls(st - ncls)%w
+    endif
+  end function state_w
+
+  ! PDF factor of a radiating line in state st at its momentum fraction
+  real(dp) function state_pdf(st, f)
+    integer, intent(in) :: st
+    real(dp), intent(in) :: f(-6:6)
+    if (st <= ncls) then
+       state_pdf = pdfsum(f, cls(st))
+    else
+       state_pdf = gcls(st - ncls)%n*f(0)
+    endif
+  end function state_pdf
+
+  ! H+3j flavours (cs_glue order) for line l in state st and the other
+  ! line at Born level in class ib
+  function h3_flav(l, st, ib) result(bflav)
+    integer, intent(in) :: l, st, ib
+    integer :: bflav(6)
+    bflav = [cls(ib)%a, cls(ib)%a, 25, cls(ib)%b, cls(ib)%b, 0]
+    if (st <= ncls) then
+       bflav(l) = cls(st)%a; bflav(3+l) = cls(st)%b
+    else
+       bflav(l) = 0; bflav(3+l) = gcls(st - ncls)%q; bflav(6) = gcls(st - ncls)%qb
+    endif
+  end function h3_flav
+
+  ! stage 3, events E1 (l = 1) and E2 (l = 2): line l radiated (its
+  ! three-parton point p6l, PDFs fEl at its momentum fraction), the other
+  ! line o at its Born with its O(alpha_s) pieces: (V + I) f + (K + P) (x) f
+  ! at the Born, minus its dipoles at its own three-parton point (if
+  ! oko; p6o, fEo, wrado). Weight in pb, without the VEGAS weight.
+  real(dp) function nlo11_e12(l, pb, xb, fB, p6l, fEl, wradl, oko, p6o, fEo, wrado, mur, muf, Qs, common) result(w)
+    use cs_dipoles, only: h_if_qg, h_fi_qg
+    integer, intent(in) :: l
+    real(dp), intent(in) :: pb(0:3,5), xb(2), fB(-6:6,2), p6l(0:3,6), fEl(-6:6), wradl, p6o(0:3,6), fEo(-6:6), wrado
+    real(dp), intent(in) :: mur(2), muf(2), Qs(2), common
+    logical, intent(in) :: oko
+    real(dp), external :: hoppetAlphaS
+    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
+    real(dp) :: twopi, lo, vi, fq(-6:6), me(8), m1, m2, pdfl, wb, wd, x, u, pa(0:3), pk(0:3), pt(0:3), kq, kg
+    integer :: o, st, ib, ig, b5(5), jq, jqb
+    twopi = 8*atan(1.0_dp)
+    o = 3 - l
+    lo = log(mur(o)**2/Qs(o)**2)
+    vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,o), pb(:,3+o), mur(o)**2)/twopi
+    call nlo2_kp_dis(xb(o), pb(:,o), pb(:,3+o), muf(o), fq)
+    if (oko) then
+       pa = p6o(:,o); pk = p6o(:,3+o); pt = p6o(:,6)
+       x = 1 - mdot(pt, pk)/mdot(pa, pt + pk)
+       u = mdot(pa, pt)/mdot(pa, pt + pk)
+       kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
+       kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
+    endif
+    wb = 0; wd = 0
+    do st = 1, ncls + ngcls
+       pdfl = state_pdf(st, fEl)
+       if (pdfl == 0) cycle
+       me = 0
+       do ib = 1, ncls
+          if (.not. compatible(state_w(st), cls(ib)%w)) cycle
+          call cs_hjjj_lines(p6l, h3_flav(l, st, ib), m1, m2)
+          me(ib) = merge(m1, m2, l == 1)
+          wb = wb + me(ib)*pdfl*(vi*pdfsum(fB(:,o), cls(ib)) + pdfsum(fq, cls(ib))/twopi)
+          if (oko) wd = wd - kq*me(ib)*pdfl*pdfsum(fEo, cls(ib))*wrado
+       enddo
+       if (.not. oko) cycle
+       ! the other line gluon-initiated: its two IF dipoles, Born -qbar -> q
+       ! (antiquark emitted, pt) and -q -> qbar (quark emitted, pk)
+       do ig = 1, ngcls
+          if (.not. compatible(state_w(st), gcls(ig)%w)) cycle
+          jq = 0; jqb = 0
+          do ib = 1, ncls
+             if (cls(ib)%a == -gcls(ig)%qb .and. cls(ib)%b == gcls(ig)%q) jq = ib
+             if (cls(ib)%a == -gcls(ig)%q .and. cls(ib)%b == gcls(ig)%qb) jqb = ib
+          enddo
+          if (jq == 0 .or. jqb == 0) stop 'nlo11_e12: Born classes of a gluon class not found'
+          wd = wd - (kg/(2*mdot(pa, pt))*me(jq) + kg/(2*mdot(pa, pk))*me(jqb))*pdfl*gcls(ig)%n*fEo(0)*wrado
+       enddo
+    enddo
+    w = (wb + wd)*common*wradl*hoppetAlphaS(mur(l))*hoppetAlphaS(mur(o))
+  end function nlo11_e12
+
+  ! stage 3, event E3: both lines radiated (the class-12 H+4j at the
+  ! two three-parton points); p7: proVBFH order (1, 2 incoming, 3 Higgs,
+  ! 4, 5 outgoing quarks of lines 1, 2, 6, 7 the extra partons of lines
+  ! 1, 2). Weight in pb, without the VEGAS weight.
+  real(dp) function nlo11_e3(pb, p6, fE, wrad, mur, common, p7) result(w)
+    real(dp), intent(in) :: pb(0:3,5), p6(0:3,6,2), fE(-6:6,2), wrad(2), mur(2), common
+    real(dp), intent(out) :: p7(0:3,7)
+    real(dp), external :: hoppetAlphaS
+    real(dp) :: pe(0:3,7), me, p1, p2
+    integer :: s1, s2, j, l1
+    p7(:,1) = p6(:,1,1); p7(:,2) = p6(:,2,2); p7(:,3) = pb(:,3)
+    p7(:,4) = p6(:,4,1); p7(:,5) = p6(:,5,2); p7(:,6) = p6(:,6,1); p7(:,7) = p6(:,6,2)
+    w = 0
+    do s1 = 1, ncls + ngcls
+       p1 = state_pdf(s1, fE(:,1))
+       if (p1 == 0) cycle
+       do s2 = 1, ncls + ngcls
+          j = e3_entry(s1,s2)
+          if (j == 0) cycle
+          p2 = state_pdf(s2, fE(:,2))
+          if (p2 == 0) cycle
+          call e3_momenta(s1, s2, p7, pe)
+          call cs_real_me(j, pe, me)
+          w = w + e3_fac(s1,s2)*me*p1*p2
+       enddo
+    enddo
+    w = w*common*wrad(1)*wrad(2)*hoppetAlphaS(mur(1))*hoppetAlphaS(mur(2))
+  end function nlo11_e3
+
+  ! momenta of the class-12 entry of the line states (s1, s2) from p7
+  ! (proVBFH order: 4, 5 outgoing quarks, 6, 7 extra partons of lines 1, 2)
+  subroutine e3_momenta(s1, s2, p7, pe)
+    integer, intent(in) :: s1, s2
+    real(dp), intent(in) :: p7(0:3,7)
+    real(dp), intent(out) :: pe(0:3,7)
+    integer :: l1
+    l1 = e3_leg1(s1,s2)
+    pe(:,1:3) = p7(:,1:3)
+    if (e3_swap(1,s1,s2)) then
+       pe(:,4) = p7(:,6); pe(:,l1) = p7(:,4)
+    else
+       pe(:,4) = p7(:,4); pe(:,l1) = p7(:,6)
+    endif
+    if (e3_swap(2,s1,s2)) then
+       pe(:,5) = p7(:,7); pe(:,13-l1) = p7(:,5)
+    else
+       pe(:,5) = p7(:,5); pe(:,13-l1) = p7(:,7)
+    endif
+  end subroutine e3_momenta
 
   ! limit tests of the real matrix elements against their dipoles
   subroutine cs_excl_testlimits(mode)

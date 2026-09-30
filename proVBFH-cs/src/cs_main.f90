@@ -22,6 +22,7 @@ program provbfh_cs
   use cs_exclusive
   use cs_nlo2, only: nlo2_ncount, nlo2_ncut
   use cs_dipoles, only: spin_avg
+  use matrix_element, only: incl_only11
   implicit none
   integer, parameter :: maxdim = 20
   integer :: ndim
@@ -40,6 +41,7 @@ program provbfh_cs
   if (powheginput('#cs_part') > 0) part = nint(powheginput('#cs_part'))
 
   if (part == 1) then
+     if (powheginput('#incl_only11') == 1) incl_only11 = .true.
      call run_inclusive()
      call cpu_time(t1)
      write(6,'(a,f12.1,a)') ' proVBFH-cs inclusive part: CPU ', t1 - t0, ' s'
@@ -57,6 +59,7 @@ program provbfh_cs
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.
   if (powheginput('#cs_order') > 0) excl_order = nint(powheginput('#cs_order'))
   if (powheginput('#cs_only2') == 1) excl_only2 = .true.
+  if (powheginput('#cs_no20') == 1) excl_no20 = .true.
   if (powheginput('#cs_dump2') == 1) then
      excl_dump2 = .true.
      if (powheginput('#cs_dump2min') > 0) dump2_min = powheginput('#cs_dump2min')
@@ -65,7 +68,8 @@ program provbfh_cs
   if (powheginput('#cs_estimate') > 0) excl_estimate = nint(powheginput('#cs_estimate'))
   if (powheginput('#cs_estimu') > 0) excl_estimu = nint(powheginput('#cs_estimu'))
   if (excl_order >= 2 .or. powheginput('#cs_testlimits') >= 1 .or. powheginput('#cs_testvirt') == 1 &
-       & .or. powheginput('#cs_testborn2') == 1) then
+       & .or. powheginput('#cs_testborn2') == 1 .or. powheginput('#cs_testlines') == 1 &
+       & .or. powheginput('#cs_testlines11') == 1) then
      call cs_excl_setup2(.true.)
      call cpu_time(t1)
      write(6,'(a,f10.2,a)') ' proVBFH-cs stage-2 set-up: CPU ', t1 - t0, ' s'
@@ -76,6 +80,14 @@ program provbfh_cs
   endif
   if (powheginput('#cs_testborn2') == 1) then
      call cs_excl_testborn2()
+     stop
+  endif
+  if (powheginput('#cs_testlines') == 1) then
+     call cs_excl_testlines()
+     stop
+  endif
+  if (powheginput('#cs_testlines11') == 1) then
+     call cs_excl_testlines11()
      stop
   endif
   if (powheginput('#cs_testvirt') == 1) then
@@ -99,7 +111,7 @@ program provbfh_cs
   ! the seven dimensions of the four-parton events are not adapted (their
   ! density enters the multichannel weight)
   ndim = 13
-  if (excl_order >= 2) then
+  if (excl_order >= 2 .and. excl_order /= 11 .and. excl_order /= 13) then
      ndim = 20
      jfreeze = 14
   endif
