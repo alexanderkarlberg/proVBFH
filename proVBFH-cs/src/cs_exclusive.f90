@@ -84,6 +84,10 @@ module cs_exclusive
   ! excl_estimate 4: the effect of nf = 4 in VBFNLO's ffunc (nf = 5 elsewhere)
   ! on the one-loop H+3j: alpha_s/(2 pi) B (1/6) [ln(mu^2/|t|) + ln(mu^2/|u|)],
   ! t, u the gluon's invariants with the two quarks of its line, at mu_e
+  ! excl_estimate 5: the size of the NC gg pair-type bug of real_vbfnlo.f
+  ! (fixed in the marked copy): E3 with the original line minus E3 fixed,
+  ! as an event with its Born counterevent, nothing else; unsubtracted, so
+  ! it depends on the cutoff like the old code's unmatched real
   integer, public, save :: excl_estimate = 0, excl_estimu = 1
   real(dp), save :: tb_pb(0:3,5,2), tb_xb(2,2)
   integer, save :: tb_n = 0
@@ -638,6 +642,14 @@ contains
        if (need(2)) e12(2) = nlo11_e12(2, pb, [x1, x2], fB, p6(:,:,2), fE(:,2), wrad(2), ok(1), &
             & p6(:,:,1), fE(:,1), wrad(1), mur, muf, [Q1, Q2], common)
        if (need3) e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7)
+    endif
+    if (excl_estimate == 5) then
+       w = 0; wv = 0; wr = 0; wd = 0; e12 = 0
+       if (need3) then
+          call cs_set_ggbug(.true.)
+          e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7) - e3
+          call cs_set_ggbug(.false.)
+       endif
     endif
     if (excl_no20) then
        wv = 0; wr = 0; wd = 0

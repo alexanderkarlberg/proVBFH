@@ -66,6 +66,7 @@ program provbfh_cs
      open(79, file='cs_dump2.dat', status='replace')
   endif
   if (powheginput('#cs_estimate') > 0) excl_estimate = nint(powheginput('#cs_estimate'))
+  call cs_set_ggbug(.false.)
   if (powheginput('#cs_estimu') > 0) excl_estimu = nint(powheginput('#cs_estimu'))
   if (excl_order >= 2 .or. powheginput('#cs_testlimits') >= 1 .or. powheginput('#cs_testvirt') == 1 &
        & .or. powheginput('#cs_testborn2') == 1 .or. powheginput('#cs_testlines') == 1 &

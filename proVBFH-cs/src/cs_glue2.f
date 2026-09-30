@@ -144,3 +144,13 @@ c number of real entries (after cs_init_reals)
       include 'pwhg_flst.h'
       cs_nreal = flst_nreal
       end
+c---------------------------------------------------------------------
+c cs_estimate 5: switch the original (buggy) NC gg pair type of
+c real_vbfnlo.f on or off
+      subroutine cs_set_ggbug(flag)
+      implicit none
+      logical flag
+      logical cs_ggbug
+      common/csggbug/cs_ggbug
+      cs_ggbug = flag
+      end

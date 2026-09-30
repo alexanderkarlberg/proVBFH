@@ -318,3 +318,44 @@ The conclusion (no cutoff dependence) stands. The runs at different
 cutoffs share their seeds, so they are correlated and chi2/n somewhat
 below 1 is expected. The largest value, 183.5/155 for stage 2 at 1e-4
 vs 1e-5, is 1.6 sigma above the mean.
+
+## Full NNLO against 1506.02660 (2026-09-30)
+
+`runs/nnlo-full` (30 seeds, cs_order 3, cutoff 1e-5, 5.2M points, 3.0
+CPU-h per job, thserv18, no spikes) + `runs/nnlo-incl` (4 seeds), against
+AK's paper files `runs/ref-1506.02660/11.top` (mu_0; `HH`, `22` = 0.5,
+2 mu_0). Combined with `tools/combine_parts.py --strip=-vbf --error max`
+(error = larger of VEGAS and seed scatter, bin by bin):
+
+| | proVBFH-cs [pb] | 1506.02660 files [pb] | difference |
+|---|---|---|---|
+| sig(VBF cuts), NNLO | 0.83854 +- 0.00188 | 0.84383 +- 0.00046 | -0.0053 (-2.7 sigma, -0.63%) |
+| inclusive part with VBF cuts | 0.92249 +- 0.00084 | 0.92258 +- 0.00001 (`sig incl cuts`) | +0.1 sigma |
+| exclusive part | -0.08395 +- 0.00169 | -0.07875 +- 0.00046 | -0.0052 (-3.0 sigma) |
+
+- The paper's `sig incl cuts` is filled for every event before cuts; in
+  a P2B run events and counterevents cancel in it, so it is the inclusive
+  part with VBF cuts (phspcuts at the Born). Ours agrees.
+- nnlo-full's exclusive part agrees with the sum of the separately run
+  pieces at 1e-5 (NLO -0.05452, (2,0)+(0,2) -0.02284, (1,1) -0.00335:
+  -0.08071 +- 0.00325; -0.9 sigma).
+- Distributions (10 with VBF cuts): chi2 211.6/154; after rescaling ours
+  by 1.0063, 141.5/154. The difference is a normalisation, not a shape.
+- The O(alpha_s^2) exclusive part is therefore about -0.029 (ours) vs
+  -0.024 (paper, using its NLO 0.876 and our NLO inclusive part).
+- Known issues of the old code, by the version: the paper files are from
+  2018-02-21, after proVBFH 1.1.0 (2018-02-07, fixed H+3j virtual) and
+  before 1.1.1 (2018-11-20), which introduced `nf = st_nlight` in the
+  explicit logs with `ffunc` still at nf = 4. In 1.1.0 both are 4, and
+  the nf terms of `ffunc` and of the explicit gamma_g logs cancel exactly
+  when they use the same nf, so the -0.0016 pb of `estimate-nf4` (the
+  4/5 mismatch) does not apply to the paper. The missing ISR region
+  (issue 2) adds +0.000126 pb per e-fold of the effective collinear
+  cutoff (`estimate-coll-e2`): the right sign, and 25-40 e-folds would
+  explain the difference, but the old code's effective cutoff (with the
+  trimming) is not known. kl swap: 7e-6. NC gg pair type: not yet sized.
+- Built `proVBFH-cs-p1506` with the paper's analysis (proVBFH 1.1.2,
+  `analysis/p1506_analysis.f`): 23 histograms, including the 3- and 4-jet
+  rates. Same seed and card: the 2-jet results are bitwise identical to
+  the current analysis. sigma(>= 3 jets) has no counterevents and no
+  inclusive part, so it compares the H+3j NLO directly.
