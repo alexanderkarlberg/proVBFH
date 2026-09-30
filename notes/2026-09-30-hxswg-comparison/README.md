@@ -280,3 +280,11 @@ h = 0 run on thserv18; the 12 + 12 seed test on thserv19 is the clean one.
   30 seeds x 3.3M, as `stage3-validnlo`: -0.102618 +- 0.00033 against
   the structure functions' -0.102623 +- 0.000068) with h = 0.3:
   `runs/stage3-validnlo-h03`, thserv09.
+- **Bias check passed (20:55):** line NLO (cs_order 11, no cuts, 30 seeds
+  x 3.3M) with h = 0.3: -0.102827 +- 0.000297 pb against the structure
+  functions' -0.102623 +- 0.000068 (-0.67 sigma); h = 0 gave -0.102618
+  +- 0.000330 (+0.02 sigma). The hard channel of the line radiation is
+  unbiased at the 0.3% level of the full inclusive integral; error^2 x
+  CPU 3.88e-3 against 4.77e-3 (gain 1.23 for this total without cuts).
+  (The watcher's parser failed on VEGAS's "integral =-0.99E-01+/-"
+  without a space; parsed from the "sum |w1|+|w2|" line instead.)
