@@ -8,8 +8,12 @@
 !   - the sampled phase-space volume, sum of wrad over the unit cube,
 !     equals Q^2/(16 pi^2) ln(1/xB) (the 2-body phase space of the
 !     line's final state with f = |M|^2 = 1, cutoff -> 0).
-! Both samplings (npow = 2 and logarithmic, npow = 0) are tested; with the
-! logarithmic one the volume is that inside the cutoff.
+! The samplings npow = 2, logarithmic (npow = 0) and logarithmic with the
+! hard channel (npow = 0, hard = 0.3) are tested; with the logarithmic
+! ones the volume is that inside the cutoff.
+! The masses, xp and z are compared relative to kappa = E_max^2/Q^2 (the
+! largest energy of pin, a, b; round-off grows with it: the hard channel
+! reaches xp ~ xB, where pin = pB/xp is large compared with sqrt(Q^2)).
 ! Exits with status 1 if a check fails.
 !----------------------------------------------------------------------
 program test_kinematics
@@ -18,13 +22,14 @@ program test_kinematics
   integer, parameter :: dp = kind(1d0)
   real(dp), parameter :: pi = 3.141592653589793238462643383279502884197_dp
   real(dp) :: pB(0:3), pOB(0:3), pin(0:3), a(0:3), b(0:3), qin(0:3), r(3)
-  real(dp) :: xB, xp, z, wrad, Q2, E, th, ph, errmax(5), vol, vol2, exact, sig
+  real(dp) :: xB, xp, z, wrad, Q2, E, th, ph, errmax(5), vol, vol2, exact, sig, hd, kappa
   logical :: ok, fail
   integer :: ipt, k, n, ncut, npw, ipw
   errmax = 0; fail = .false.
   call random_seed()
-  do ipw = 1, 2
+  do ipw = 1, 3
   npw = merge(2, 0, ipw == 1)
+  hd = merge(0.3_dp, 0.0_dp, ipw == 3)
   do ipt = 1, 20
      ! incoming Born parton along +z (or -z), outgoing at a random angle
      call random_number(r)
@@ -40,19 +45,20 @@ program test_kinematics
      ! pointwise checks
      do k = 1, 200
         call random_number(r)
-        call line_radiation(pB, pOB, xB, r, npw, 1d-12, pin, a, b, xp, z, wrad, ok)
+        call line_radiation(pB, pOB, xB, r, npw, 1d-12, pin, a, b, xp, z, wrad, ok, hd)
         if (.not. ok) cycle
-        errmax(1) = max(errmax(1), abs(mdot(a,a))/Q2, abs(mdot(b,b))/Q2)
+        kappa = max(1.0_dp, max(pin(0), a(0), b(0))**2/Q2)
+        errmax(1) = max(errmax(1), abs(mdot(a,a))/Q2/kappa, abs(mdot(b,b))/Q2/kappa)
         errmax(2) = max(errmax(2), maxval(abs(pin + qin - a - b))/sqrt(Q2))
         errmax(3) = max(errmax(3), maxval(abs(pin*xp - pB))/pB(0))
-        errmax(4) = max(errmax(4), abs(Q2/(2*mdot(pin, qin)) - xp))
-        errmax(5) = max(errmax(5), abs(mdot(pin, a)/mdot(pin, qin) - z))
+        errmax(4) = max(errmax(4), abs(Q2/(2*mdot(pin, qin)) - xp)/kappa)
+        errmax(5) = max(errmax(5), abs(mdot(pin, a)/mdot(pin, qin) - z)/kappa)
      enddo
      ! phase-space volume (plain MC over the unit cube)
      n = 400000; vol = 0; vol2 = 0; ncut = 0
      do k = 1, n
         call random_number(r)
-        call line_radiation(pB, pOB, xB, r, npw, 1d-12, pin, a, b, xp, z, wrad, ok)
+        call line_radiation(pB, pOB, xB, r, npw, 1d-12, pin, a, b, xp, z, wrad, ok, hd)
         if (.not. ok) then
            ncut = ncut + 1; cycle
         endif
@@ -74,7 +80,7 @@ program test_kinematics
      write(*,*) 'test_kinematics: FAILED'
      call exit(1)
   endif
-  write(*,*) 'test_kinematics: passed (20 line kinematics, pointwise and phase-space volume)'
+  write(*,*) 'test_kinematics: passed (20 line kinematics x 3 samplings, pointwise and phase-space volume)'
 contains
   ! integral of dxp/xp dz over 1-xp in [c, 1-xB], z in [c, 1-c]
   real(dp) function volcut(xB, c)

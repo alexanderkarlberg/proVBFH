@@ -24,6 +24,14 @@
 ! Sampling (npow > 0): 1 - xp = (1 - xB) r1^npow;  z = (2 r2)^npow/2 for
 ! r2 < 1/2, 1 - z = (2 (1-r2))^npow/2 otherwise. npow = 0: logarithmic in
 ! 1 - xp and min(z, 1-z) down to the cutoff (the default in proVBFH-cs).
+! With npow = 0 and hard = h > 0 (optional), a second channel with
+! probability h samples the hard region: ln(xp) uniform in [ln xB, 0] and
+! z uniform; the weight uses the combined density
+!   g = (1-h) g_log(xp) g_log(z) + h g_hard(xp) g_hard(z),
+! g_log(xp) = 1/((1-xp) ln((1-xB)/c)), g_log(z) = 1/(2 min(z,1-z) ln(1/(2c))),
+! g_hard(xp) = 1/(xp ln(1/xB)), g_hard(z) = 1. The logarithmic channel puts
+! few points at small xp, where both partons of the line are hard
+! (pT^2 = Q^2 z (1-z) (1-xp)/xp), which dominates the high-pT tails.
 ! Events with 1-xp, z or 1-z below cutoff are rejected (ok = .false.), as
 ! DISENT's invariant cutoff.
 ! Momenta are (E, px, py, pz) with index 0:3.
@@ -43,17 +51,44 @@ contains
     mdot = p(0)*q(0) - p(1)*q(1) - p(2)*q(2) - p(3)*q(3)
   end function mdot
 
-  subroutine line_radiation(pB, pOB, xB, r, npow, cutoff, pin, a, b, xp, z, wrad, ok)
+  subroutine line_radiation(pB, pOB, xB, r, npow, cutoff, pin, a, b, xp, z, wrad, ok, hard)
     real(dp), intent(in)  :: pB(0:3), pOB(0:3), xB, r(3), cutoff
     integer,  intent(in)  :: npow
     real(dp), intent(out) :: pin(0:3), a(0:3), b(0:3), xp, z, wrad
     logical,  intent(out) :: ok
+    real(dp), intent(in), optional :: hard
     real(dp) :: Q2, jx, jz, u, alpha, pT, phi, e1(0:3), e2(0:3), qin(0:3)
+    real(dp) :: h, s, lz, lx
     ok = .false.
     pin = 0; a = 0; b = 0; xp = 1; z = 0; wrad = 0
     Q2 = 2*mdot(pB, pOB)
     if (Q2 <= 0 .or. xB >= 1) return
-    if (npow > 0) then
+    h = 0
+    if (present(hard)) h = hard
+    if (npow == 0 .and. h > 0) then
+       ! logarithmic channel (probability 1-h) and hard channel (h)
+       if (1 - xB <= cutoff) return
+       u = log((1 - xB)/cutoff)
+       lz = log(0.5_dp/cutoff)
+       lx = log(1/xB)
+       if (r(1) < 1 - h) then
+          s = r(1)/(1 - h)
+          xp = 1 - cutoff*exp(u*s)
+          if (r(2) < 0.5_dp) then
+             z = cutoff*exp(lz*2*r(2))
+          else
+             z = 1 - cutoff*exp(lz*2*(1 - r(2)))
+          endif
+       else
+          s = (r(1) - (1 - h))/h
+          xp = xB**(1 - s)
+          z = r(2)
+       endif
+       if (1 - xp < cutoff .or. z < cutoff .or. 1 - z < cutoff) return
+       ! jx*jz = 1/g(xp, z)
+       jx = 1/((1 - h)/((1 - xp)*u)/(2*min(z, 1 - z)*lz) + h/(xp*lx))
+       jz = 1
+    elseif (npow > 0) then
        ! power sampling: xp in [xB, 1], z symmetric about 1/2
        xp = 1 - (1 - xB)*r(1)**npow
        jx = (1 - xB)*npow*r(1)**(npow-1)

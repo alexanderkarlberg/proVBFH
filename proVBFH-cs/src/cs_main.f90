@@ -6,6 +6,8 @@
 !             2: exclusive part, (1,0) + (0,1) with counterevents
 !                (default)
 !   cs_npow   sampling power for 1-xp and z; 0 (default): logarithmic
+!   cs_hardfrac  fraction of the line radiations in the hard channel (small
+!             xp, z ~ 1/2; for the high-pT tails); default 0
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-6)
 !   cs_order  1: the O(alpha_s) exclusive part (NLO, default);
 !             2: also the O(alpha_s^2) (2,0) + (0,2) (stage 2)
@@ -54,6 +56,7 @@ program provbfh_cs
   call cs_excl_setup()
   call set_beams(sqrts)
   if (powheginput('#cs_npow') >= 0) excl_npow = nint(powheginput('#cs_npow'))
+  if (powheginput('#cs_hardfrac') > 0) excl_hardfrac = powheginput('#cs_hardfrac')
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.

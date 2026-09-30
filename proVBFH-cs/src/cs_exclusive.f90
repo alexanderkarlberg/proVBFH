@@ -39,6 +39,7 @@ module cs_exclusive
   implicit none
   private
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
+  public :: excl_hardfrac
   public :: excl_order, excl_only2, excl_no20, excl_dump2, dump2_min, cs_excl_replay, cs_excl_testborn2, cs_excl_testlines, cs_excl_testlines11, cs_excl_setup2, cs_excl_testlimits, cs_excl_testvirt
 
   ! 1: (1,0) + (0,1) (NLO); 2: also (2,0) + (0,2)
@@ -94,6 +95,9 @@ module cs_exclusive
 
   logical, save :: excl_fill = .false.
   integer, save :: excl_npow = 0     ! 0: logarithmic sampling
+  ! fraction of the line radiations sampled in the hard channel (small
+  ! xp, z ~ 1/2; line_radiation), for the high-pT tails; 0: off
+  real(dp), save :: excl_hardfrac = 0
   real(dp), save :: excl_cutoff = 1d-6
   ! counters: points, line radiations rejected by the cutoff, NaN, points
   ! where neither event nor Born passes the cuts
@@ -429,10 +433,10 @@ contains
     do line = 1, 2
        if (line == 1) then
           call line_radiation(pb(:,1), pb(:,4), x1, xrand(8:10), excl_npow, excl_cutoff, &
-               & pin, a, b, xp, z, wrad(1), ok(1))
+               & pin, a, b, xp, z, wrad(1), ok(1), excl_hardfrac)
        else
           call line_radiation(pb(:,2), pb(:,5), x2, xrand(11:13), excl_npow, excl_cutoff, &
-               & pin, a, b, xp, z, wrad(2), ok(2))
+               & pin, a, b, xp, z, wrad(2), ok(2), excl_hardfrac)
        endif
        if (.not. ok(line)) then
           excl_stats(2) = excl_stats(2) + 1
