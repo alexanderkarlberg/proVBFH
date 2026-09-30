@@ -383,7 +383,7 @@ went to 1e-6.
 `runs/nnlo-p1506`: 30 more seeds (iseed 7101-7130; 14 on thserv18, 16
 on thserv09) with the paper's analysis (`proVBFH-cs-p1506`), no spikes;
 inclusive part rerun with that analysis (`runs/nnlo-incl-p1506`, same
-cards and seeds as nnlo-incl). `nnlo-p1506/combine60.py` (seed-scatter
+cards and seeds as nnlo-incl). `tools/combine60_1506.py` (seed-scatter
 errors):
 
 | sig(VBF cuts) [pb] | proVBFH-cs | 1506.02660 files | difference |
