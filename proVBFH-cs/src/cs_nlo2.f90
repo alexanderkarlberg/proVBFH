@@ -45,6 +45,9 @@ module cs_nlo2
   public :: nlo2_ngroups, nlo2_ncount, nlo2_debug_is, nlo2_debug_is4, nlo2_debug_isg, nlo2_debug_point
   ! read by cs_exclusive's diagnostic dump only
   public :: mvar, mz, cur_w4
+  ! four-parton points dropped by the technical cut
+  integer, public, save :: nlo2_ncut = 0
+  logical, save :: kin_verbose = .false.
 
   real(dp), parameter :: pi = 3.141592653589793238462643383279502884197_dp
   real(dp), parameter :: CF = 4.0_dp/3.0_dp, CA = 3.0_dp, TR = 0.5_dp
@@ -311,8 +314,9 @@ contains
   ! spectator). Events for the analysis (1, 2 incoming, 3 Higgs, partons):
   ! pr (7 momenta) and pd(:,:,m) (6 momenta); dok(m): the mapped
   ! configuration m is inside the three-parton cutoff (dipole used).
-  subroutine nlo2_real_kin(line, pb, xb, r, cutoff, pr, pd, dok, ok)
+  subroutine nlo2_real_kin(line, pb, xb, r, cutoff, pr, pd, dok, ok, nocut)
     integer, intent(in) :: line
+    logical, intent(in), optional :: nocut
     real(dp), intent(in) :: pb(0:3,5), xb(2), r(7), cutoff
     real(dp), intent(out) :: pr(0:3,7), pd(0:3,6,6)
     logical, intent(out) :: dok(6), ok
@@ -344,6 +348,27 @@ contains
        pd(:,line,m) = ma(:,m); pd(:,o,m) = pb(:,o); pd(:,3,m) = pb(:,3)
        pd(:,4,m) = mt(:,m); pd(:,5,m) = mk(:,m); pd(:,6,m) = pb(:,3+o)
     enddo
+    ! technical cut, consistent with the support of gen_four: the whole
+    ! four-parton point (real and counterevents) is dropped if any map is
+    ! closer to its singular limit than the cutoff (FF: y, z, 1-z; FI: 1-x,
+    ! z, 1-z). Without it the real's singular limits beyond the cutoff are
+    ! reached by other paths with a tiny density (weights up to 1e13).
+    if (present(nocut)) then
+       if (nocut) return
+    endif
+    do m = 1, 6
+       if (m <= 3) then
+          if (mvar(m) < cutoff) ok = .false.
+       else
+          if (1 - mvar(m) < cutoff) ok = .false.
+       endif
+       if (min(mz(m), 1 - mz(m)) < cutoff) ok = .false.
+    enddo
+    if (.not. ok) then
+       if (kin_verbose) write(6,'(a,6es10.2,a,6es10.2)') ' nlo2_real_kin cut: var', mvar, '  z', mz
+       dok = .false.
+       nlo2_ncut = nlo2_ncut + 1
+    endif
   end subroutine nlo2_real_kin
 
   ! weights of the real event (wr) and the six counterevents (wd, with the
@@ -560,7 +585,8 @@ contains
     grp(maxgrp)%leg = leg; grp(maxgrp)%fl = fl
     do it = 1, 2
        r = [0.31_dp, 0.62_dp, 0.17_dp, (it - 0.5_dp)/2.0_dp*0.93_dp + 0.02_dp, 0.41_dp, 0.73_dp, 0.29_dp]
-       call nlo2_real_kin(line, pbtest(:,:,it), xbtest(:,it), r, cutoff, pr, pd, dok, ok)
+       ! fixed test points: matrix elements only, no technical cut
+       call nlo2_real_kin(line, pbtest(:,:,it), xbtest(:,it), r, cutoff, pr, pd, dok, ok, nocut=.true.)
        if (.not. ok) stop 'cs_nlo2: test point not generated'
        ncache = 0
        call group_me(maxgrp, cur_pa, cur_k, me, d, .false.)

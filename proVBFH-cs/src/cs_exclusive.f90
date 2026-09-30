@@ -53,6 +53,10 @@ module cs_exclusive
   ! replay (cs_replay): print the stage-2 real and dipoles of each point
   logical, public, save :: excl_verbose = .false.
   real(dp), save :: dump2_min = 1d-3
+  ! with excl_order = 2: points whose integrand times VEGAS weight exceeds
+  ! spike_min (default 10 pb, about 1e4 times a typical point) are written
+  ! to unit 80 (cs_spikes.dat) with their random numbers, for cs_replay
+  real(dp), public, save :: spike_min = 10
   ! estimate (debug, notes/2026-09-29-cs-p2b-stage2): weight the (1,0) and
   ! (0,1) events by alpha_s/(2 pi) Delta, Delta = F(mu_e) - F(Q) -
   ! b0 ln(mu_e^2/Q^2), the change of the one-loop H+3j when VBFNLO's F
@@ -441,6 +445,11 @@ contains
     endif
     cs_excl_dsigma = abs(w(1) + wv(1)) + abs(w(2) + wv(2)) + abs(wr(1) + sum(wd(:,1))) &
          & + abs(wr(2) + sum(wd(:,2)))
+    if (excl_order >= 2 .and. cs_excl_dsigma*vegas_weight > spike_min .and. .not. excl_verbose) then
+       write(80,'(es12.4,6es11.3,2x,20es24.16)') cs_excl_dsigma*vegas_weight, (w + wv)*vegas_weight, &
+            & wr*vegas_weight, sum(wd,1)*vegas_weight, xrand(1:20)
+       flush(80)
+    endif
   end function excl_point
 
   ! (2,0) (line 1) or (0,2) (line 2) at the three-parton event p6 of the

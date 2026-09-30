@@ -20,7 +20,7 @@ program provbfh_cs
   use phase_space, only: set_beams
   use integration
   use cs_exclusive
-  use cs_nlo2, only: nlo2_ncount
+  use cs_nlo2, only: nlo2_ncount, nlo2_ncut
   use cs_dipoles, only: spin_avg
   implicit none
   integer, parameter :: maxdim = 20
@@ -78,6 +78,10 @@ program provbfh_cs
      stop
   endif
   if (powheginput('#cs_spinavg') == 1) spin_avg = .true.
+  if (excl_order >= 2) then
+     if (powheginput('#cs_spikemin') > 0) spike_min = powheginput('#cs_spikemin')
+     open(80, file='cs_spikes.dat', status='replace')
+  endif
   if (powheginput('#cs_replay') == 1) then
      call cs_excl_replay()
      stop
@@ -118,5 +122,6 @@ program provbfh_cs
   write(6,'(a,es13.5,a,es10.3,a)') ' proVBFH-cs exclusive part: sum |w1|+|w2| = ', integ, ' +- ', err, ' pb'
   write(6,'(a,4i14)') ' points, line radiations cut off, NaN, points failing all cuts: ', excl_stats
   if (excl_order >= 2) write(6,'(a,2i14)') ' stage 2: real and Born matrix-element calls: ', nlo2_ncount
+  if (excl_order >= 2) write(6,'(a,i14)') ' stage 2: four-parton points dropped by the technical cut: ', nlo2_ncut
   write(6,'(a,f12.1,a)') ' proVBFH-cs exclusive part: CPU ', t1 - t0, ' s'
 end program provbfh_cs

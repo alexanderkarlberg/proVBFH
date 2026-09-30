@@ -334,3 +334,55 @@ report to its authors. Status of the issues there:
   (both are in libvbfnlo.a with the same symbols, and `brakets.o` comes
   first). This makes no difference here (tested). The public
   `hjjj_amp_aux.f` is identical to proVBFH's `hjjj_amp_aux_corrected.F`.
+
+## First integration of the O(alpha_s^2) part (2026-09-30, night)
+
+Timing test (`runs/stage2-timing`, 13 TeV, VBF cuts, cutoff 1e-6, 40k
+points, `cs_order 2` with the new `cs_only2 1`, which keeps only the (2,0) +
+(0,2) weights): 0.7 ms per point on thA371a, with 70% of the points failing
+all cuts before any matrix element.
+
+1. **Bug in my integration driver, fixed.** `nlo2_real_kin` keeps the
+   four-parton point in module state. `excl_point` set up both lines first
+   and only then called `nlo2_real_me` per line. So line 1's real and
+   dipoles were evaluated at line 2's point (with line 2's groups and the
+   wrong PDFs) and attached to line 1's events. It now sets up each line's
+   point again right before its matrix elements, and checks that the
+   dipole flags agree. Effect of the fix: sum |w| went from 494 +- 242 to
+   134 +- 13 pb. The limit tests (kinematics and matrix elements line by
+   line) could not see it, and no earlier result used this path.
+2. **Remaining heavy tail: double-unresolved corners.** New diagnostics:
+   `cs_dump2` (per-point contributions), `cs_replay` (per-group,
+   per-dipole printout of dumped points) and per-path densities of
+   `four_weight`.
+   - The largest weights come from the real minus dipoles; the virtual
+     part is smooth.
+   - Worst point: a soft (2% and 0.4% of the beam energy), collinear
+     (s_23/Q^2 = 3e-6) pair of final-state partons next to the hard quark.
+     The FF dipole of that pair has y = 0.027, which is not small (the
+     three partons form a narrow jet). Its map subtracts y/(1-y) k_1 from
+     the pair and leaves the merged gluon at 1e-4 of the beam energy
+     (mapped z3 = 1.3e-5, 1 - xp3 = 1.2e-4, just above the cutoff).
+   - The dipole's Born is therefore far more singular than the real at
+     that point: D = 5e5 against R = 1.6e3, in weight units.
+   - The multichannel density of the path through that mapped
+     configuration dominates, as it should. The weight equals what one
+     expects for the log-sampled double-unresolved measure
+     (ln^4(1/cutoff), about 4e4).
+   - So this is the known behaviour of CS dipoles in double-unresolved
+     regions, not a bug. The observable cancels against the Born
+     projection only where event, counterevents and Born pass the cuts
+     together, so the spikes in sigma(VBF cuts) come from such corners
+     near cut boundaries.
+   - **Correction of my first guess:** I suspected the spin-correlated
+     g -> gg / g -> q qbar term (soft mapped gluon nearly collinear to the
+     beam). Replacing it by its azimuthal average (`cs_spinavg`, diagnostic
+     only) changes D by 2%, so that was wrong.
+   - Possible remedies if the variance is too large: a larger cutoff (if
+     the results are cutoff-independent), Nagy's alpha restriction of the
+     dipoles (with its analytic terms in I, K + P), or averaging over
+     related points.
+3. **Cutoff study** running on thserv18 (`runs/stage2-cut`, commit a552b94,
+   30 jobs, nice 10): the O(alpha_s^2) part alone at cutoffs 1e-4, 1e-5
+   and 1e-6, 10 seeds x 5.2M points each. Comparison with
+   `tools/cutoff_compare.py` (seed-scatter errors besides VEGAS's).
