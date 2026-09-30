@@ -400,7 +400,7 @@ contains
     integer :: m
     logical, external :: cs_passes
     integer :: line, i1, i2, bflav(6)
-    real(dp), external :: hoppetAlphaS
+    real(dp), external :: hoppetAlphaS, cs_born2
     integer vegas_ncall
     common/vegas_ncall/vegas_ncall
 
@@ -451,6 +451,19 @@ contains
        fE(:,line) = fE(:,line)/xi3(line)
     enddo
 
+    ! normalisation check (cs_order 10): the LO cross section from cs_born2
+    if (excl_order == 10) then
+       cs_excl_dsigma = 0
+       do i1 = 1, ncls
+          do i2 = 1, ncls
+             if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
+             cs_excl_dsigma = cs_excl_dsigma + cs_born2(pb, [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b]) &
+                  & *pdfsum(fB(:,1), cls(i1))*pdfsum(fB(:,2), cls(i2))
+          enddo
+       enddo
+       cs_excl_dsigma = cs_excl_dsigma*common
+       return
+    endif
     ! stage-3 validation (cs_order 11): the O(alpha_s) correction of each
     ! line from its Catani-Seymour pieces, signed, no events
     if (excl_order == 11) then

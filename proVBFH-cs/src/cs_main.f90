@@ -111,7 +111,7 @@ program provbfh_cs
   ! the seven dimensions of the four-parton events are not adapted (their
   ! density enters the multichannel weight)
   ndim = 13
-  if (excl_order >= 2 .and. excl_order /= 11 .and. excl_order /= 13) then
+  if (excl_order >= 2 .and. excl_order /= 10 .and. excl_order /= 11 .and. excl_order /= 13) then
      ndim = 20
      jfreeze = 14
   endif
