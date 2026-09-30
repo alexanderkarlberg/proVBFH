@@ -412,3 +412,28 @@ errors):
 - Our errors for the 3- and 4-jet observables are 40-190 times the
   paper's (the old code needs no subtraction there at LO and its errors
   are trimmed); the hard-emission channel should help.
+
+### The difference is the shape of the missing ISR region (19:50)
+
+`runs/estimate-coll-p1506` (issue 2, cs_estimate 2, with the paper's
+analysis): per e-fold of the collinear cutoff, sig(VBF, 2 jets)
++1.258e-4 +- 0.019e-4 pb (event minus counterevent; reproduces
+estimate-coll-e2), >= 3 jets +3.103e-4 +- 0.017e-4 (the events only), 4
+jets 0. Fit of (paper - ours) = Delta x (estimate), bin by bin over the
+23 histograms of `nnlo-p1506/total.top` (errors of ours and the paper):
+
+| histograms | bins | best Delta [e-folds] | chi2 at Delta = 0 | at best |
+|---|---|---|---|---|
+| 2-jet (14) | 211 | 30.2 +- 4.7 | 185.5 | 143.8 |
+| 3-jet (5) | 102 | 16.0 +- 1.9 | 157.8 | 90.1 |
+| all distributions | 344 | 18.7 +- 1.9 | 444.4 | 347.6 |
+
+One parameter, the effective number of e-folds over which the old code
+integrates the unsubtracted IS-collinear singularity of the NC pair
+graphs, reproduces both the size and the shape of the differences, with
+a shape computed independently in proVBFH-cs; the 3-jet chi2 drops by 68.
+The 2-jet and 3-jet values of Delta differ by 2.7 sigma; a common
+Delta = 19 gives chi2/n about 1. The 4-jet histograms (not affected by
+issue 2) have chi2 107/34 from our under-sampling (most bins 10-30% low
+with small errors, a few spikes with large errors): the second emission
+of gen_four is sampled logarithmically only.

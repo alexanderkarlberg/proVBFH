@@ -56,8 +56,10 @@ module cs_dipoles
 
   ! diagnostic output of four_weight (per path)
   logical, public, save :: fw_verbose = .false.
-  ! fraction of the first step (Born -> three partons, line_radiation) in
-  ! its hard channel (cs_hardfrac); 0: logarithmic only
+  ! fraction of each step in its hard channel (cs_hardfrac); 0:
+  ! logarithmic only. First step (Born -> three partons): line_radiation.
+  ! Second step: y uniform (FF) or ln x uniform in [ln xi3, 0] (FI), and z
+  ! uniform, instead of logarithmic y (1-x) and z
   real(dp), public, save :: four_hard = 0
   ! diagnostic: azimuthally averaged spin correlations (not for physics runs)
   logical, public, save :: spin_avg = .false.
@@ -185,8 +187,9 @@ contains
     real(dp), intent(out) :: pa(0:3), k(0:3,3), w
     logical,  intent(out) :: ok
     real(dp) :: pin(0:3), a(0:3), b(0:3), xp, z3, wrad, e(0:3), o(0:3)
-    real(dp) :: y, x, z, phi, xi3, q(0:3,3)
+    real(dp) :: y, x, z, phi, xi3, q(0:3,3), s
     integer :: ipath, iperm, islot, ityp
+    logical :: hard2
     integer, parameter :: perm(3,6) = reshape([1,2,3, 1,3,2, 2,1,3, 2,3,1, 3,1,2, 3,2,1], [3,6])
     ok = .false.; pa = 0; k = 0; w = 0
     call line_radiation(pB, pOB, xB, r(1:3), 0, cutoff, pin, a, b, xp, z3, wrad, ok, four_hard)
@@ -201,16 +204,35 @@ contains
     else
        e = b; o = a
     endif
-    z = symlog(r(6), cutoff)
+    hard2 = four_hard > 0 .and. r(5) >= 1 - four_hard
+    if (hard2) then
+       s = (r(5) - (1 - four_hard))/four_hard
+       z = r(6)
+       if (min(z, 1 - z) < cutoff) return
+    else
+       s = r(5)
+       if (four_hard > 0) s = r(5)/(1 - four_hard)
+       z = symlog(r(6), cutoff)
+    endif
     phi = 2*pi*r(7)
     if (ityp == 0) then
-       y = cutoff**(1 - r(5))
+       if (hard2) then
+          y = s
+          if (y < cutoff) return
+       else
+          y = cutoff**(1 - s)
+       endif
        call split_ff(e, o, y, z, phi, q(:,1), q(:,2), q(:,3))
        pa = pin
     else
        xi3 = xB/xp
        if (1 - xi3 <= cutoff) return
-       x = 1 - cutoff*exp(log((1 - xi3)/cutoff)*r(5))
+       if (hard2) then
+          x = xi3**(1 - s)
+          if (1 - x < cutoff) return
+       else
+          x = 1 - cutoff*exp(log((1 - xi3)/cutoff)*s)
+       endif
        call split_fi(e, pin, x, z, phi, q(:,1), q(:,2), pa)
        q(:,3) = o
     endif
@@ -247,14 +269,23 @@ contains
           if (ityp == 0) then
              call map_ff(k(:,i), k(:,j), k(:,l), ptij, ptk, y, z)
              if (y < cutoff .or. min(z, 1 - z) < cutoff) cycle
-             ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)*(y*lc)*(2*min(z, 1 - z)*lh)
+             if (four_hard > 0) then
+                ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)/((1 - four_hard)/((y*lc)*(2*min(z, 1 - z)*lh)) + four_hard)
+             else
+                ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)*(y*lc)*(2*min(z, 1 - z)*lh)
+             endif
              pta = pa
           else
              call map_fi(k(:,i), k(:,j), pa, ptij, pta, x, z)
              ptk = k(:,l)
              xi3 = xB*pta(0)/pB(0)
              if (1 - x < cutoff .or. min(z, 1 - z) < cutoff .or. 1 - xi3 <= cutoff) cycle
-             ws = 2*mdot(ptij, pa)/(16*pi**2)*((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)
+             if (four_hard > 0) then
+                ws = 2*mdot(ptij, pa)/(16*pi**2)/((1 - four_hard)/(((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)) &
+                     & + four_hard/(x*log(1/xi3)))
+             else
+                ws = 2*mdot(ptij, pa)/(16*pi**2)*((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)
+             endif
           endif
           ! three-parton configuration (pta; ptij, ptk) from the Born by
           ! line_radiation (logarithmic sampling)
