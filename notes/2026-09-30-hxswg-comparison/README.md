@@ -356,3 +356,25 @@ K+P convolutions use their own Gauss quadrature (not the sampling). To
 locate it: `runs/hard-diag`, (2,0)+(0,2) only (cs_order 2, cs_only2) and
 (1,1) only (cs_order 3, cs_only2, cs_no20), h = 0 and 0.3, 16 seeds
 each, 13.6 TeV set-up (thserv09, 21, 19, 22).
+
+### The open question, per piece (2026-10-01, 07:00)
+
+`runs/hard-diag`, 16 seeds per piece and sampling, 13.6 TeV set-up;
+ptHjj-ptj20 over [100, 1000] in 1e-3 pb:
+
+| | h = 0 | h = 0.3 | pull |
+|---|---|---|---|
+| (2,0)+(0,2) only | 3.75 +- 0.32 | 3.46 +- 0.15 | -0.8 |
+| (1,1) only | 0.22 +- 0.11 | 0.24 +- 0.05 | +0.1 |
+| NLO part (nlo12) | 3.81 +- 0.05 | 3.77 +- 0.03 | -0.8 |
+| sum | 7.78 +- 0.34 | 7.47 +- 0.16 | |
+| full NNLO runs | 9.23 +- 0.43 (A16) | 7.53 +- 0.19 (B16) | |
+
+Each piece agrees between the samplings, and the sum of the h = 0 pieces
+agrees with h = 0.3. The outlier is the full NNLO run at h = 0, 2.7
+sigma above the sum of its own pieces: its seeds spread over 6.5-12; the
+full run with (0.3, 0.1) also has one large seed (16.0). In this tail the
+full-run estimates have heavy-tailed seed distributions and the 16-seed
+errors are not reliable; no sign of a bias of the hard channel. Gains of
+the channel per piece: (2,0)+(0,2) totals 3.7 / 4.0, ptHjj ranges 4-7;
+(1,1) totals 2.6 / 3.6, ranges 2.3-6.
