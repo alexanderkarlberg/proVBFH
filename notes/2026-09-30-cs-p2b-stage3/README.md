@@ -489,3 +489,104 @@ the prime suspects, together with anything that only shows at >= 3 jets.
 The public NNLOJET v1.0.2 cannot run VFH/VFHJ (no driver channels; the
 VFH/VFHJ entries are commented out), so a direct NNLOJET run needs its
 authors.
+
+### The 3-jet bins at 13.6 TeV (2026-10-01)
+
+HXSWG study set-up and analysis; ours from 56 exclusive NNLO seeds (all
+samplings, unbiased) and 36 NLO seeds; the study's raw seeds (plain mean)
+and its trimmed combinations:
+
+| exactly 3 jets, ptj > 20 [pb] | study | proVBFH-cs |
+|---|---|---|
+| NLO (= H+3j tree) | 0.56885 | 0.56844 +- 0.00114 (-0.4 sigma) |
+| O(alpha_s^2) correction | -0.130 (plain), -0.145 (trimmed) | -0.180 +- 0.004 |
+| NNLO | 0.4389 plain, 0.4235 combine_runs, 0.4264 NNLOJET-style trim | 0.3889 +- 0.0035 |
+
+Exactly 4 jets (H+4j tree): 0.1164 +- 0.0011 against 0.1181 (-1.5 sigma).
+So the H+3j and H+4j trees agree; the O(alpha_s^2) correction to H+3j
+differs by about -9% of the H+3j tree, roughly flat in ptH (-10% at low
+ptH, -5% above 260 GeV) and in ptHjj 20-80 GeV. Trimming (either
+procedure) lowers the study's 3-jet bins by 3-3.5% (net-positive spikes),
+so it does not explain the difference.
+
+NNLOJET's merging (dokan, `combine/_util.py`, v1.0.2): per bin and per
+part, runs are masked with a robust asymmetric z-score (is_outlier_dynMAD:
+distance from the median over the left/right quantile half-width),
+threshold 4 (config `trim_threshold`), at most 0.7% of the runs
+(`trim_max_fraction`; the threshold is raised in steps while more would be
+cut), then merged weighted by the number of evaluations or by inverse
+variance, with a k-scan (`k_scan_nsteps` 3, `k_scan_maxdev_steps` 0.2).
+The 2018 VBF paper predates dokan; its Table 2 gives 844 fb without an MC
+error, so its weight against our 839.1 +- 1.3 depends on that error.
+
+Two hypotheses remain: (H1) proVBFH-cs's O(alpha_s^2) H+3j correction is
+too negative by about 9% of the tree; (H2) the old code's missing ISR
+region (issue 2) inflates its 3-jet correction, more with looser cuts.
+Test of H2: the missing-region piece per e-fold at the 13.6 TeV set-up
+(`runs/estimate-coll-hxswg`); H2 predicts the same Delta (16-19 e-folds)
+as at the 1506.02660 cuts.
+
+### NLO against the old code at the 1506.02660 set-up (2026-10-01, 09:50)
+
+Old proVBFH (POWHEG exclusive part, the code NNLOJET validated) with the
+paper's analysis (`runs/old1506-nlo`, 16 seeds, thserv09, as
+aux/runpar.sh, card from the 2026-09-24 validation) against proVBFH-cs
+(`runs/nlo-p1506`, 16 seeds, + `runs/nlo-incl-p1506`):
+
+| [pb] | proVBFH-cs | old proVBFH | pull |
+|---|---|---|---|
+| sig(VBF cuts, 2 jets), NLO | 0.87761 +- 0.00154 | 0.87694 +- 0.00200 | +0.26 |
+| >= 3 jets (H+3j tree) | 0.13101 +- 0.00112 | 0.13141 +- 0.00096 | -0.27 |
+
+Distributions chi2 about 1 per bin (yj3 30.7/18, y*j3 30.7/24). So at
+both set-ups the H+3j tree agrees and the difference is in the
+O(alpha_s^2) correction to H+3j: at 1506.02660 +0.0018 pb (paper files)
+against -0.0037 (ours), i.e. -0.0055 = -4.2% of the tree; at 13.6 TeV
+-8.8% of the tree (exactly 3 jets). With the 1506.02660 coefficient of
+the missing-region piece (3.10e-4 pb per e-fold for >= 3 jets) this is
+Delta = 17.7 e-folds.
+
+### The two hypotheses tested (2026-10-01, 10:30): evidence for H2 again
+
+1. Missing-region piece at the 13.6 TeV set-up (`runs/estimate-coll-hxswg`,
+   study analysis): per e-fold, exactly 3 jets +1.57e-3 (ptj > 20) /
+   +1.48e-3 (ptj > 30) pb, exactly 4 jets 0, exactly 2 jets -1.63e-3,
+   fiducial total -5.5e-5 (event and counterevent nearly cancel).
+2. Shape fits of the 3-jet differences (exclusive NNLO, ours from 78 seeds
+   at 1506.02660 and 56 at 13.6 TeV), one parameter each:
+
+   | set-up | chi2 at 0 | H1: k x (H+3j tree) | H2: Delta x (missing region) |
+   |---|---|---|---|
+   | 1506.02660, 101 bins | 394.9 | 128.4 (k = 0.037) | 89.7 (Delta = 19.2 +- 1.1) |
+   | 13.6 TeV, 38 bins | 676.6 | 81.1 (k = 0.082) | 58.3 (Delta = 29.5 +- 1.2) |
+
+   The missing-region shape (gluon-initiated NC lines, a quark along the
+   beam) fits better at both set-ups.
+3. Fingerprint in the study's raw seeds (per-seed values of the
+   NJETS histograms, ptj > 20): exactly 3 jets: Hill tail index of the
+   positive side 1.00 (top 50), negative side 2.42; largest seed 5206
+   half-widths above the median; plain mean - median +0.0164 (+3.9%), the
+   top 20 seeds alone +0.0106; running mean 0.4301 (1k seeds) ... 0.4389
+   (9.94k), still rising. Control, exactly 4 jets (no missing-region
+   piece): alpha 2.15 / 10.5, largest seed 56 half-widths, mean - median
+   +0.0004, running mean stable at 0.1180-0.1181. A tail index of 1 is
+   the signature of an unregulated logarithmic singularity (weights 1/x:
+   P(w > W) ~ 1/W, a mean that grows with the statistics).
+4. With robust estimates the two set-ups give similar Delta: at 13.6 TeV
+   the trimmed (combine_runs) 3-jet value needs Delta = 22, the median 21
+   (the plain mean, with the rare giant seeds, 31); at 1506.02660 (trimmed
+   paper files) 19 +- 1.
+
+So the evidence again favours H2: the old code's 3-jet bins carry the
+unregulated IS-collinear contribution of issue 2. This corrects the
+withdrawal above (twice-corrected record: the first interpretation, the
+withdrawal after the NNLOJET paper, and now H2 again on direct evidence).
+Open: NNLOJET's 844 fb and its "excellent agreement" with the old 3-jet
+distributions. Under H2 the old 2-jet excess at 1506.02660 is about
+19 x 1.26e-4 = 0.0024 pb (corrected value about 0.8414 against our
+0.8391 +- 0.0013), and the 3-jet excess about 4%; both are compatible
+with NNLOJET only if its MC errors were at that level (not quoted). Their
+numbers with errors (or a new run) would settle it.
+Correction to the raw-data section of the HXSWG notes: the largest seed
+(61 pb, pwg-9460) is a 3-jet event (it sits in HISTO-PTH-NJETS-3), not a
+2-jet one; the next ones (17, -9 pb) are in the 2-jet bins.
