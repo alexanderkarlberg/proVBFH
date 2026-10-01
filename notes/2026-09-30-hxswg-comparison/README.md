@@ -240,7 +240,7 @@ gains in error^2 x CPU, and consistency).
   120/99), where h = 0 misses rare configurations and underestimates its
   errors; the other histograms 410/499.
 
-### Second emission of gen_four (19:45, commit f215582)
+### Second emission of gen_four (19:45, commit 7dc122a)
 
 The 4-jet histograms at the 1506.02660 set-up (chi2 107/34; most bins
 10-30% low with small errors, a few spikes) show that the second
@@ -378,3 +378,10 @@ full-run estimates have heavy-tailed seed distributions and the 16-seed
 errors are not reliable; no sign of a bias of the hard channel. Gains of
 the channel per piece: (2,0)+(0,2) totals 3.7 / 4.0, ptHjj ranges 4-7;
 (1,1) totals 2.6 / 3.6, ranges 2.3-6.
+
+(2026-10-01, before the first push: commit 3e57a64 had swept in five
+untracked files with `git add notes` - the build products
+`tools/find_regions.o` and `tools/list_regions` of the stage-2 notes and
+three run outputs of AK's `notes/scale-setting-in-vbf-hh`. The branch was
+rebuilt without them (the files stay on disk, untracked); the commits from
+there on have new hashes, e.g. f215582 -> 7dc122a, daf218b -> c785573.)
