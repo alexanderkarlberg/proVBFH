@@ -590,3 +590,32 @@ numbers with errors (or a new run) would settle it.
 Correction to the raw-data section of the HXSWG notes: the largest seed
 (61 pb, pwg-9460) is a 3-jet event (it sits in HISTO-PTH-NJETS-3), not a
 2-jet one; the next ones (17, -9 pb) are in the 2-jet bins.
+
+### The same-line two-gluon H+4j against NNLOJET (2026-10-01, 11:00)
+
+`~/cernbox/disorder-comparisons/vbf_nnlojet/harness_20.f90` (from
+harness_e3; build_20.sh): VBFNLO's entries with both extra gluons on line
+1 (tags (1,1)) and on line 2 ((2,2)), as used for the (2,0)+(0,2) double
+real, against NNLOJET v1.0.2's two-gluon pieces at 20 generic points,
+for s c -> s c g g, u d -> u d g g, d d -> d d g g (NC) and u d -> d u g g
+(CC):
+- One gluon per line (control): VBFNLO/NNLOJET/(4 pi R_ctl) = 8/3 at all
+  points, as in harness_e3.
+- NNLOJET's adjacent piece C2g0VBFadj is one ordering of the gluon
+  attachments (not symmetric under exchanging the gluons, by up to 35%);
+  VBFNLO's (1,1), (2,2) are symmetric to 1e-16. Leading colour LC =
+  adj(a,b) + adj(b,a); subleading SC = |A(a,b) + A(b,a)|^2 as in
+  Ct2g0VBF (joinAmplCt2g).
+- Fit VBFNLO/(4 pi R_ctl) = a LC + b SC over the points: a = 1.50000000,
+  b/a = -0.11111111 = -1/N^2, largest residual 1e-13 to 3e-13, all
+  channels and both lines (the colour algebra gives 6 [LC - SC/9]:
+  Tr(TaTbTbTa) = 16/3, Tr(TaTbTaTb) = -2/3).
+- NNLOJET's amplitude cache (two-state flag) must be refreshed for every
+  combination in every pass, or values from earlier points come back: the
+  first version of this harness got erratic "full - nadj" values from it.
+
+So the double-real matrix elements of (2,0)+(0,2) agree exactly with
+NNLOJET's full-colour ones in the qq channels; with the one-loop H+3j,
+the one-gluon-per-line H+4j and the four-quark H+4j (earlier harnesses)
+all matrix elements of our O(alpha_s^2) H+3j region are confirmed
+(gluon-initiated same-line entries not yet checked).
