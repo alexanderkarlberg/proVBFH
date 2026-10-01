@@ -692,3 +692,49 @@ for the Born, real and double-real in the old code (Born_phsp.f).
   and real, seeds 1-20 (fixed m_H), then 101-120 (ID 20); thserv21, nice
   10. The dynamic-scale run compares directly with the paper files and
   with nnlo-p1506.
+
+## 1 Oct, 19:15 — VBFNLO at fixed and dynamic scale (≥3 jets at O(αs²))
+
+VBFNLO 3.0, process 110 (VBF H+3j at NLO, Catani–Seymour), 1506.02660
+set-up, 20 jobs per scale; dynamic scale added as ID 20
+(`tools/vbfnlo-3.0-scale20.patch`). Compared with `tools/fixmh_compare.py`.
+
+| σ(≥3 jets) [pb] | proVBFH-cs | VBFNLO | old code / paper |
+|---|---|---|---|
+| μ = m_H, tree | 0.12031 ± 0.00115 | 0.11937 ± 0.00003 | 0.12003 ± 0.00049 |
+| μ = m_H, O(αs²) | 0.12550 ± 0.00067 (74 seeds) | 0.12582 ± 0.00052 | 0.13302 ± 0.00097 (81/120 jobs) |
+| μ0(pT,H), tree | 0.13101 ± 0.00108 | 0.13038 ± 0.00003 | 0.13141 ± 0.00096 |
+| μ0(pT,H), O(αs²) | 0.12795 ± 0.00116 | 0.12658 ± 0.00050 | 0.13324 ± 0.00006 (paper) |
+
+- proVBFH-cs agrees with VBFNLO (−0.4σ fixed, +1.1σ dynamic); the old
+  code is +5.7% (+6.5σ) high at fixed scale, the paper +5.3% at μ0.
+- **Correction:** the morning conclusion (proVBFH-cs most likely low in
+  the ≥3-jet O(αs²) part, after NNLOJET's 844 fb) is superseded. The
+  ≥3-jet difference is in the old code, and the fixed-scale runs show it
+  is not the scale assignment. The tension with NNLOJET's ≥2-jet 844 fb
+  (no error quoted) stays open.
+- Still to do: the complete old-code fixed-scale set (about 21:00).
+
+## 1 Oct, 20:30 — fixed-scale comparison complete (old code: all 120 stage-2 jobs)
+
+All 120 old-code jobs exited with status 0; the 120 NNLO result files contain
+no NaN. `tools/fixmh_compare.py`, μ = m_H, all VBF cuts [pb]:
+
+| σ | proVBFH-cs (74 seeds) | old code (120 jobs, plain) | VBFNLO |
+|---|---|---|---|
+| ≥ 2 jets | 0.84632 ± 0.00122 | 0.84524 ± 0.00697 | – |
+| ≥ 3 jets | 0.12550 ± 0.00067 | 0.13201 ± 0.00076 | 0.12582 ± 0.00052 |
+| ≥ 4 jets | 0.01465 ± 0.00021 | 0.01499 ± 0.00028 (combine_runs 0.01473 ± 0.00012) | – |
+
+- ≥ 3 jets: proVBFH-cs vs VBFNLO −0.4σ; old code vs VBFNLO +4.9% (+6.7σ),
+  vs proVBFH-cs +6.4σ. With 81 jobs the old code had 0.13302 ± 0.00097; the
+  conclusion is unchanged.
+- ≥ 2 and ≥ 4 jets agree between the codes within their errors (the old
+  code's ≥ 2-jet error is too large to see a shift of the size of the ≥ 3-jet
+  difference).
+- Dynamic scale (unchanged): proVBFH-cs 0.12795 ± 0.00116, VBFNLO
+  0.12658 ± 0.00050 (+1.1σ), paper 0.13324 ± 0.00006 (+5.3% vs VBFNLO).
+- So the old code's ≥ 3-jet result is about 5% high at both scales, and it is
+  not the scale assignment. Next: find the cause in the old code's H+3j
+  O(αs²) part (the missing FKS region of the NC pair graphs is the lead
+  candidate, see 1 Oct, 10:30).
