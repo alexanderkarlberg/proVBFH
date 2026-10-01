@@ -1,0 +1,86 @@
+--- ../pristine/vbfnlo-3.0/utilities/scales.F90	2024-06-19 17:00:58.000000000 +0200
++++ utilities/scales.F90	2026-10-01 10:32:53.241995512 +0200
+@@ -366,6 +366,19 @@
+             STOP
+          END SELECT
+          
++!... dynamic scale mu^2 = (m_H/2) sqrt((m_H/2)^2 + pT_H^2), as in proVBFH
++!... (scale_choice 3, arXiv:1506.02660); added for the proVBFH cross-check
++      CASE(20)
++         SELECT CASE(procID)
++         CASE(Hjjj)
++            if (lglobalprint) print*,"Dynamical factorization scale chosen:"
++            if (lglobalprint) print*," mu_F^2 = mH/2 sqrt((mH/2)^2 + pT_H^2)"
++         CASE DEFAULT
++            print *,"unreasonable scale choice for this process:  &
++                 id_muf = ",id_muf
++            STOP
++         END SELECT
++
+       CASE DEFAULT
+          print *,"unreasonable scale choice for this process:  &
+                id_muf = ",id_muf
+@@ -697,6 +710,19 @@
+             STOP
+          END SELECT
+ 
++!... dynamic scale mu^2 = (m_H/2) sqrt((m_H/2)^2 + pT_H^2), as in proVBFH
++!... (scale_choice 3, arXiv:1506.02660); added for the proVBFH cross-check
++      CASE(20)
++         SELECT CASE(procID)
++         CASE(Hjjj)
++            if (lglobalprint) print*,"Dynamical renormalization scale chosen:"
++            if (lglobalprint) print*," mu_R^2 = mH/2 sqrt((mH/2)^2 + pT_H^2)"
++         CASE DEFAULT
++            print *,"unreasonable scale choice for this process:  &
++                 id_mur = ",id_mur
++            STOP
++         END SELECT
++
+       CASE DEFAULT
+          print *,"unreasonable scale choice for this process:  &
+                  id_mur = ",id_mur
+@@ -1385,6 +1411,18 @@
+             mufsq(2,L) = temp
+          enddo
+ 
++! mu^2 = (m_H/2) sqrt((m_H/2)^2 + pT_H^2) (proVBFH scale_choice 3)
++      CASE(20)
++         do L = 1,Lmax
++            tempvec = 0d0
++            do i = 1,n_v
++               tempvec = tempvec + v(0:3,i,L)
++            enddo
++            temp = sqrt((xmh/2d0)**4 + (xmh/2d0)**2*(tempvec(1)**2+tempvec(2)**2))
++            mufsq(1,L) = temp * xif**2
++            mufsq(2,L) = temp * xif**2
++         enddo
++
+       CASE DEFAULT
+          print *,"unreasonable scale choice : id_muf = ",id_muf
+          STOP
+@@ -1560,6 +1598,24 @@
+            als(2,L) = als(1,L)
+          enddo
+ 
++! mu^2 = (m_H/2) sqrt((m_H/2)^2 + pT_H^2) (proVBFH scale_choice 3)
++      CASE(20)
++         do L = 1,Lmax
++            tempvec = 0d0
++            do i = 1,n_v
++               tempvec = tempvec + v(0:3,i,L)
++            enddo
++            temp = sqrt((xmh/2d0)**4 + (xmh/2d0)**2*(tempvec(1)**2+tempvec(2)**2))
++            mursq(1,L) = temp * xir**2
++            mursq(2,L) = temp * xir**2
++            if (nlo.eq.0) then
++               als(1,L) = alphas5(mursq(1,L),0)
++            else
++               als(1,L) = alphas5(mursq(1,L),1)
++            endif
++            als(2,L) = als(1,L)
++         enddo
++
+       CASE DEFAULT
+          print *,"unreasonable scale choice : id_mur = ",id_mur
+          STOP

@@ -546,7 +546,7 @@ against -0.0037 (ours), i.e. -0.0055 = -4.2% of the tree; at 13.6 TeV
 the missing-region piece (3.10e-4 pb per e-fold for >= 3 jets) this is
 Delta = 17.7 e-folds.
 
-### The two hypotheses tested (2026-10-01, 10:30): evidence for H2 again
+### The two hypotheses tested (2026-10-01, 10:00): evidence for H2 again
 
 1. Missing-region piece at the 13.6 TeV set-up (`runs/estimate-coll-hxswg`,
    study analysis): per e-fold, exactly 3 jets +1.57e-3 (ptj > 20) /
@@ -591,7 +591,7 @@ Correction to the raw-data section of the HXSWG notes: the largest seed
 (61 pb, pwg-9460) is a 3-jet event (it sits in HISTO-PTH-NJETS-3), not a
 2-jet one; the next ones (17, -9 pb) are in the 2-jet bins.
 
-### The same-line two-gluon H+4j against NNLOJET (2026-10-01, 11:00)
+### The same-line two-gluon H+4j against NNLOJET (2026-10-01, 10:10)
 
 `~/cernbox/disorder-comparisons/vbf_nnlojet/harness_20.f90` (from
 harness_e3; build_20.sh): VBFNLO's entries with both extra gluons on line
@@ -619,3 +619,76 @@ NNLOJET's full-colour ones in the qq channels; with the one-loop H+3j,
 the one-gluon-per-line H+4j and the four-quark H+4j (earlier harnesses)
 all matrix elements of our O(alpha_s^2) H+3j region are confirmed
 (gluon-initiated same-line entries not yet checked).
+
+Gluon-initiated same-line entries (added 2026-10-01, 10:16): g c -> u c ub g
+and g c -> d c db g (NC; the incoming gluon and the extra gluon on the
+same line), same fit over 20 points: a = 1.12500000, b/a = -0.11111111,
+largest residual 1.5e-13. So the same-line two-gluon entries agree with
+NNLOJET's full colour in the gq channels as well.
+
+### Scale assignment in the old code, VBFNLO's 2018 Hjjj fixes, fixed-scale runs (2026-10-01, 10:50)
+
+AK: the scale (mu_0 depends on ptH) may be evaluated on different momenta
+for the Born, real and double-real in the old code (Born_phsp.f).
+- Old proVBFH `set_fac_ren_scales` (src/exclusive/Born_phsp.f, also in
+  the study's v2.1.0): ptH from `kn_preal` only if `flg_btildepart =
+  'r'`, i.e. only with `btlscalereal 1`; otherwise from `kn_pborn`. The
+  1506.02660 card and the 13.6 TeV study card have no `btlscalereal`, so
+  the H+4j real events (and their counterterms) of the exclusive part
+  use mu_0 of the FKS underlying H+3j Born, whose Higgs momentum differs
+  from the event's (POWHEG's ISR and FSR maps both move the recoiling
+  final state). In P2B the Higgs momentum of an event equals that of its
+  Born projection (q1, q2 fixed), and the inclusive part uses mu_0 of that
+  ptH. proVBFH-cs evaluates mu_0 on the event's own ptH everywhere, and
+  its dipole maps (per line, q fixed) leave ptH unchanged. So the two
+  codes differ at O(alpha_s^3) in the >= 3-jet region: formally beyond
+  NNLO, numerically unknown. A fixed scale removes the difference.
+- VBFNLO history (source tarballs from the CERN LCG mirror; HepForge is
+  behind an anti-bot page): VBFNLO 3.0.0 beta 5 (2018-02-06) "Fix two
+  bugs in NLO calculation of Hjjj production"; the 3.0 manual: "a bug in
+  the virtual and real-emission parts of VBF-Hjjj ... leads to a decrease
+  of the NLO cross section of roughly 10%". beta4 -> beta5 diff:
+  (a) hjjj_amp_aux.F: the one-mass box `D0t1m` replaced by `D01m_fin`
+  (virtual); (b) qqh4q_mg.F: `sus_usbbh` -> `sus_usuuh` for identical
+  flavours (four-quark real); (c) dipsub.F: two dipole indices swapped
+  (VBFNLO's own subtraction); (d) a colour-flow fix for event output.
+  (a) is the fix in proVBFH 1.1.0 (`hjjj_amp_aux_corrected.F`, compiled
+  since 1.1.2's Makefile; 1.0.0 used the old box) and in 1506.02660 v2
+  (arXiv 2018-02-21, "Inclusion of bugfix of NLO H+3jet virtual
+  corrections"; the paper files are from the same day, as noted above).
+  (b) and (c) are in VBFNLO's own real-emission code, which neither
+  proVBFH nor proVBFH-cs uses (their four-quark real has its own
+  identical-flavour treatment, real_vbfnlo.f).
+- Fixed-scale check (AK: "run with a fixed scale in all programs"):
+  mu_R = mu_F = m_H, 1506.02660 set-up and analysis, all three codes:
+  - `runs/fixmh-nlo-p1506` (16 seeds), `runs/fixmh-nnlo-p1506` (44 seeds,
+    h = 0.3), `runs/fixmh-incl-p1506` (4 seeds): proVBFH-cs, runningscales
+    0 (structure functions at hoppet's fixed scale m_H, cs_mu = xi m_H);
+  - `runs/fixmh-old1506-nlo` (16 jobs, qcd_order 2) and
+    `runs/fixmh-old1506` (qcd_order 3: stage 1 30 jobs x 3 x 200k x 3,
+    stage 2 60 jobs x 1M x 3): old proVBFH (current source, muref =
+    ph_Hmass);
+  - VBFNLO 3.0 process 110 (VBF H+3j at NLO, Catani-Seymour; after the
+    2018 fixes), built locally in ~/work/disorder-comparisons/vbfnlo
+    (default processes + quad precision; the vbf,hjjj-only build does not
+    compile), with ID_MUF = ID_MUR = 0 at 125 GeV, NNPDF30_nnlo_as_0118,
+    EWSCHEME 3 with the same G_F, M_W, M_Z, VBFHASB (b quarks in NC),
+    anti-kt 0.4, the 1506 cuts. VBFNLO keeps only jets with |y| < 4.5 and
+    pt > 25 (no veto), tags the two hardest, Delta y and the hemisphere
+    cut on rapidities; Hjjj requires >= 3 jets, i.e. the analysis's
+    "sig(all VBF cuts 3 jets)". For the dynamic scale a new ID 20
+    (mu^2 = m_H/2 sqrt(m_H^2/4 + ptH^2), ptH from the sum of the
+    non-parton momenta, per kinematics L) is added (scale20.patch).
+- VBFNLO set-up check at LO (process 110, NLO_SWITCH false, 2^20 x 4,
+  thA371a): sig(>= 3 jets, VBF cuts) = 130.60 +- 0.44 fb with ID 20
+  (mu_0(ptH)), against the H+3j tree of proVBFH-cs 131.01 +- 1.12 and of
+  the old code 131.41 +- 0.96 (NLO runs above): -0.3 sigma. Fixed
+  m_H: 119.46 +- 0.40; fixed m_H/2: 145.98 +- 0.48 (ID 20 in between, as
+  it must). So cuts, PDF, couplings, flavours and the new scale agree with
+  proVBFH at the tree level. Build from the same card on thA371a and
+  thserv21: bitwise identical.
+- Production (`~/work/disorder-comparisons/vbfnlo/runs/{fixmh,dyn}-1506`,
+  `run_thserv21.sh`): 20 jobs x 2^23 x 5 points each for LO, Born+virtual
+  and real, seeds 1-20 (fixed m_H), then 101-120 (ID 20); thserv21, nice
+  10. The dynamic-scale run compares directly with the paper files and
+  with nnlo-p1506.
