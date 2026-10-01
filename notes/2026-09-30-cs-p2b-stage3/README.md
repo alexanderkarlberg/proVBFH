@@ -456,3 +456,36 @@ nnlo-full (30); weighted means of the seed-scatter results:
 (exactly 2 jets: +0.0012 +- 0.0017). In terms of the missing ISR
 region: 19 e-folds from the 3-jet rate, 37 from the 2-jet rate (ratio
 of the differences 0.79 +- 0.25 against 0.41 predicted, 1.5 sigma).
+
+### Correction (2026-10-01): NNLOJET agrees with the old proVBFH, not with us
+
+arXiv:1802.02445 (Cruz-Martinez, Gehrmann, Glover, Huss; NNLOJET, antenna
+subtraction, factorised VBF) uses exactly the 1506.02660 set-up (NNPDF3.0,
+mu_0(pt,H), M_W 80.398, Gamma_W 2.141, anti-kt 0.4, the VBF cuts) and
+finds for VBF-2j: LO 957, NLO 877, NNLO 844 +9 -9 (scale) fb (Table 2;
+no MC error quoted), and "once these corrections are applied [AK, private
+communication] in [proVBFH], we find excellent agreement with our results
+for the fiducial cross section, Table 2, and all distributions considered
+in [1506.02660]" - i.e. with the 2018 paper files we compare with.
+proVBFH-cs: NLO 876.3 +- 2.0, NNLO 839.1 +- 1.3 fb.
+
+So an independent code without POWHEG's missing ISR region agrees with
+the old numbers. The interpretation above (the old code high because of
+issue 2) is withdrawn: most likely proVBFH-cs is low, by about 0.6% in
+the 2-jet rate and 4.5% in the >= 3-jet rate, i.e. in the O(alpha_s^2)
+H+3j region. The fit of the differences to the missing-region estimate
+does not discriminate: any deficit in the H+3j region has a similar
+shape. (Issue 2 itself stands as a code fact, but its numerical effect on
+the old results must be small.)
+
+Checked since: the VBFNLO one-loop H+3j used here is in the CDR
+(4 pi)^eps/Gamma(1-eps) normalisation assumed by our I operator
+(harness_virt: NNLOJET - VBFNLO = (pi^2/6)(2 CF + CA/2) to 1e-13, the
+predicted shift from NNLOJET's e^{-eps gamma} normalisation); the colour
+factors of nlo2_ifin and the K+P coefficients (kqf, lsc) look right on
+inspection. The (2,0)+(0,2) integrated dipoles have no integrated check
+(the exclusive part vanishes for Higgs-only observables), so they remain
+the prime suspects, together with anything that only shows at >= 3 jets.
+The public NNLOJET v1.0.2 cannot run VFH/VFHJ (no driver channels; the
+VFH/VFHJ entries are commented out), so a direct NNLOJET run needs its
+authors.
