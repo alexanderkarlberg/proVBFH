@@ -327,3 +327,32 @@ cs_hardfrac2 depends on the set-up. Overnight tuning (`runs/hard-tune`,
 variants per machine so the CPU is comparable): 13.6 TeV (0,0) 8 seeds,
 (0.3,0) 8, (0.3,0.1) 16 (plus the earlier 8+8); 1506.02660 (0.3,0) 16,
 (0.3,0.1) 16.
+
+### Tuning results (2026-10-01, 04:20) and an open question
+
+`runs/hard-tune` (overnight), gains in error^2 x CPU against h = 0:
+- 13.6 TeV, 16 seeds per variant (new 8 + earlier 8 for A and B):
+  (0.3, 0): totals 1.8 / 0.8, ptj2 400-600 / 600-1000 3.4 / 5.1, ptHjj
+  100-1000 4.8, median 0.80; (0.3, 0.1): totals 0.8 / 0.5, median 0.75.
+- 1506.02660 set-up, 16 seeds per variant against nnlo-p1506 (h = 0, 30):
+  (0.3, 0): 2-jet 1.1, 3-jet 3.7, 4-jet 39, median 1.07; (0.3, 0.1): 1.2,
+  1.7, 11, 1.18; (0.3, 0.3): 2.1, 1.5, 5.5, 1.12.
+- So the second emission's channel does not pay; the first emission's
+  does (the 4-jet rate even more than with the second-step channel).
+  Recommended: cs_hardfrac 0.3, cs_hardfrac2 0.
+
+**Open: ptHjj 100-1000 at 13.6 TeV differs between the samplings.**
+NNLO, ptHjj-ptj20 integrated over [100, 1000]: h = 0 (A16) 9.23e-3 +-
+0.43e-3 pb, (0.3, 0) (B16) 7.53e-3 +- 0.19e-3: -3.7 sigma (and -3.3 and
+-1.8 in the two independent 8-seed comparisons). Per seed, h = 0 spreads
+over 6.5-12.0 (median 9.7) and h = 0.3 clusters at 7.6 +- 0.5: not a
+single outlier. NLO parts agree (3.81e-3 vs 3.77e-3), so the difference
+is in the O(alpha_s^2) pieces (about 5.4e-3 vs 3.7e-3). The study gives
+8.41e-3 (plain), between the two (its NLO 3.78e-3 agrees with ours; its
+>= 3-jet region has the missing-ISR-region excess). Correction: the
+statement above that the NNLO variants "agree with h = 0 within the
+errors" holds for the totals but not for this tail.
+K+P convolutions use their own Gauss quadrature (not the sampling). To
+locate it: `runs/hard-diag`, (2,0)+(0,2) only (cs_order 2, cs_only2) and
+(1,1) only (cs_order 3, cs_only2, cs_no20), h = 0 and 0.3, 16 seeds
+each, 13.6 TeV set-up (thserv09, 21, 19, 22).
