@@ -36,6 +36,10 @@ C     xrand contains a vector of random numbers in [0,1]
       double precision ptH
       integer vegas_ncall
       common/vegas_ncall/vegas_ncall
+C     on-the-fly scale variations (incl_nscale > 1): one weight per scale
+      include 'pwhg_weights.h'
+      double precision dsk(7)
+      integer k
 
       dsigma = 0d0
 C     generate phase space using phase_space module
@@ -56,11 +60,23 @@ C     Hence ptH is given by
 C     compute dsigma using the squared hadronic tensor
 !         dsigma = eval_matrix_element_tensor(order_min,order_max, x1, x2, 
 !     $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, ptH)
+         if (incl_nscale.gt.1) then
+            do k = 1, incl_nscale
+               dsk(k) = eval_matrix_element(order_min,order_max, x1, x2,
+     $              kn_beams(:,1), kn_beams(:,2), vq1, vq2, ptH,
+     $              incl_scr(k), incl_scf(k)) * gev2pb * jacobian
+               if (dsk(k).ne.dsk(k)) dsk(k) = 0d0
+            enddo
+            dsigma = dsk(1)
+         else
          dsigma = eval_matrix_element(order_min,order_max, x1, x2, 
      $        kn_beams(:,1), kn_beams(:,2), vq1, vq2, ptH)
 C     convert to [pb] and add in jacobian
          dsigma = dsigma * gev2pb * jacobian
+         endif
 
+      else if (incl_nscale.gt.1) then
+         dsk = 0d0
       endif
       
 C     map to powheg variables for use by analysis
@@ -71,6 +87,12 @@ C     remove the rare outliers where we get dsigma = NaN
 C     fill histograms using powheg analysis if requested
 C     (only at LO when running exclusive)
       if (fill_plots) then
+         if (incl_nscale.gt.1) then
+            weights_num = incl_nscale
+            do k = 1, incl_nscale
+               weights_val(k) = dsk(k)*vegas_ncall*vegas_weight
+            enddo
+         endif
          call user_analysis(dsigma*vegas_ncall*vegas_weight)
          call pwhgaccumup
       endif

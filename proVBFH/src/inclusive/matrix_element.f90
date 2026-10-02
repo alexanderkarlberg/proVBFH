@@ -68,10 +68,13 @@ module matrix_element
 contains
 
   !----------------------------------------------------------------------
-  function eval_matrix_element(order_start,order_stop, x1, x2, P1, P2, q1, q2, ptH) result(res)
+  function eval_matrix_element(order_start,order_stop, x1, x2, P1, P2, q1, q2, ptH, xr, xf) result(res)
     use nonfact
     integer , intent(in) :: order_start,order_stop
     real(dp), intent(in) :: x1, x2, P1(0:3), P2(0:3), q1(0:3), q2(0:3), ptH
+    ! optional: mu_R, mu_F multiplied by xr, xf (on-the-fly scale variations;
+    ! only for scale_choice 2, 3, where hoppet takes the scales as arguments)
+    real(dp), intent(in), optional :: xr, xf
     real(dp)             :: res
     !----------------------------------------------------------------------
     real(dp) :: Q1sq, Q2sq, Q1val, Q2val
@@ -94,6 +97,16 @@ contains
     muR2val = muR2(Q1val, Q2val, ptH)
     muF1val = muF1(Q1val, Q2val, ptH)
     muF2val = muF2(Q1val, Q2val, ptH)
+    if (present(xr) .or. present(xf)) then
+       if (scale_choice /= 2 .and. scale_choice /= 3) &
+            & stop 'eval_matrix_element: scale factors need scale_choice 2 or 3'
+       if (present(xr)) then
+          muR1val = muR1val*xr; muR2val = muR2val*xr
+       endif
+       if (present(xf)) then
+          muF1val = muF1val*xf; muF2val = muF2val*xf
+       endif
+    endif
 
     F1F1 = zero
     F2F1 = zero

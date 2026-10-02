@@ -69,7 +69,8 @@ computed and histogrammed at the VBF Born kinematics as in proVBFH.
 5. VEGAS adapts on |w_1| + |w_2|. The signed sum per cycle is zero by
    construction.
 6. All scale choices are computed at once, as per-event weight arrays
-   (μ_i = Q_i per line by default; μ0(pt,H) as an option).
+   (μ_i = Q_i per line by default; μ0(pt,H) as an option). Implemented
+   2026-10-02 as `cs_scales`, see "On-the-fly scale variations" below.
 
 ## Matrix elements (option A)
 
@@ -167,3 +168,42 @@ Validation, before the (1,1) runs:
 3. E3 against H3 x line-2 dipole in line 2's singular limits, including
    the normalisation for two gluons on different lines (no symmetry
    factor, distinguishable lines).
+
+## On-the-fly scale variations (2026-10-02)
+
+`cs_scales 3` or `cs_scales 7` in powheg.input (exclusive and inclusive
+part; default 1, off): every event carries one weight per scale point,
+written as `-W1.top` ... `-Wn.top` (the analyses use POWHEG's
+`weights_num`/`weights_val`). Points (μ_R/μ_R0, μ_F/μ_F0): 3 = (1,1),
+(½,½), (2,2); 7 = these, then (½,1), (1,½), (2,1), (1,2). Needs
+`runningscales 1` (μ0(p_T,H); scale_choice 2 or 3), where hoppet takes the
+scales as arguments.
+
+- Exclusive part: the weights of a phase-space point are recomputed for
+  each scale point (PDFs, α_s, I operator, K + P at μ_F); the tree and
+  real matrix elements and the dipoles are taken from a per-point cache
+  (`cs_memo.f90`, keyed by flavours, line and the exact momenta). The
+  one-loop V + I of the radiating line is evaluated once and shifted with
+  its renormalisation-group dependence, Born × β0/(4π) ln(μ_R²/μ_R,ref²)
+  (`memo_vi`), as DISENT/disorder treat μ_R. Cost: +7% (3 points), +21% (7
+  points) of the CPU of a run without variations.
+- Inclusive part: the structure functions at each scale point
+  (`eval_matrix_element(..., xr, xf)`).
+- Without `cs_scales` both parts are bitwise unchanged.
+- Validation (1506.02660 NNLO set-up, stored grid, one iteration, so that
+  all runs see the same points): every on-the-fly weight against a run at
+  that fixed (renscfact, facscfact). Inclusive: bitwise, except 5e-9 at
+  μ_F = 2μ0 (the fixed-scale run tabulates the PDFs over a larger Q range).
+  Exclusive, points that vary only μ_F: exact (1e-7 at μ_F = 2μ0, same
+  reason). Points that vary μ_R: within statistics. `cs_scalecheck 2`
+  accumulates shift − direct per point with its own error: rms 1.00 of
+  that error over 309 bins (400k points), σ(2 jets) −1.1σ and +1.2σ.
+  `cs_scalecheck 1` compares the shifted V + I with a direct evaluation at
+  every point: exact slope β0/(4π) for quark- and gluon-initiated lines;
+  for incoming antiquarks VBFNLO's virtual deviates at the 1e-3 level of
+  the slope (flavour dependent, no gauge-check fallbacks involved), and
+  where an invariant of the line has 2 p_i.p_j < 2 GeV² VBFNLO drops the
+  boxes ("no boxes if there are less than 3 jets") and its μ_R dependence
+  is not the renormalisation-group one. In both cases the shift is the
+  consistent μ_R dependence.
+

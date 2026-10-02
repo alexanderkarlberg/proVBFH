@@ -26,6 +26,8 @@ program provbfh_cs
   use integration
   use cs_exclusive
   use cs_nlo2, only: nlo2_ncount, nlo2_ncut, nlo2_emul_kappa
+  use cs_memo, only: memo_hits, memo_misses
+  use incl_parameters, only: incl_nscale, incl_scr, incl_scf
   use cs_dipoles, only: spin_avg, four_hard, four_hard2
   use matrix_element, only: incl_only11
   implicit none
@@ -34,7 +36,7 @@ program provbfh_cs
   real(dp) :: region(2*maxdim), integ, err, chi2, t0, t1
   real(dp) :: powheginput
   external powheginput
-  integer :: part, ilast
+  integer :: part, ilast, i
   common/last_integ/ilast
   character(len=20) :: pwgprefix
   integer :: lprefix
@@ -47,6 +49,15 @@ program provbfh_cs
 
   if (part == 1) then
      if (powheginput('#incl_only11') == 1) incl_only11 = .true.
+     ! on-the-fly scale variations (the same points as the exclusive part)
+     if (powheginput('#cs_scales') > 1) then
+        incl_nscale = nint(powheginput('#cs_scales'))
+        if (incl_nscale /= 3 .and. incl_nscale /= 7) stop 'cs_scales must be 1, 3 or 7'
+        incl_scr(1:incl_nscale) = sc_r(1:incl_nscale)
+        incl_scf(1:incl_nscale) = sc_f(1:incl_nscale)
+        write(6,'(a,i2,a)') ' proVBFH-cs inclusive part: ', incl_nscale, ' scale points, weights W1, W2, ...:'
+        write(6,'(7(a,f4.2,a,f4.2,a))') (' (', sc_r(i), ',', sc_f(i), ')', i = 1, incl_nscale)
+     endif
      call run_inclusive()
      call cpu_time(t1)
      write(6,'(a,f12.1,a)') ' proVBFH-cs inclusive part: CPU ', t1 - t0, ' s'
@@ -91,6 +102,21 @@ program provbfh_cs
   endif
   ! cs_estimate 7 (Born-type weights only): no four-parton matrix elements
   if (excl_estimate == 7) nlo2_emul_kappa = huge(1.0_dp)
+  ! on-the-fly scale variations: cs_scales 3 (symmetric) or 7 points
+  if (powheginput('#cs_scales') > 0) then
+     call cs_scales_setup(nint(powheginput('#cs_scales')))
+     if (powheginput('#cs_scalecheck') == 1) excl_scalecheck = .true.
+     if (powheginput('#cs_scalecheck') == 2) then
+        if (excl_nscale /= 7) stop 'cs_scalecheck 2 needs cs_scales 7'
+        excl_scalecheck2 = .true.
+        sc_r = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 1.0_dp]
+        sc_f = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 1.0_dp]
+        write(6,'(a)') ' cs_scalecheck 2: W1-W3 (1,1), (1/2,1/2), (2,2) with the beta0 shift, W4, W5 (1/2,1/2), (2,2)' &
+             & //' with the virtual evaluated directly, W6 = W2 - W4, W7 = W3 - W5 (W6, W7: scale labels not meaningful)'
+     endif
+     write(6,'(a,i2,a)') ' proVBFH-cs: ', excl_nscale, ' scale points (mu_R/mu_R0, mu_F/mu_F0), weights W1, W2, ...:'
+     write(6,'(7(a,f4.2,a,f4.2,a))') (' (', sc_r(i), ',', sc_f(i), ')', i = 1, excl_nscale)
+  endif
   if (powheginput('#cs_testlimits') >= 1) then
      call cs_excl_testlimits(nint(powheginput('#cs_testlimits')))
      stop
@@ -157,5 +183,8 @@ program provbfh_cs
   write(6,'(a,4i14)') ' points, line radiations cut off, NaN, points failing all cuts: ', excl_stats
   if (excl_order >= 2) write(6,'(a,2i14)') ' stage 2: real and Born matrix-element calls: ', nlo2_ncount
   if (excl_order >= 2) write(6,'(a,i14)') ' stage 2: four-parton points dropped by the technical cut: ', nlo2_ncut
+  if (excl_nscale > 1) write(6,'(a,2i14)') ' scale variations: matrix-element cache hits, misses: ', memo_hits, memo_misses
+  if (excl_scalecheck) write(6,'(a,i12,a,2es10.2)') ' scale check: ', scalecheck_n, &
+       & ' shifted V+I against direct, max deviation relative to |V+I|, to |born|:', scalecheck_dev
   write(6,'(a,f12.1,a)') ' proVBFH-cs exclusive part: CPU ', t1 - t0, ' s'
 end program provbfh_cs

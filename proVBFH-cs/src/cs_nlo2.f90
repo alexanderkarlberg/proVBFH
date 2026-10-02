@@ -39,6 +39,7 @@ module cs_nlo2
   use types, only: dp
   use cs_kinematics, only: mdot, line_radiation
   use cs_dipoles
+  use cs_memo, only: memo_on, memo_get, memo_put, memo_nkey
   implicit none
   private
   public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp, nlo2_test_limits
@@ -399,13 +400,34 @@ contains
           pdf = pdf + f4(grp(ig)%fa(i))*fo(grp(ig)%fo(i))
        enddo
        if (pdf == 0) cycle
-       call group_me(ig, cur_pa, cur_k, me, d, .true.)
+       if (memo_on) then
+          call group_me_memo(ig, me, d)
+       else
+          call group_me(ig, cur_pa, cur_k, me, d, .true.)
+       endif
        wr = wr + me*pdf
        wd = wd - d*pdf
     enddo
     wr = wr*cur_w4
     wd = wd*cur_w4
   end subroutine nlo2_real_me
+
+  ! group_me(ig, cur_pa, cur_k, me, d, .true.) through the per-point cache
+  ! (scale variations): the real and its dipoles do not depend on the scales
+  subroutine group_me_memo(ig, me, d)
+    integer, intent(in) :: ig
+    real(dp), intent(out) :: me, d(6)
+    integer :: key(memo_nkey), slot
+    real(dp) :: mom(16), val(7)
+    key = 0; key(1) = 5; key(2) = ig; key(3) = cur_line
+    mom(1:4) = cur_pa; mom(5:16) = reshape(cur_k, [12])
+    if (memo_get(key, mom, 16, val, 7, slot)) then
+       me = val(1); d = val(2:7)
+    else
+       call group_me(ig, cur_pa, cur_k, me, d, .true.)
+       call memo_put(slot, key, mom, 16, [me, d], 7)
+    endif
+  end subroutine group_me_memo
 
   ! diagnostic: nlo2_real_me for the current point, printed per flavour
   ! group (real and the six mapped configurations' dipoles, weighted as in

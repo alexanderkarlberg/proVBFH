@@ -110,6 +110,11 @@ c variables for powheg:
       external dotrr
       double precision tr,nf,gammaq,gammag
       double precision rest12,rest34
+c proVBFH-cs (debug, 2026-10-02): the Born of the last call, lines 21 and
+c 43, for the check of the scale variations (cs_scalecheck)
+      double precision csdbg_born(2)
+      integer csdbg_nfall(2), csdbg_ntot(2)
+      common/csvdbg/csdbg_born, csdbg_nfall, csdbg_ntot
 
       double precision ffunc
       external ffunc
@@ -131,6 +136,8 @@ c
 c initialize:
       ans     = 0d0
       ansc(:) = 0d0
+      csdbg_nfall = 0
+      csdbg_ntot = 0
 
 C  Reset the coupling factors
       do i = 1,6
@@ -478,6 +485,8 @@ c
 
                      if(i.gt.0) then !gauge invariance testing
                         ratio = abs(mv21(k,isig,0)/mm21(k,isig,i))
+                        csdbg_ntot(1) = csdbg_ntot(1) + 1
+                        if(ratio.gt.0.1d0) csdbg_nfall(1) = csdbg_nfall(1) + 1
                         if(ratio.gt.0.1d0) then ! use constant factor
                            mv21(k,isig,i) =colfac*cvirtH3j*mm21(k,isig,i) !GETS ADDED BACK LATER
                         endif
@@ -492,6 +501,8 @@ ccc
 
                      if(i.gt.0) then ! gauge invariance testing
                         ratio = abs(mv43(k,isig,0)/mm43(k,isig,i))
+                        csdbg_ntot(2) = csdbg_ntot(2) + 1
+                        if(ratio.gt.0.1d0) csdbg_nfall(2) = csdbg_nfall(2) + 1
                         if(ratio.gt.0.1d0) then ! use constant factor      
                            mv43(k,isig,i) =colfac*cvirtH3j*mm43(k,isig,i)
                         endif
@@ -754,6 +765,8 @@ ccccccccccccc
          
 c      enddo !k
       
+         csdbg_born(1) = res(k,1)*fac
+         csdbg_born(2) = res(k,2)*fac
 c      do k =1,6
 c     born**2
          if(lborn) then

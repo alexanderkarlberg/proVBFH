@@ -36,6 +36,7 @@ module cs_exclusive
   use phase_space, only: gen_phsp, set_phsp, x1, x2, vq1, vq2, Q1_sq, Q2_sq
   use cs_kinematics
   use cs_nlo2, dbg_mvar => mvar, dbg_mz => mz, dbg_w4 => cur_w4
+  use cs_memo
   implicit none
   private
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
@@ -101,6 +102,26 @@ module cs_exclusive
   ! code has (btildecoll adds it for every gluon Born): old - proVBFH-cs =
   ! [estimate 6] + [estimate 7]. Only these weights are produced.
   integer, public, save :: excl_estimate = 0, excl_estimu = 1
+  ! on-the-fly scale variations (cs_scales 3 or 7; 1: off): the event
+  ! weights at mu_R = sc_r(k) mu_R0, mu_F = sc_f(k) mu_F0, k = 1..excl_nscale,
+  ! written as weights 1..n (files -W1.top ... -Wn.top); 3: symmetric
+  ! (1,1), (1/2,1/2), (2,2); 7: the same, then (1/2,1), (1,1/2), (2,1), (1,2)
+  integer, parameter :: max_scales = 7
+  integer, public, save :: excl_nscale = 1
+  real(dp), public, save :: sc_r(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp]
+  real(dp), public, save :: sc_f(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 2.0_dp]
+  public :: cs_scales_setup
+  ! cs_scalecheck 1: also evaluate the virtual directly at every shifted mu_R
+  ! and record the largest deviation of the beta0 shift (memo_vi)
+  logical, public, save :: excl_scalecheck = .false.
+  ! cs_scalecheck 2: weights (1,1), (1/2,1/2), (2,2) with the beta0 shift,
+  ! (1/2,1/2), (2,2) with the virtual evaluated directly, and the two
+  ! differences shift - direct (accumulated point by point, so that their
+  ! errors are those of the differences)
+  logical, public, save :: excl_scalecheck2 = .false.
+  logical, save :: vi_direct = .false.
+  real(dp), public, save :: scalecheck_dev(2) = 0
+  integer(8), public, save :: scalecheck_n = 0
   real(dp), save :: tb_pb(0:3,5,2), tb_xb(2,2)
   integer, save :: tb_n = 0
 
@@ -355,7 +376,7 @@ contains
                    p7t(:,1) = p6(:,1,1); p7t(:,2) = p6(:,2,2); p7t(:,3) = pb(:,3)
                    p7t(:,4) = p6(:,4,1); p7t(:,5) = p6(:,5,2); p7t(:,6) = p6(:,6,1); p7t(:,7) = p6(:,6,2)
                    call e3_momenta(s1, s2, p7t, pe)
-                   call cs_real_me(j, pe, me)
+                   call memo_real_me(j, pe, me)
                    me = me*e3_fac(s1,s2)
                    x = 1 - mdot(pt, pk)/mdot(pa, pt + pk); u = mdot(pa, pt)/mdot(pa, pt + pk)
                    if (st <= ncls) then
@@ -422,6 +443,10 @@ contains
     real(dp), external :: hoppetAlphaS, cs_born2
     integer vegas_ncall
     common/vegas_ncall/vegas_ncall
+    ! weights per scale point (cs_scales; point 1 is the central scale)
+    integer :: ks, ns
+    real(dp) :: sw(2,max_scales), swv(2,max_scales), swr(2,max_scales), swd(6,2,max_scales)
+    real(dp) :: se12(2,max_scales), se3(max_scales), fB0(-6:6,2), fE0(-6:6,2), as0(2)
 
     cs_excl_dsigma = 0
     excl_stats(1) = excl_stats(1) + 1
@@ -544,6 +569,28 @@ contains
        endif
     endif
 
+    ! the event weights at each scale point; the matrix elements are
+    ! cached (memo) for the points after the first
+    ns = excl_nscale
+    if (ns > 1) then
+       call memo_new_point()
+       fB0 = fB; fE0 = fE; as0 = as
+    endif
+    do ks = 1, merge(5, ns, excl_scalecheck2)
+    vi_direct = excl_scalecheck2 .and. ks >= 4
+    if (ks > 1) then
+       mur = [cs_mu(xmur*sc_r(ks), 1, Q1, Q2, ptH, .true.), cs_mu(xmur*sc_r(ks), 2, Q1, Q2, ptH, .true.)]
+       muf = [cs_mu(xmuf*sc_f(ks), 1, Q1, Q2, ptH, .false.), cs_mu(xmuf*sc_f(ks), 2, Q1, Q2, ptH, .false.)]
+       call hoppetEval(x1, muf(1), fB(:,1))
+       call hoppetEval(x2, muf(2), fB(:,2))
+       fB = fB/spread([x1, x2], 1, 13)
+       do line = 1, 2
+          if (.not. ok(line)) cycle
+          as(line) = hoppetAlphaS(mur(line))
+          call hoppetEval(xi3(line), muf(line), fE(:,line))
+          fE(:,line) = fE(:,line)/xi3(line)
+       enddo
+    endif
     w = 0; wg = 0
     do line = 1, 2
        if (.not. need(line)) cycle
@@ -552,7 +599,7 @@ contains
           do i2 = 1, ncls
              if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
              bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
-             call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+             call memo_lines(p6(:,:,line), bflav, m1, m2)
              me = merge(m1, m2, line == 1)
              if (line == 1) then
                 w(1) = w(1) + me*pdfsum(fE(:,1), cls(i1))*pdfsum(fB(:,2), cls(i2))
@@ -574,11 +621,11 @@ contains
                 if (excl_estimate == 2) ib = 3 - i1
                 if (line == 1) then
                    bflav = [0, cls(i2)%a, 25, gcls(ib)%q, cls(i2)%b, gcls(ib)%qb]
-                   call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                   call memo_lines(p6(:,:,line), bflav, m1, m2)
                    w(1) = w(1) + m1*gcls(i1)%n*fsing*pdfsum(fB(:,2), cls(i2))
                 else
                    bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(ib)%q, gcls(ib)%qb]
-                   call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                   call memo_lines(p6(:,:,line), bflav, m1, m2)
                    w(2) = w(2) + m2*gcls(i1)%n*pdfsum(fB(:,1), cls(i2))*fsing
                 endif
              enddo
@@ -591,12 +638,12 @@ contains
              if (.not. compatible(gcls(i1)%w, cls(i2)%w)) cycle
              if (line == 1) then
                 bflav = [0, cls(i2)%a, 25, gcls(i1)%q, cls(i2)%b, gcls(i1)%qb]
-                call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                call memo_lines(p6(:,:,line), bflav, m1, m2)
                 w(1) = w(1) + m1*gcls(i1)%n*fE(0,1)*pdfsum(fB(:,2), cls(i2))
                 wg(1) = wg(1) + m1*gcls(i1)%n*fE(0,1)*pdfsum(fB(:,2), cls(i2))
              else
                 bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
-                call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                call memo_lines(p6(:,:,line), bflav, m1, m2)
                 w(2) = w(2) + m2*gcls(i1)%n*pdfsum(fB(:,1), cls(i2))*fE(0,2)
                 wg(2) = wg(2) + m2*gcls(i1)%n*pdfsum(fB(:,1), cls(i2))*fE(0,2)
              endif
@@ -680,11 +727,27 @@ contains
        wv = 0; wr = 0; wd = 0
     endif
     if (excl_only2) w = 0
+    sw(:,ks) = w; swv(:,ks) = wv; swr(:,ks) = wr; swd(:,:,ks) = wd; se12(:,ks) = e12; se3(ks) = e3
+    enddo
+    vi_direct = .false.
+    if (excl_scalecheck2) then
+       sw(:,6:7) = sw(:,2:3) - sw(:,4:5); swv(:,6:7) = swv(:,2:3) - swv(:,4:5)
+       swr(:,6:7) = swr(:,2:3) - swr(:,4:5); swd(:,:,6:7) = swd(:,:,2:3) - swd(:,:,4:5)
+       se12(:,6:7) = se12(:,2:3) - se12(:,4:5); se3(6:7) = se3(2:3) - se3(4:5)
+    endif
+    ! the central-scale weights for everything below except the analysis
+    if (ns > 1) then
+       mur = [cs_mu(xmur, 1, Q1, Q2, ptH, .true.), cs_mu(xmur, 2, Q1, Q2, ptH, .true.)]
+       muf = [cs_mu(xmuf, 1, Q1, Q2, ptH, .false.), cs_mu(xmuf, 2, Q1, Q2, ptH, .false.)]
+       w = sw(:,1); wv = swv(:,1); wr = swr(:,1); wd = swd(:,:,1); e12 = se12(:,1); e3 = se3(1)
+       fB = fB0; fE = fE0; as = as0
+    endif
     if (excl_flavcheck > 0) then
        excl_flavcheck = excl_flavcheck - 1
        call flavour_check(p6, need, fB, fE, common*wrad*as, w)
     endif
-    if (any(w /= w) .or. any(wv /= wv) .or. any(wr /= wr) .or. any(wd /= wd) .or. any(e12 /= e12) .or. e3 /= e3) then
+    if (any(sw(:,1:ns) /= sw(:,1:ns)) .or. any(swv(:,1:ns) /= swv(:,1:ns)) .or. any(swr(:,1:ns) /= swr(:,1:ns)) &
+         & .or. any(swd(:,:,1:ns) /= swd(:,:,1:ns)) .or. any(se12(:,1:ns) /= se12(:,1:ns)) .or. any(se3(1:ns) /= se3(1:ns))) then
        excl_stats(3) = excl_stats(3) + 1
        return
     endif
@@ -724,7 +787,7 @@ contains
             & 1-dxp, dz, dok, (w + wv)*vegas_weight, wr*vegas_weight, sum(wd,1)*vegas_weight, &
             & (dmv(:,line), dmz(:,line), line=1,2), dw4*vegas_weight, xrand(1:20)
     endif
-    if (excl_fill) then
+    if (excl_fill .and. ns == 1) then
        do line = 1, 2
           if (need(line)) call cs_analysis(6, p6(:,:,line), (w(line) + wv(line) + e12(line))*vegas_ncall*vegas_weight)
           if (needr(line)) then
@@ -736,6 +799,20 @@ contains
        enddo
        if (need3) call cs_analysis(7, p7, e3*vegas_ncall*vegas_weight)
        call cs_analysis(5, pb, -(sum(w) + sum(wv) + sum(wr) + sum(wd) + sum(e12) + e3)*vegas_ncall*vegas_weight)
+    elseif (excl_fill) then
+       do line = 1, 2
+          if (need(line)) call cs_analysis_m(6, p6(:,:,line), &
+               & (sw(line,1:ns) + swv(line,1:ns) + se12(line,1:ns))*vegas_ncall*vegas_weight)
+          if (needr(line)) then
+             call cs_analysis_m(7, pr(:,:,line), swr(line,1:ns)*vegas_ncall*vegas_weight)
+             do m = 1, 6
+                if (dok(m,line)) call cs_analysis_m(6, pd(:,:,m,line), swd(m,line,1:ns)*vegas_ncall*vegas_weight)
+             enddo
+          endif
+       enddo
+       if (need3) call cs_analysis_m(7, p7, se3(1:ns)*vegas_ncall*vegas_weight)
+       call cs_analysis_m(5, pb, -(sum(sw(:,1:ns), 1) + sum(swv(:,1:ns), 1) + sum(swr(:,1:ns), 1) &
+            & + sum(sum(swd(:,:,1:ns), 1), 1) + sum(se12(:,1:ns), 1) + se3(1:ns))*vegas_ncall*vegas_weight)
     endif
     cs_excl_dsigma = abs(w(1) + wv(1) + e12(1)) + abs(w(2) + wv(2) + e12(2)) + abs(e3) + abs(wr(1) + sum(wd(:,1))) &
          & + abs(wr(2) + sum(wd(:,2)))
@@ -857,7 +934,7 @@ contains
              if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
              il = merge(i1, i2, line == 1); io = merge(i2, i1, line == 1)
              bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
-             call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+             call memo_lines(p6(:,:,line), bflav, m1, m2)
              me = merge(m1, m2, line == 1)
              b2 = cs_born2(pb, bflav(1:5))
              wr = wr + (me - kq*b2)*pdfsum(fE(:,line), cls(il))*pdfsum(fB(:,o), cls(io))
@@ -874,7 +951,7 @@ contains
              else
                 bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
              endif
-             call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+             call memo_lines(p6(:,:,line), bflav, m1, m2)
              me = merge(m1, m2, line == 1)
              b5 = [cls(i2)%a, cls(i2)%a, 25, cls(i2)%b, cls(i2)%b]
              b5(line) = -gcls(i1)%qb; b5(3+line) = gcls(i1)%q
@@ -898,7 +975,7 @@ contains
   real(dp) function virt_point(line, p6, fB, fE, xi3, mur, muf, Qo) result(v)
     integer, intent(in) :: line
     real(dp), intent(in) :: p6(0:3,6), fB(-6:6,2), fE(-6:6), xi3, mur, muf, Qo
-    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq, rem
+    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq, rem, vi
     integer :: i1, i2, bflav(6), o, il, io
     real(dp), parameter :: CF = 4.0_dp/3.0_dp, twopi = 6.283185307179586476925286766559005768394_dp
     o = 3 - line
@@ -919,7 +996,7 @@ contains
              else
                 bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
              endif
-             call cs_hjjj_born_line(p6, bflav, line, born, bmn)
+             call memo_born_line(p6, bflav, line, born, bmn)
              v = v - gcls(i1)%n*born/twopi*fgq*pdfsum(fB(:,o), cls(i2))
           enddo
        enddo
@@ -936,10 +1013,15 @@ contains
           if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
           bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
           il = merge(i1, i2, line == 1); io = merge(i2, i1, line == 1)
-          call cs_hjjj_born_line(p6, bflav, line, born, bmn)
-          call cs_hjjj_virt_line(p6, bflav, line, mur**2, virt)
-          v20 = virt - born*c11
-          v = v + ((v20 + born*iq/twopi)*pdfsum(fE, cls(il)) + born/twopi*pdfsum(fq, cls(il))) &
+          call memo_born_line(p6, bflav, line, born, bmn)
+          if (memo_on) then
+             vi = memo_vi(p6, bflav, line, mur**2, born, c11, iq)
+          else
+             call cs_hjjj_virt_line(p6, bflav, line, mur**2, virt)
+             v20 = virt - born*c11
+             vi = v20 + born*iq/twopi
+          endif
+          v = v + (vi*pdfsum(fE, cls(il)) + born/twopi*pdfsum(fq, cls(il))) &
                & *pdfsum(fB(:,o), cls(io))
        enddo
     enddo
@@ -952,10 +1034,15 @@ contains
           else
              bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
           endif
-          call cs_hjjj_born_line(p6, bflav, line, born, bmn)
-          call cs_hjjj_virt_line(p6, bflav, line, mur**2, virt)
-          v20 = virt - born*c11
-          v = v + gcls(i1)%n*((v20 + born*ig/twopi)*fE(0) + born/twopi*fg)*pdfsum(fB(:,o), cls(i2))
+          call memo_born_line(p6, bflav, line, born, bmn)
+          if (memo_on) then
+             vi = memo_vi(p6, bflav, line, mur**2, born, c11, ig)
+          else
+             call cs_hjjj_virt_line(p6, bflav, line, mur**2, virt)
+             v20 = virt - born*c11
+             vi = v20 + born*ig/twopi
+          endif
+          v = v + gcls(i1)%n*(vi*fE(0) + born/twopi*fg)*pdfsum(fB(:,o), cls(i2))
        enddo
     enddo
   end function virt_point
@@ -1175,7 +1262,7 @@ contains
        me = 0
        do ib = 1, ncls
           if (.not. compatible(state_w(st), cls(ib)%w)) cycle
-          call cs_hjjj_lines(p6l, h3_flav(l, st, ib), m1, m2)
+          call memo_lines(p6l, h3_flav(l, st, ib), m1, m2)
           me(ib) = merge(m1, m2, l == 1)
           wb = wb + me(ib)*pdfl*(vi*pdfsum(fB(:,o), cls(ib)) + pdfsum(fq, cls(ib))/twopi)
           if (oko) wd = wd - kq*me(ib)*pdfl*pdfsum(fEo, cls(ib))*wrado
@@ -1219,7 +1306,7 @@ contains
           p2 = state_pdf(s2, fE(:,2))
           if (p2 == 0) cycle
           call e3_momenta(s1, s2, p7, pe)
-          call cs_real_me(j, pe, me)
+          call memo_real_me(j, pe, me)
           w = w + e3_fac(s1,s2)*me*p1*p2
        enddo
     enddo
@@ -1337,7 +1424,7 @@ contains
              mu = [50.0_dp, 200.0_dp, 800.0_dp]
              if (it == 1 .and. line == 1 .and. (i1 == 1 .or. i1 == ncls + 1)) then
                 do im = 1, 7
-                   call cs_hjjj_born_line(p6, bflav, line, born, bmn)
+                   call memo_born_line(p6, bflav, line, born, bmn)
                    call cs_hjjj_virt_line(p6, bflav, line, (25.0_dp*2**(im-1))**2, virt)
                    lo = log((25.0_dp*2**(im-1))**2/Qo**2)
                    iop = nlo2_ifin(btype, p6(:,line), p6(:,3+line), p6(:,6), (25.0_dp*2**(im-1))**2)
@@ -1347,7 +1434,7 @@ contains
                 enddo
              endif
              do im = 1, 3
-                call cs_hjjj_born_line(p6, bflav, line, born, bmn)
+                call memo_born_line(p6, bflav, line, born, bmn)
                 call cs_hjjj_virt_line(p6, bflav, line, mu(im)**2, virt)
                 lo = log(mu(im)**2/Qo**2)
                 iop = nlo2_ifin(btype, p6(:,line), p6(:,3+line), p6(:,6), mu(im)**2)
@@ -1386,7 +1473,7 @@ contains
                    if (w1 == 0 .or. w2 == 0 .or. w1 /= -w2) cycle
                 endif
                 bflav = [a1, a2, 25, b1, b2, 0]
-                call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                call memo_lines(p6(:,:,line), bflav, m1, m2)
                 if (line == 1) then
                    wb(1) = wb(1) + m1*fE(a1,1)*fB(a2,2)
                 else
@@ -1415,11 +1502,11 @@ contains
                 endif
                 if (line == 1) then
                    bflav = [0, a2, 25, b1, b2, -a1]
-                   call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                   call memo_lines(p6(:,:,line), bflav, m1, m2)
                    wb(1) = wb(1) + m1*fE(0,1)*fB(a2,2)
                 else
                    bflav = [a2, 0, 25, b2, b1, -a1]
-                   call cs_hjjj_lines(p6(:,:,line), bflav, m1, m2)
+                   call memo_lines(p6(:,:,line), bflav, m1, m2)
                    wb(2) = wb(2) + m2*fB(a2,1)*fE(0,2)
                 endif
              enddo
@@ -1474,6 +1561,166 @@ contains
        stop 'cs_mu: illegal scale_choice'
     endif
   end function cs_mu
+
+  ! cs_scales: number of scale points (1, 3 or 7)
+  subroutine cs_scales_setup(n)
+    integer, intent(in) :: n
+    if (n /= 1 .and. n /= 3 .and. n /= 7) stop 'cs_scales must be 1, 3 or 7'
+    excl_nscale = n
+    memo_on = n > 1
+    if (n > 1) then
+       if (scale_choice /= 2 .and. scale_choice /= 3) &
+            & stop 'cs_scales: on-the-fly variations need scale_choice 2 or 3 (runningscales 1)'
+       if (excl_estimate /= 0) stop 'cs_scales: not with cs_estimate'
+    endif
+  end subroutine cs_scales_setup
+
+  ! the matrix-element routines of the event weights through the per-point
+  ! cache (memo_on, scale variations), else directly
+  subroutine memo_lines(p6, bflav, m1, m2)
+    real(dp), intent(in) :: p6(0:3,6)
+    integer, intent(in) :: bflav(6)
+    real(dp), intent(out) :: m1, m2
+    integer :: key(memo_nkey), slot
+    real(dp) :: val(2)
+    if (.not. memo_on) then
+       call cs_hjjj_lines(p6, bflav, m1, m2)
+       return
+    endif
+    key = 0; key(1) = 1; key(2:7) = bflav
+    if (memo_get(key, reshape(p6, [24]), 24, val, 2, slot)) then
+       m1 = val(1); m2 = val(2)
+    else
+       call cs_hjjj_lines(p6, bflav, m1, m2)
+       call memo_put(slot, key, reshape(p6, [24]), 24, [m1, m2], 2)
+    endif
+  end subroutine memo_lines
+
+  subroutine memo_born_line(p6, bflav, line, born, bmn)
+    real(dp), intent(in) :: p6(0:3,6)
+    integer, intent(in) :: bflav(6), line
+    real(dp), intent(out) :: born, bmn(0:3,0:3)
+    integer :: key(memo_nkey), slot
+    real(dp) :: val(17)
+    if (.not. memo_on) then
+       call cs_hjjj_born_line(p6, bflav, line, born, bmn)
+       return
+    endif
+    key = 0; key(1) = 2; key(2:7) = bflav; key(8) = line
+    if (memo_get(key, reshape(p6, [24]), 24, val, 17, slot)) then
+       born = val(1); bmn = reshape(val(2:17), [4, 4])
+    else
+       call cs_hjjj_born_line(p6, bflav, line, born, bmn)
+       call memo_put(slot, key, reshape(p6, [24]), 24, [born, reshape(bmn, [16])], 17)
+    endif
+  end subroutine memo_born_line
+
+  ! the virtual at mu_R^2 = mur2 (cached per value of mur2)
+  subroutine memo_virt_line(p6, bflav, line, mur2, virt)
+    real(dp), intent(in) :: p6(0:3,6), mur2
+    integer, intent(in) :: bflav(6), line
+    real(dp), intent(out) :: virt
+    integer :: key(memo_nkey), slot
+    real(dp) :: val(1), mom(25)
+    if (.not. memo_on) then
+       call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
+       return
+    endif
+    key = 0; key(1) = 3; key(2:7) = bflav; key(8) = line
+    mom(1:24) = reshape(p6, [24]); mom(25) = mur2
+    if (memo_get(key, mom, 25, val, 1, slot)) then
+       virt = val(1)
+    else
+       call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
+       call memo_put(slot, key, mom, 25, [virt], 1)
+    endif
+  end subroutine memo_virt_line
+
+  ! V + I of the radiating line, (virtual - born c11) + born i/(2 pi), at
+  ! mu_R^2 = mur2 (c11: the other line's vertex term, i: the line's I
+  ! operator, both at mur2), through the per-point cache: evaluated at the
+  ! first mu_R of the point, then shifted by its renormalisation-group
+  ! dependence, born b0/(4 pi) ln(mur2/mur2_ref), b0 = 11/3 CA - 4/3 TR nf
+  ! (the infrared logarithms of V and I cancel; the H+3j tree is O(g_s))
+  real(dp) function memo_vi(p6, bflav, line, mur2, born, c11, ii) result(vi)
+    real(dp), intent(in) :: p6(0:3,6), mur2, born, c11, ii
+    integer, intent(in) :: bflav(6), line
+    real(dp), parameter :: CA = 3, TR = 0.5_dp, twopi = 6.283185307179586476925286766559005768394_dp
+    real(dp), external :: cs_nlight
+    integer :: key(memo_nkey), slot
+    real(dp) :: val(2), virt, vid, b0_4pi, vb(2)
+    integer :: nfall(2), ntot(2)
+    key = 0; key(1) = 6; key(2:7) = bflav; key(8) = line
+    if (vi_direct) then
+       call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
+       vi = (virt - born*c11) + born*ii/twopi
+       return
+    endif
+    if (memo_get(key, reshape(p6, [24]), 24, val, 2, slot)) then
+       b0_4pi = (11.0_dp/3*CA - 4.0_dp/3*TR*cs_nlight())/(2*twopi)
+       vi = val(1) + born*b0_4pi*log(mur2/val(2))
+       if (excl_scalecheck .and. mur2 /= val(2)) then
+          call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
+          vid = (virt - born*c11) + born*ii/twopi
+          scalecheck_n = scalecheck_n + 1
+          scalecheck_dev(1) = max(scalecheck_dev(1), abs(vi - vid)/max(abs(vid), tiny(1.0_dp)))
+          if (abs(vi - vid)/max(abs(born), tiny(1.0_dp)) > scalecheck_dev(2)) then
+             call cs_get_vborn(vb, nfall, ntot)
+             write(6,'(a,es10.2,a,6i4,a,i2,a,es11.3,a,2es12.4,a,2i4,a,2i4)') ' scalecheck new max dev/born', &
+                  & abs(vi - vid)/abs(born), ' fl', bflav, ' line', line, ' born', born, ' V+I shifted, direct', vi, vid, &
+                  & ' fallbacks at mu (21,43):', nfall, ' of', ntot
+             call cs_hjjj_virt_line(p6, bflav, line, val(2), virt)
+             call cs_get_vborn(vb, nfall, ntot)
+             write(6,'(a,2i4,a,2i4)') '      fallbacks at mu_ref (21,43):', nfall, ' of', ntot
+          endif
+          scalecheck_dev(2) = max(scalecheck_dev(2), abs(vi - vid)/max(abs(born), tiny(1.0_dp)))
+          if (scalecheck_n <= 40) then
+             call cs_get_vborn(vb, nfall, ntot)
+             write(6,'(a,i3,a,6i4,a,i2,a,es11.3,a,f12.6,a,2i4,a,2i4)') ' scalecheck', &
+               & int(scalecheck_n), ' fl', bflav, ' line', line, ' born', born, &
+               & ' slope (V+I)/born per ln mu2', (vid - val(1))/(born*log(mur2/val(2))), &
+               & '  gauge-check fallbacks (21, 43):', nfall, ' of', ntot
+          endif
+       endif
+    else
+       call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
+       vi = (virt - born*c11) + born*ii/twopi
+       call memo_put(slot, key, reshape(p6, [24]), 24, [vi, mur2], 2)
+    endif
+  end function memo_vi
+
+  subroutine memo_real_me(j, pe, me)
+    integer, intent(in) :: j
+    real(dp), intent(in) :: pe(0:3,7)
+    real(dp), intent(out) :: me
+    integer :: key(memo_nkey), slot
+    real(dp) :: val(1)
+    if (.not. memo_on) then
+       call cs_real_me(j, pe, me)
+       return
+    endif
+    key = 0; key(1) = 4; key(2) = j
+    if (memo_get(key, reshape(pe, [28]), 28, val, 1, slot)) then
+       me = val(1)
+    else
+       call cs_real_me(j, pe, me)
+       call memo_put(slot, key, reshape(pe, [28]), 28, [me], 1)
+    endif
+  end subroutine memo_real_me
+
+  ! cs_analysis with one weight per scale point (wgt(1): the central one);
+  ! a single scale point goes through cs_analysis unchanged
+  subroutine cs_analysis_m(n, p, wgt)
+    integer, intent(in) :: n
+    real(dp), intent(in) :: p(0:3,n), wgt(:)
+    if (size(wgt) == 1) then
+       call cs_analysis(n, p, wgt(1))
+       return
+    endif
+    call cs_set_weights(size(wgt), wgt)
+    call cs_fill_phep(n, p)
+    call user_analysis(wgt(1))
+  end subroutine cs_analysis_m
 
   subroutine cs_analysis(n, p, wgt)
     integer, intent(in) :: n

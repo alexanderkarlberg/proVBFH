@@ -12,6 +12,11 @@ module incl_parameters
   real(dp), parameter, public :: gev2pb = 389379660.0_dp
   real(dp), parameter, public :: eps    = 1.0e-14_dp
   real(dp), public :: xmuf, xmur, Qmin
+  ! on-the-fly scale variations of the inclusive part (proVBFH-cs, cs_scales):
+  ! incl_nscale points, mu_R and mu_F multiplied by incl_scr(k), incl_scf(k);
+  ! 1 (default): off, the run is unchanged
+  integer,  public :: incl_nscale = 1
+  real(dp), public :: incl_scr(7) = 1.0_dp, incl_scf(7) = 1.0_dp
   real(dp), public :: mh, mh_sq, hwidth
   real(dp), public :: sin_thw, mw, mz, w_width, z_width
   real(dp), public :: sqrts, S, pi, Q0_cut_sq
