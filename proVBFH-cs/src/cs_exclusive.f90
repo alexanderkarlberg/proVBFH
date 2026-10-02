@@ -96,6 +96,10 @@ module cs_exclusive
   ! line quark of the incoming flavour, (K + P)_qg the quark part of the K + P
   ! of the NC gluon-initiated Borns (gcls(1:2)); the last term, a power
   ! correction in kappa, is left out. Only these weights are produced.
+  ! excl_estimate 7: the other half of the emulation, the quark part of the
+  ! old code's (FKS) collinear remnant of the same gluon Borns, which the old
+  ! code has (btildecoll adds it for every gluon Born): old - proVBFH-cs =
+  ! [estimate 6] + [estimate 7]. Only these weights are produced.
   integer, public, save :: excl_estimate = 0, excl_estimu = 1
   real(dp), save :: tb_pb(0:3,5,2), tb_xb(2,2)
   integer, save :: tb_n = 0
@@ -661,6 +665,9 @@ contains
     if (excl_estimate == 6) then
        w = 0; e12 = 0; e3 = 0
     endif
+    if (excl_estimate == 7) then
+       w = 0; wr = 0; wd = 0; e12 = 0; e3 = 0
+    endif
     if (excl_estimate == 5) then
        w = 0; wv = 0; wr = 0; wd = 0; e12 = 0
        if (need3) then
@@ -891,13 +898,18 @@ contains
   real(dp) function virt_point(line, p6, fB, fE, xi3, mur, muf, Qo) result(v)
     integer, intent(in) :: line
     real(dp), intent(in) :: p6(0:3,6), fB(-6:6,2), fE(-6:6), xi3, mur, muf, Qo
-    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq
+    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq, rem
     integer :: i1, i2, bflav(6), o, il, io
     real(dp), parameter :: CF = 4.0_dp/3.0_dp, twopi = 6.283185307179586476925286766559005768394_dp
     o = 3 - line
     call nlo2_kp(xi3, p6(:,line), p6(:,3+line), p6(:,6), muf, fq, fg, fgq)
-    if (excl_estimate == 6) then
-       ! emulation: minus the quark part of K + P of the NC gluon-initiated Borns
+    if (excl_estimate == 6 .or. excl_estimate == 7) then
+       ! emulation: minus the quark part of K + P of the NC gluon-initiated
+       ! Borns (6), or plus the old code's FKS remnant in its place (7)
+       if (excl_estimate == 7) then
+          rem = nlo2_rem_fks_qg(xi3, 2*mdot(p6(:,1), p6(:,2)), muf)
+          fgq = -rem
+       endif
        v = 0
        do i1 = 1, 2
           do i2 = 1, ncls

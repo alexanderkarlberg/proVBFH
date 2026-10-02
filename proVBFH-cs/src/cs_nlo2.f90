@@ -42,7 +42,7 @@ module cs_nlo2
   implicit none
   private
   public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp, nlo2_test_limits
-  public :: nlo2_kp_dis, nlo2_ifin_dis
+  public :: nlo2_kp_dis, nlo2_ifin_dis, nlo2_rem_fks_qg
   public :: nlo2_ngroups, nlo2_ncount, nlo2_debug_is, nlo2_debug_is4, nlo2_debug_isg, nlo2_debug_point
   ! read by cs_exclusive's diagnostic dump only
   public :: mvar, mz, cur_w4
@@ -753,6 +753,38 @@ contains
     sq = 0
     fq(0) = 0
   end subroutine kp_core
+
+  ! the quark part of the collinear remnant of a gluon Born in the old
+  ! proVBFH (POWHEG-BOX btildecoll, 'qg remnant', FNO2007 2.102), which it
+  ! adds for every gluon Born whether or not the real has the initial-state
+  ! region; normalised as fgq of nlo2_kp:
+  !   sum_q int_xi^1 dz/z [P_qg(z) (ln(sb/(z muf^2)) + 2 ln(1-z)) + CF z] f_q(xi/z)
+  ! with P_qg(z) = CF (1 + (1-z)^2)/z and sb the Born's partonic s
+  real(dp) function nlo2_rem_fks_qg(xi, sb, muf) result(r)
+    real(dp), intent(in) :: xi, sb, muf
+    real(dp) :: zm, z, wz, f(-6:6), fsum
+    integer :: ip, iq, a
+    r = 0
+    zm = (1 + xi)/2
+    do ip = 1, 2
+       do iq = 1, nq
+          if (ip == 1) then
+             z = xi*(zm/xi)**gx(iq)
+             wz = gw(iq)*z*log(zm/xi)
+          else
+             z = 1 - (1 - zm)*gx(iq)**2
+             wz = gw(iq)*2*(1 - zm)*gx(iq)
+          endif
+          call hoppetEval(xi/z, muf, f)
+          f = f/xi               ! f_a(xi/z)/z
+          fsum = 0
+          do a = -nf, nf
+             if (a /= 0) fsum = fsum + f(a)
+          enddo
+          r = r + wz*(CF*(1 + (1 - z)**2)/z*(log(sb/(z*muf**2)) + 2*log(1 - z)) + CF*z)*fsum
+       enddo
+    enddo
+  end function nlo2_rem_fks_qg
 
   ! dilogarithm Li2(x), 0 <= x <= 1
   real(dp) function li2(x)

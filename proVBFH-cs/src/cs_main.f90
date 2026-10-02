@@ -89,6 +89,8 @@ program provbfh_cs
      nlo2_emul_kappa = 0.1_dp
      if (powheginput('#cs_kappa') > 0) nlo2_emul_kappa = powheginput('#cs_kappa')
   endif
+  ! cs_estimate 7 (Born-type weights only): no four-parton matrix elements
+  if (excl_estimate == 7) nlo2_emul_kappa = huge(1.0_dp)
   if (powheginput('#cs_testlimits') >= 1) then
      call cs_excl_testlimits(nint(powheginput('#cs_testlimits')))
      stop
