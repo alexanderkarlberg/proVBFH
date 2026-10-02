@@ -782,6 +782,126 @@ nf = 5 consistently in all codes?".
   down to κ_min ~ M/√(N f) for N points (fraction f in these regions): about
   1 GeV in the pilot, a few 10 MeV in the 3.6e8-point production, i.e. Δ of
   order 15–20 e-folds there, growing like ln N, and present in the median of
-  every job rather than in rare spikes. To be checked at production
-  statistics: 120 jobs × 1M × 3 points (as fixmh-old1506) running since 01:45
-  (60 on thserv18/22, 60 to follow).
+  every job rather than in rare spikes [corrected below]. To be checked at
+  production statistics: 120 jobs × 1M × 3 points (as fixmh-old1506).
+
+### k_T scan at production statistics (2 Oct, morning)
+
+`runs/ktscan-old1506`, old code at μ = m_H, 91 (of 120; the last 29, on thserv22, still running at 09:05) jobs × 3M points (seeds
+8001–8120, stage-1 grids of fixmh-old1506; `tools`: scratchpad
+`ktscan_analyse.py`). Contributions to σ(≥ 3 jets, VBF cuts) of the `fspair`
+regions (events + FKS counterevents), per half-decade of the smallest parton
+k_T of the real point [pb]:
+
+| log10 k_T [GeV] | fspair contribution per half-decade [pb] |
+|---|---|
+| [−2.5, −2.0) | −3.2e-08 ± 1.0e-08 |
+| [−2.0, −1.5) | −3.7e-07 ± 4.5e-08 |
+| [−1.5, −1.0) | +6.8e-06 ± 7.1e-06 |
+| [−1.0, −0.5) | +5.5e-04 ± 2.6e-04 |
+| [−0.5, 0.0) | +5.1e-04 ± 1.7e-04 |
+| [0.0, 0.5) | −1.25e-04 ± 4.4e-05 |
+| [0.5, 1.0) | −2.28e-03 ± 4.5e-05 |
+| [1.0, 1.5) | −5.64e-03 ± 3.7e-05 |
+| [1.5, 2.0) | −3.73e-03 ± 2.7e-05 |
+
+- **The unsubtracted initial-state singularity is there, with the expected
+  height.** The plateau between 0.1 and 1 GeV has (5.5 ± 2.6)e-4 and (5.1 ± 1.7)e-4 per
+  half-decade, against 2 ln 10 × B / 2 = 6.1e-4 from the independently
+  computed coefficient B = 2.63e-4 pb per e-fold of k_T² (`estimate-coll-fixmh`).
+  Above 1 GeV the other (negative, subtracted) pieces of these regions
+  dominate.
+- **It is realised down to κ ≈ 0.1 GeV**, where the sampling runs out (below:
+  (0.6 ± 0.7)e-5 pb in total below 0.1 GeV). The pilot with 450× fewer points stopped near 1 GeV, i.e.
+  κ ∝ 1/√N as for a flat density in p_T² against a 1/k_T² integrand.
+  (**Correction** of 2 Oct, night: "a few 10 MeV in the 3.6e8-point
+  production" was a factor 2–3 too low; the realised reach is about 0.1 GeV.) The
+  expectation value continues below κ but is realised only in rare jobs.
+- **Heavy tail, per job.** The 0.1–1 GeV contribution per job: mean 1.06e-3 pb, median 1.7e-4, maximum 2.3e-2; 20 of the 91 jobs are above 1e-3 and the five largest carry 53% of the sum.
+  The jobs with the largest unsubtracted contributions are the jobs with the
+  largest σ(≥ 3 jets) (correlation 0.51). **Correction** of the statement
+  above (and of 2 Oct, night, "no visible skew, so the excess is not carried by
+  a few spikes"): in this sample σ(≥ 3 jets) has mean 0.13259 ± 0.00076 and median
+  0.13100; the 120 fixmh-old1506 jobs happened to show little skew.
+- **Size.** Log part of the artefact relative to the correct (MS-bar,
+  μ_F = m_H) treatment: B ln(m_H²/κ²) = 2.63e-4 × 14.3 ≈ 3.8e-3 pb for
+  κ = 0.1 GeV (3.4–4.0e-3 for κ = 0.06–0.18 GeV); with the nf mismatch
+  (+0.87e-3) 4.3–4.9e-3 pb, against the measured excess over VBFNLO of
+  6.2 ± 0.9e-3 pb (old 0.13201 ± 0.00076, VBFNLO 0.12582 ± 0.00052). The
+  remainder, about 1.5σ, is of the size of the O(1) non-logarithmic constant of
+  the missing subtraction (K+P-type terms, 2.6e-4 per unit) and of the
+  uncertainty in κ. A closure to better than this needs the old-code treatment
+  emulated in proVBFH-cs (drop the IF dipole and its integrated K+P term for the
+  NC pair entries, cut k_T > κ on the real). **Superseded** by the emulation
+  below: the non-logarithmic part is not an O(1) constant guess, and the old
+  code does have the collinear remnant (+1.09e-3 pb, about 4 units of B).
+- **Conclusion.** The old code's ≥ 3-jet excess is mostly the unsubtracted
+  initial-state collinear region of the NC pair graphs (H2), integrated down to
+  a sampling-limited κ, plus 14% from its nf = 4/5 mismatch in `ffunc`. Its
+  result therefore depends on the number of points (like ln N) and is
+  heavy-tailed. This also explains the tail index 1 of the study's 3-jet seeds.
+
+### Emulation of the old code's treatment in proVBFH-cs (2 Oct, morning)
+
+AK: "On proVBFH-cs go." What the old code does differently for the NC pair
+graphs, emulated in proVBFH-cs at μ = m_H (1506.02660 set-up and analysis):
+
+- **cs_estimate 6** (commit e785726; the committed code reproduces the run
+  binary's output exactly): Δ₆(κ) = ∫_{k_T > κ} D − (K + P)_qg, with D the IF
+  q → q dipoles of structure 5 (dip(3:4,5)), k_T that of the line quark of the
+  incoming flavour, and (K + P)_qg the quark part of the K + P of the NC
+  gluon-initiated Borns (gcls(1:2)); the power correction ∫_{k_T < κ}(R − D) is
+  left out. `runs/emul-old-fixmh`: κ = 3, 1, 0.3, 0.1, 0.03, 0.01 GeV × 20
+  seeds × 1.1M points, cs_cutoff 1e-7 (two jobs each at κ = 3, 0.3, 0.01
+  stopped at the transverse-basis guard and are left out); seed-scatter
+  errors.
+
+  | κ [GeV] | Δ₆, ≥ 3 jets [1e-3 pb] | Δ₆, ≥ 2 jets [1e-3 pb] |
+  |---|---|---|
+  | 3 | 1.54 ± 0.10 | 0.46 ± 0.20 |
+  | 1 | 2.07 ± 0.15 | 1.11 ± 0.33 |
+  | 0.3 | 2.28 ± 0.23 | 0.88 ± 0.44 |
+  | 0.1 | 2.64 ± 0.22 | 0.25 ± 0.55 |
+  | 0.03 | 3.77 ± 0.33 | 1.07 ± 0.44 |
+  | 0.01 | 3.98 ± 0.52 | 1.49 ± 0.31 |
+
+  Slope from 3 to 0.01 GeV: (2.1 ± 0.5)e-4 pb per e-fold of k_T², against
+  B = 2.63e-4 (1σ). Below a few 10 MeV the technical cut (the whole point is
+  dropped if z or 1 − z of any map is below 1e-7) starts to remove the
+  collinear region, so κ ≤ 0.03 GeV are not used below.
+- **The old code has the collinear remnant.** Its `btildecoll`
+  (POWHEG-BOX, FNO2007 2.102) adds the qg remnant to every gluon Born, whether
+  or not the real has the initial-state region. So old − proVBFH-cs =
+  Δ₆(κ) + R_FKS, R_FKS = the old code's qg remnant of the NC gluon Borns,
+  ∑_q ∫ dz/z [P_qg(z)(ln(s_B/(z μ_F²)) + 2 ln(1 − z)) + C_F z] f_q(ξ/z):
+  **cs_estimate 7** (commit 8b5f446, `nlo2_rem_fks_qg`; estimate 6 output
+  unchanged), `runs/emul-rem-fixmh` (8 × 300k points): ≥ 3 jets
+  **+(1.085 ± 0.012)e-3 pb**, ≥ 2 jets +(0.42 ± 0.02)e-3. For comparison
+  −(K + P)_qg alone (estimate 6 with κ = 1e30): +(0.205 ± 0.005)e-3 (≥ 3 jets).
+- **Closure per job** (the 91 k_T-scan jobs above, same old code): taking out of
+  each job its realised fspair contribution F below κ_c, against the reference
+  (proVBFH-cs and VBFNLO combined, 0.12570 ± 0.00041) + Δ₆(κ_c) + R_FKS + nf
+  (0.87e-3):
+
+  | κ_c | old: σ(≥ 3 jets) − F(< κ_c) | prediction | old − prediction |
+  |---|---|---|---|
+  | 1 GeV | 0.13152 ± 0.00066 | 0.12972 ± 0.00044 | +(1.8 ± 0.8)e-3, 2.3σ |
+  | 0.1 GeV | 0.13260 ± 0.00077 | 0.13029 ± 0.00046 | +(2.3 ± 0.9)e-3, 2.6σ |
+
+  Without R_FKS the κ_c = 1 GeV difference was +(2.9 ± 0.8)e-3 (3.6σ).
+- **Pooled** with the 120 fixmh-old1506 jobs (no k_T information; their
+  realised F(< 1 GeV) taken as the mean of the k_T scan, (1.07 ± 0.30)e-3):
+  old code 0.13226 ± 0.00054, i.e. (6.6 ± 0.7)e-3 above the reference.
+  The emulation accounts for (5.1 ± 0.3)e-3 of it: nf 0.87, missing region above
+  1 GeV including the remnant 3.15 ± 0.15, realised below 1 GeV 1.07 ± 0.30.
+  The remaining **(1.5 ± 0.8)e-3 pb is 1.9σ**.
+- σ(≥ 3 jets) − F(< 1 GeV) is still skewed (mean 0.13152, median 0.13094):
+  the old code has other rare large weights besides the fspair region below
+  1 GeV. They may be where the remaining 1.5e-3 sits; not pursued.
+- **Conclusion.** The old code's ≥ 3-jet excess over VBFNLO and proVBFH-cs is
+  explained at the 2σ level by its treatment of the NC pair graphs (no
+  initial-state FKS region but the collinear remnant kept, the unsubtracted
+  1/k_T² integrated down to a sampling-limited κ ≈ 0.1 GeV) plus its nf = 4/5
+  mismatch in `ffunc`. Its ≥ 3-jet result grows like ln N with the number of
+  points and is heavy-tailed. proVBFH-cs and VBFNLO agree (−0.4σ).
+
