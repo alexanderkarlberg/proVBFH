@@ -846,7 +846,7 @@ k_T of the real point [pb]:
 AK: "On proVBFH-cs go." What the old code does differently for the NC pair
 graphs, emulated in proVBFH-cs at μ = m_H (1506.02660 set-up and analysis):
 
-- **cs_estimate 6** (commit e785726; the committed code reproduces the run
+- **cs_estimate 6** (commit 16b9616; the committed code reproduces the run
   binary's output exactly): Δ₆(κ) = ∫_{k_T > κ} D − (K + P)_qg, with D the IF
   q → q dipoles of structure 5 (dip(3:4,5)), k_T that of the line quark of the
   incoming flavour, and (K + P)_qg the quark part of the K + P of the NC
@@ -874,7 +874,7 @@ graphs, emulated in proVBFH-cs at μ = m_H (1506.02660 set-up and analysis):
   or not the real has the initial-state region. So old − proVBFH-cs =
   Δ₆(κ) + R_FKS, R_FKS = the old code's qg remnant of the NC gluon Borns,
   ∑_q ∫ dz/z [P_qg(z)(ln(s_B/(z μ_F²)) + 2 ln(1 − z)) + C_F z] f_q(ξ/z):
-  **cs_estimate 7** (commit 8b5f446, `nlo2_rem_fks_qg`; estimate 6 output
+  **cs_estimate 7** (commit b99bc9a, `nlo2_rem_fks_qg`; estimate 6 output
   unchanged), `runs/emul-rem-fixmh` (8 × 300k points): ≥ 3 jets
   **+(1.085 ± 0.012)e-3 pb**, ≥ 2 jets +(0.42 ± 0.02)e-3. For comparison
   −(K + P)_qg alone (estimate 6 with κ = 1e30): +(0.205 ± 0.005)e-3 (≥ 3 jets).
