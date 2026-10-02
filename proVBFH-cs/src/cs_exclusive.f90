@@ -89,6 +89,13 @@ module cs_exclusive
   ! (fixed in the marked copy): E3 with the original line minus E3 fixed,
   ! as an event with its Born counterevent, nothing else; unsubtracted, so
   ! it depends on the cutoff like the old code's unmatched real
+  ! excl_estimate 6: emulation of the old proVBFH's treatment of the NC pair
+  ! graphs (no FKS region for their initial-state q -> q || beam singularity):
+  ! old - proVBFH-cs = int_{kT > kappa} D - (K + P)_qg - int_{kT < kappa} (R - D),
+  ! with D the IF q -> q dipoles of structure 5 (dip(3:4,5)), k_T that of the
+  ! line quark of the incoming flavour, (K + P)_qg the quark part of the K + P
+  ! of the NC gluon-initiated Borns (gcls(1:2)); the last term, a power
+  ! correction in kappa, is left out. Only these weights are produced.
   integer, public, save :: excl_estimate = 0, excl_estimu = 1
   real(dp), save :: tb_pb(0:3,5,2), tb_xb(2,2)
   integer, save :: tb_n = 0
@@ -632,6 +639,10 @@ contains
              if (.not. okt .or. any(dokt .neqv. dok(:,line))) stop 'cs_exclusive: nlo2_real_kin not reproducible'
              dmv(:,line) = dbg_mvar; dmz(:,line) = dbg_mz; dw4(line) = dbg_w4
              call nlo2_real_me(muf(line), fB(:,3-line), wr(line), wd(:,line))
+             ! emulation: add the dipoles back (nlo2_real_me subtracts them)
+             if (excl_estimate == 6) then
+                wr(line) = 0; wd(:,line) = -wd(:,line)
+             endif
              if (excl_verbose) call nlo2_debug_point(muf(line), fB(:,3-line), 6)
              wr(line) = wr(line)*common*as(line)**2
              wd(:,line) = wd(:,line)*common*as(line)**2
@@ -646,6 +657,9 @@ contains
        if (need(2)) e12(2) = nlo11_e12(2, pb, [x1, x2], fB, p6(:,:,2), fE(:,2), wrad(2), ok(1), &
             & p6(:,:,1), fE(:,1), wrad(1), mur, muf, [Q1, Q2], common)
        if (need3) e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7)
+    endif
+    if (excl_estimate == 6) then
+       w = 0; e12 = 0; e3 = 0
     endif
     if (excl_estimate == 5) then
        w = 0; wv = 0; wr = 0; wd = 0; e12 = 0
@@ -877,11 +891,28 @@ contains
   real(dp) function virt_point(line, p6, fB, fE, xi3, mur, muf, Qo) result(v)
     integer, intent(in) :: line
     real(dp), intent(in) :: p6(0:3,6), fB(-6:6,2), fE(-6:6), xi3, mur, muf, Qo
-    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11
+    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq
     integer :: i1, i2, bflav(6), o, il, io
     real(dp), parameter :: CF = 4.0_dp/3.0_dp, twopi = 6.283185307179586476925286766559005768394_dp
     o = 3 - line
-    call nlo2_kp(xi3, p6(:,line), p6(:,3+line), p6(:,6), muf, fq, fg)
+    call nlo2_kp(xi3, p6(:,line), p6(:,3+line), p6(:,6), muf, fq, fg, fgq)
+    if (excl_estimate == 6) then
+       ! emulation: minus the quark part of K + P of the NC gluon-initiated Borns
+       v = 0
+       do i1 = 1, 2
+          do i2 = 1, ncls
+             if (.not. compatible(gcls(i1)%w, cls(i2)%w)) cycle
+             if (line == 1) then
+                bflav = [0, cls(i2)%a, 25, gcls(i1)%q, cls(i2)%b, gcls(i1)%qb]
+             else
+                bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
+             endif
+             call cs_hjjj_born_line(p6, bflav, line, born, bmn)
+             v = v - gcls(i1)%n*born/twopi*fgq*pdfsum(fB(:,o), cls(i2))
+          enddo
+       enddo
+       return
+    endif
     iq = nlo2_ifin(1, p6(:,line), p6(:,3+line), p6(:,6), mur**2)
     ig = nlo2_ifin(2, p6(:,line), p6(:,3+line), p6(:,6), mur**2)
     lo = log(mur**2/Qo**2)

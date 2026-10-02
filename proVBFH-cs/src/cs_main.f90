@@ -25,7 +25,7 @@ program provbfh_cs
   use phase_space, only: set_beams
   use integration
   use cs_exclusive
-  use cs_nlo2, only: nlo2_ncount, nlo2_ncut
+  use cs_nlo2, only: nlo2_ncount, nlo2_ncut, nlo2_emul_kappa
   use cs_dipoles, only: spin_avg, four_hard, four_hard2
   use matrix_element, only: incl_only11
   implicit none
@@ -82,6 +82,12 @@ program provbfh_cs
      call cs_excl_setup2(.true.)
      call cpu_time(t1)
      write(6,'(a,f10.2,a)') ' proVBFH-cs stage-2 set-up: CPU ', t1 - t0, ' s'
+  endif
+  ! cs_estimate 6: k_T cut [GeV] of the emulated old-code treatment (set after
+  ! the stage-2 set-up, whose grouping of the real entries uses the full matrix elements)
+  if (excl_estimate == 6) then
+     nlo2_emul_kappa = 0.1_dp
+     if (powheginput('#cs_kappa') > 0) nlo2_emul_kappa = powheginput('#cs_kappa')
   endif
   if (powheginput('#cs_testlimits') >= 1) then
      call cs_excl_testlimits(nint(powheginput('#cs_testlimits')))

@@ -48,6 +48,11 @@ module cs_nlo2
   public :: mvar, mz, cur_w4
   ! four-parton points dropped by the technical cut
   integer, public, save :: nlo2_ncut = 0
+  ! emulation of the old proVBFH's treatment of the NC pair graphs (cs_estimate
+  ! 6): if >= 0, group_me returns only the initial-state q -> q dipoles of
+  ! structure 5 (dip(3:4,5)) for k_T of role 1 above this value [GeV], and no
+  ! real matrix element
+  real(dp), public, save :: nlo2_emul_kappa = -1
   logical, save :: kin_verbose = .false.
 
   real(dp), parameter :: pi = 3.141592653589793238462643383279502884197_dp
@@ -472,10 +477,19 @@ contains
     p7(:,g%leg(3)) = cur_pb(:,3)
     p7(:,g%leg(4)) = k(:,1); p7(:,g%leg(5)) = k(:,2); p7(:,g%leg(6)) = k(:,3)
     p7(:,g%leg(7)) = cur_pb(:,3+o)
-    call cs_real_me(g%rep, p7, me)
-    nlo2_ncount(1) = nlo2_ncount(1) + 1
     d = 0
+    if (nlo2_emul_kappa >= 0) then
+       ! emulation (cs_estimate 6): only the IF q -> q dipoles of structure 5,
+       ! for k_T of role 1 (the line quark of the incoming flavour) above kappa
+       me = 0
+       if (s /= 5) return
+       if (sqrt(k(1,1)**2 + k(2,1)**2) <= nlo2_emul_kappa) return
+    else
+       call cs_real_me(g%rep, p7, me)
+       nlo2_ncount(1) = nlo2_ncount(1) + 1
+    endif
     do id = 1, ndip(s)
+       if (nlo2_emul_kappa >= 0 .and. id < 3) cycle
        dp_ = dip(id, s)
        m = map_index(dp_%i, dp_%j, dp_%typ)
        if (usemok .and. .not. mok(m)) cycle
@@ -645,9 +659,11 @@ contains
   ! on [0,1] (DISENT's KPFUNS, MSbar, the xmin terms giving the integral
   ! from 0 to xi). The line's contribution is alpha_s/(2 pi) B_a' fq(a')
   ! (or B_g fg) in place of B_a' f_a'(xi).
-  subroutine nlo2_kp(xi, pa, p1, p2, muf, fq, fg)
+  subroutine nlo2_kp(xi, pa, p1, p2, muf, fq, fg, fgq)
     real(dp), intent(in) :: xi, pa(0:3), p1(0:3), p2(0:3), muf
     real(dp), intent(out) :: fq(-6:6), fg
+    ! fgq (optional): the quark part of fg, sum_q [(K + P)^{q g} (x) f_q](xi)
+    real(dp), intent(out), optional :: fgq
     real(dp) :: kqf, kgf, lsc, lsg, s1, s2
     ! colour factors (as DISENT's COLFOR and VIRTHR)
     kqf = (1.5_dp*(CF - CA/2) + 0.5_dp*gam_g)/CF
@@ -657,7 +673,7 @@ contains
     ! log(scale) + PQF = -sum_I T_I.T_a/T_a^2 ln(muf^2/(2 pa.pI))
     lsc = -((CA/2 - CF)/CF*s1 - CA/(2*CF)*s2)
     lsg = 0.5_dp*(s1 + s2)
-    call kp_core(xi, muf, kqf, kgf, lsc, lsg, fq, fg)
+    call kp_core(xi, muf, kqf, kgf, lsc, lsg, fq, fg, fgq)
   end subroutine nlo2_kp
 
   ! K + P for a DIS line (stage 3): Born with incoming quark pa and
@@ -684,9 +700,10 @@ contains
   end function nlo2_ifin_dis
 
   ! the convolutions of nlo2_kp for given colour-dependent factors
-  subroutine kp_core(xi, muf, kqf, kgf, lsc, lsg, fq, fg)
+  subroutine kp_core(xi, muf, kqf, kgf, lsc, lsg, fq, fg, fgq)
     real(dp), intent(in) :: xi, muf, kqf, kgf, lsc, lsg
     real(dp), intent(out) :: fq(-6:6), fg
+    real(dp), intent(out), optional :: fgq
     real(dp) :: lm, dl, zm, z, wz, l, f(-6:6), f1(-6:6), fsum
     real(dp) :: qqp, qqr, gqr, qgr, ggp, ggr, qqd, ggd, sq
     integer :: ip, iq, a
@@ -700,6 +717,7 @@ contains
          & + TR*nf*16.0_dp/9 - gam_g*lsg
     fq = qqd*f1
     fg = ggd*f1(0)
+    if (present(fgq)) fgq = 0
     ! the z integral: [xi, zm] logarithmic, [zm, 1] with 1-z = (1-zm) v^2
     zm = (1 + xi)/2
     do ip = 1, 2
@@ -729,6 +747,7 @@ contains
              fq(a) = fq(a) + wz*(qqp*(f(a) - f1(a)) + qqr*f(a) + gqr*f(0))
           enddo
           fg = fg + wz*(ggp*(f(0) - f1(0)) + ggr*f(0) + qgr*fsum)
+          if (present(fgq)) fgq = fgq + wz*qgr*fsum
        enddo
     enddo
     sq = 0
