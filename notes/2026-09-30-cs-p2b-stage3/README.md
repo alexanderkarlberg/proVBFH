@@ -904,4 +904,14 @@ graphs, emulated in proVBFH-cs at μ = m_H (1506.02660 set-up and analysis):
   1/k_T² integrated down to a sampling-limited κ ≈ 0.1 GeV) plus its nf = 4/5
   mismatch in `ffunc`. Its ≥ 3-jet result grows like ln N with the number of
   points and is heavy-tailed. proVBFH-cs and VBFNLO agree (−0.4σ).
+- **Update with all 120 k_T-scan jobs** (10:00; the tables above are from
+  91): plateau (4.8 ± 2.0)e-4 and (5.0 ± 1.3)e-4 per half-decade in 0.1–1 GeV;
+  one job reaches below 0.1 GeV, (6 ± 6)e-5 in total there; per job 0.1–1 GeV:
+  mean 9.8e-4, median 1.9e-4, maximum 2.3e-2, 27 jobs above 1e-3, the five
+  largest carry 44%; correlation with σ(≥ 3 jets) 0.46. σ(≥ 3 jets) mean
+  0.13206 ± 0.00065, median 0.13096. Closure per job: κ_c = 1 GeV
+  +(1.3 ± 0.7)e-3 (1.8σ), κ_c = 0.1 GeV +(1.7 ± 0.8)e-3 (2.1σ). Pooled with
+  fixmh-old1506 (240 jobs): old code 0.13204 ± 0.00050, (6.3 ± 0.7)e-3 above
+  the reference, of which (5.1 ± 0.3)e-3 is accounted for; remaining
+  **(1.3 ± 0.7)e-3 pb, 1.8σ**.
 
