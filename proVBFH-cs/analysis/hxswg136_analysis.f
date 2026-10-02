@@ -1,6 +1,7 @@
 c     HXSWG VBF 13.6 TeV study (STXS and fiducial set-ups): copied without
 c     changes from the study's proVBFH copy, analysis/13.6TeV_analysis.f
-c     (the analysis of its results/*.top). Build: make ANALYSIS=hxswg136
+c     (the analysis of its results/*.top), with its bins.h (copied to
+c     analysis/bins.h, unchanged). Build: make ANALYSIS=hxswg136
 c  The next subroutines open some histograms and prepare them 
 c      to receive data 
 c  You can substitute these with your favourite ones
