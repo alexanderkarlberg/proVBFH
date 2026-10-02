@@ -738,3 +738,50 @@ no NaN. `tools/fixmh_compare.py`, μ = m_H, all VBF cuts [pb]:
   not the scale assignment. Next: find the cause in the old code's H+3j
   O(αs²) part (the missing FKS region of the NC pair graphs is the lead
   candidate, see 1 Oct, 10:30).
+
+## 2 Oct, night — the old code's ≥3-jet excess: nf mismatch and the missing region
+
+AK: "look more at the initial-state collinear region" and "are you setting
+nf = 5 consistently in all codes?".
+
+- **nf audit.** proVBFH-cs: nf = 5 everywhere (`ffunc` uses `st_nlight`
+  since 29 Sep, `NFLAVOUR 5`, inclusive part "fixed number of flavours,
+  nf = 5"). VBFNLO 3.0: `nflav = 5` in the H+3j virtual, `NFLAVOURS = 5`.
+  Slicing (disorder): nf = 5 in DISENT, the SCET pieces and the PDFs. Only
+  the old code mixes: `ffunc` nf = 4 against nf = `st_nlight` = 5 in the
+  explicit γ_g logs (proVBFH ≥ 1.1.1; the 1.1.0 paper files have 4/4). Our
+  old-code binary (fixmh-old1506) is built from the current source, so it
+  has the mismatch.
+- **Size of the mismatch at μ = m_H** (`runs/estimate-nf4-fixmh`,
+  `cs_estimate 4`, `cs_estimu 2`, 1506.02660 analysis, 4 seeds): ≥ 2 jets
+  −(1.44 ± 0.05)e-3 pb, **≥ 3 jets +(0.87 ± 0.01)e-3 pb**, i.e. 14% of the
+  old code's +0.0062 pb excess over VBFNLO at fixed scale. (For ≥ 3 jets only
+  the H+3j virtual enters, without projection, so the sign differs from the
+  2-jet rate.)
+- **Missing-region coefficient at μ = m_H** (`runs/estimate-coll-fixmh`,
+  `cs_estimate 2`, 4 seeds): per e-fold of k_T², ≥ 3 jets
+  (2.63 ± 0.01)e-4 pb, ≥ 2 jets (1.07 ± 0.03)e-4 pb. The rest of the excess,
+  0.0053 pb, corresponds to Δ ≈ 20 e-folds.
+- **Per-job distribution** of the old code's fixed-scale ≥ 3-jet rate (120
+  jobs of fixmh-old1506): mean 0.13201 ± 0.00076, median 0.13174 ± 0.00089,
+  5%-trimmed 0.13169: no visible skew, so the excess is not carried by a few
+  spikes.
+- **k_T scan of the old code** (new diagnostic analysis
+  `p1506kt_analysis.f`, scratch build `oldbuild-ktscan`; `runs/ktscan-old1506`).
+  Weights of real-emission points, events and their FKS counterevents keyed to
+  the same `kn_preal`, binned in log10 of the smallest final-parton p_T of the
+  real point; separately the regions with the pair tags on legs 6, 7 only
+  (`fspair`, the NC pair graphs without initial-state region). Pilot (6 jobs ×
+  100k points, thA371a): real events reach k_T = 1e-5 GeV and cancel bin by bin
+  against their counterevents (0.1–0.3 pb per half-decade each), as they must
+  in the subtracted regions; the `fspair` regions contribute nothing below
+  about 0.3 GeV (e.g. −(0.8 ± 0.5)e-5 pb in 0.1–0.3 GeV against the 6e-4 per
+  half-decade an unsubtracted 1/k_T² would give on average). Reading: the
+  Born (s c → H s c g) is not enhanced at small p_T of the s, so VEGAS samples
+  p_T² roughly uniformly there, and the unsubtracted 1/k_T² is reached only
+  down to κ_min ~ M/√(N f) for N points (fraction f in these regions): about
+  1 GeV in the pilot, a few 10 MeV in the 3.6e8-point production, i.e. Δ of
+  order 15–20 e-folds there, growing like ln N, and present in the median of
+  every job rather than in rare spikes. To be checked at production
+  statistics: 120 jobs × 1M × 3 points (as fixmh-old1506) running since 01:45
+  (60 on thserv18/22, 60 to follow).
