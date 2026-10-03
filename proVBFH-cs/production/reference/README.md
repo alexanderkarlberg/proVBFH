@@ -10,3 +10,6 @@
   the scale bands `-min.top`, `-max.top` (see `README-study.txt`; values are
   per bin width). The raw per-seed NNLO data (`13.6TeV_NNLO/{HH,11,22}.tgz`,
   150 MB each) are not included.
+- `hxswg136/plain/`: the direct (untrimmed) merge of the study's NNLO
+  seeds per scale, and the central/min/max band built the same way as the
+  study's (see its README), for estimating the bias of the trimming.

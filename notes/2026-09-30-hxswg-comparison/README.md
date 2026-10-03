@@ -385,3 +385,21 @@ untracked files with `git add notes` - the build products
 three run outputs of AK's `notes/scale-setting-in-vbf-hh`. The branch was
 rebuilt without them (the files stay on disk, untracked); the commits from
 there on have new hashes, e.g. f215582 -> 7dc122a, daf218b -> c785573.)
+
+## Direct merge of all three scales (3 Oct)
+
+AK: "could you also do a direct merge of the HXSWG files and commit and
+push those? ... to try and estimate the bias from the trimming". Done with
+`tools/merge_plain.py`, output in
+`proVBFH-cs/production/reference/hxswg136/plain/` (README there):
+- plain means per scale with seed-scatter errors;
+- the central/min/max band.
+The trimmed re-combination reproduces the study's
+`nnlo-{central,min,max}.top` to 5e-8, which confirms that min/max are the
+per-bin envelope of HH, 11, 22.
+
+σ(ptj > 20), plain − trimmed:
+- HH: +0.0082 pb (+0.40%);
+- 11: +0.0063 pb (+0.30%);
+- 22: +0.0048 pb (+0.23%).
+One HH seed file (pwg-7524) is empty and is skipped.
