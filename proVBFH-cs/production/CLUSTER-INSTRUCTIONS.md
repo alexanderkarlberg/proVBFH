@@ -177,3 +177,134 @@ arrays; at most 10k running, 30k queued; partition `alma`).
   slightly inconsistent for incoming antiquarks (both negligible; see the
   scale-variation notes); nothing to do.
 - Kill only your own jobs, by job id; never by pattern.
+
+## 9. Extra task (AK, 3 Oct): NLO VBF H+3j cross-checks with VBFNLO and POWHEG
+
+### Why
+
+proVBFH-cs and the old proVBFH differ significantly in 3-jet observables, but
+not in 4-jet ones. Background, all in the notes:
+- `notes/2026-09-30-cs-p2b-stage3/README.md`, sections from 1 Oct on;
+- `notes/2026-09-29-cs-p2b-stage2/README.md`, "The public POWHEG-BOX-V2 VBF_HJJJ";
+- `notes/2026-09-30-hxswg-comparison/README.md`.
+
+State on thA371a: σ(≥ 3 jets, VBF cuts) at O(α_s²) (i.e. NLO H+3j), 1506.02660
+set-up, in pb:
+
+| | proVBFH-cs | VBFNLO 3.0 | old proVBFH |
+|---|---|---|---|
+| μ = m_H | 0.12550 ± 0.00067 | 0.12582 ± 0.00052 | 0.13302 ± 0.00097 |
+| μ0(p_T,H) | 0.12795 ± 0.00116 | 0.12658 ± 0.00050 | 0.13324 (paper) |
+
+That is the total rate only, with modest statistics. AK wants to be 100% sure:
+1. that proVBFH-cs agrees with VBFNLO, also in **distributions** of 3-jet
+   observables;
+2. that the public POWHEG-BOX-V2 `VBF_HJJJ` at **fixed order** shows the same
+   discrepancy as the old proVBFH. It shares the old code's problems:
+   - **(a) unregulated logarithm.** The NC four-quark graphs (Z on the
+     q q̄ pair) have no initial-state FKS region; their q || beam
+     singularity is cut only by the Born generation cut `ptcut`.
+   - **(b) pair-type swap.** In `compreal_hqqqq.f:529`, `kl` swaps u/d pairs.
+   - **(c) NC gg pair type** in `real.f`.
+
+   The old proVBFH (current source) has (a)–(c), and in addition an
+   n_f = 4/5 mismatch in `ffunc` (+0.87e-3 pb on ≥ 3 jets at μ = m_H). The
+   public POWHEG has n_f = 4/4, which is consistent, so it should lie
+   slightly below the old code but well above proVBFH-cs and VBFNLO.
+
+Run this after the main production is under way, or interleaved; it is small.
+
+### Set-up: 1506.02660 cuts, fixed scale μ_R = μ_F = m_H first
+
+A fixed scale removes the dynamic-scale ambiguity: VBFNLO's ID 20 is our
+own patch, and POWHEG takes one scale per event. Then repeat with
+μ0(p_T,H): `ID_MUF = ID_MUR = 20` in VBFNLO, `runningscales 1` in the other
+two codes.
+
+The cards are in `proVBFH-cs/production/h3j-crosscheck/` (copied from the
+thA371a runs):
+- `provbfh-cs/`: `powheg-excl.input` (cs_order 3, runningscales 0) and
+  `vbfnlo.input`. The ≥ 3-jet observables at O(α_s²) come from the full
+  NNLO run; the inclusive part does not contribute to them, so it is not
+  needed here.
+- `old-provbfh/`: `powheg.input` (qcd_order 3, testplots 1) and
+  `vbfnlo.input`. Optional (AK may already have enough of it); ask AK.
+- `vbfnlo/fixmh/`, `vbfnlo/dyn/`: VBFNLO 3.0 cards for process 110 (VBF H+3j
+  at NLO, Catani–Seymour).
+  - Settings: 13 TeV, NNPDF30_nnlo_as_0118, EWSCHEME 3 with the same G_F,
+    M_W, M_Z, VBFHASB (b quarks in NC), anti-kt 0.4, the 1506 cuts.
+  - VBFNLO keeps jets with |y| < 4.5 and p_T > 25 GeV (no veto), tags the
+    two hardest, and requires ≥ 3 jets. That is the analysis's
+    "sig(all VBF cuts 3 jets)".
+
+### VBFNLO 3.0
+
+- **Build.** Take 3.0 final, from the CERN LCG mirror; HepForge is behind an
+  anti-bot page. Build the default processes with quad precision; the
+  vbf,hjjj-only build does not compile. Apply
+  `notes/2026-09-30-cs-p2b-stage3/tools/vbfnlo-3.0-scale20.patch` for
+  scale ID 20.
+- **Check before production.** At LO (NLO_SWITCH false, 2^20 × 4 points) and
+  μ0 (ID 20) it must give 130.60 ± 0.44 fb for ≥ 3 jets with the VBF cuts.
+- **Runs on thA371a.** 20 jobs × 2^23 points × 5 iterations per scale,
+  different random.dat. Each job uses its own directory, with the cards
+  and `vbfnlo --input=.`.
+- **Distributions.** VBFNLO only fills its own built-in histograms
+  (`histograms.dat`; switch TOP/GNU or data-file output on in `vbfnlo.dat`).
+  - First list which of them match observables of
+    `proVBFH-cs/analysis/p1506_analysis.f` exactly: same jet definition,
+    same ordering in p_T, same binning or re-binnable. The third jet's p_T
+    and rapidity and the H p_T in ≥ 3-jet events are the important ones.
+  - If too few match, the clean way is to add a call in VBFNLO's
+    histogramming routine that fills our observables from VBFNLO's
+    momenta and weights. Discuss with AK before patching.
+  - The total ≥ 3-jet rate must reproduce the table above within errors.
+
+### POWHEG-BOX-V2 VBF_HJJJ (public, fixed order)
+
+- **Get it.** svn r4135; on thA371a it is exported in
+  `~/work/disorder-comparisons/powheg_vbf_hjjj_public`. Do not apply any of
+  our fixes: the point is to run it as distributed.
+- **Analysis.** Compile `proVBFH-cs/analysis/p1506_analysis.f` into it, as
+  its `pwhg_analysis`. Both use POWHEG's `pwhg_bookhist-multi`, so the
+  same histograms come out and compare bin by bin.
+- **Fixed-order NLO.** Use `testplots 1`; the fixed-order distributions are
+  `pwg-*-NLO.top` from the btilde integration (stages 1–2, no event
+  generation needed). `bornonly 0`, `withnegweights 1`, a fixed scale via
+  `runningscales 0`. Check in `Born_phsp.f`/`init_phys.f` how `muref` is
+  set and make it m_H.
+- **Parameters.** Use the same values as the old-provbfh card: beams,
+  `lhans1/2 261000`, EW inputs in its `vbfnlo.input`, H mass and width,
+  NNPDF30_nnlo_as_0118.
+  - Note: it ignores ZWIDTH/WWIDTH in vbfnlo.input and computes
+    2.5051/2.0950 GeV, where proVBFH reads 2.4952/2.141. This is a small
+    effect. Either impose the widths in its `init_couplings.f` (and say so)
+    or quantify the difference; `notes/powheg-comparison/powheg.md` has
+    the recipe used for VBF_H.
+- **Born generation cut.** Because of (a) the result depends on `ptcut`, the
+  Born parton p_T generation cut (`#ptcut` in powheg.input, read in
+  `Born_phsp.f`), logarithmically.
+  - Run at two values, e.g. 1 GeV and 0.1 GeV; both must lie below the
+    analysis cuts. Report the difference: it measures the unregulated log.
+  - The old proVBFH generates with `phspcuts 1` and a different internal
+    cut (`sigreal.f:1067`), so expect the same sign but not the same size.
+- **Check before production:**
+  - LO (`bornonly 1`): it must agree with proVBFH-cs's and VBFNLO's tree
+    level (0.12031 ± 0.00115 / 0.11937 ± 0.00003 pb at μ = m_H).
+  - The O(α_s²) ≥ 3-jet rate: expected to be close to the old code, about
+    +5% above VBFNLO.
+
+### Comparison and report
+
+- **Totals.** σ(≥ 3 jets) and the exactly-3 / ≥ 4-jet split from all codes,
+  at both scales, with seed-scatter errors (heavy tails: show the
+  combination method; see `notes/2026-09-30-hxswg-comparison/README.md`).
+- **Distributions.** Ratios to proVBFH-cs with errors, for all matching
+  3-jet observables. Also the 4-jet ones, which should agree everywhere.
+- **Expectation.** proVBFH-cs = VBFNLO within errors; public POWHEG ≈ old
+  proVBFH (minus about 0.9e-3 pb from n_f), with a `ptcut` dependence.
+  Anything else, report to AK before going on.
+- **Tools.** `proVBFH-cs/tools/fixmh_compare.py` is what was used on
+  thA371a for the totals.
+- **Logging.** Log everything in the notes file of section 7, with a section
+  of its own.
