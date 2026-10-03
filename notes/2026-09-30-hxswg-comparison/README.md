@@ -403,3 +403,25 @@ per-bin envelope of HH, 11, 22.
 - 11: +0.0063 pb (+0.30%);
 - 22: +0.0048 pb (+0.23%).
 One HH seed file (pwg-7524) is empty and is skipped.
+
+## A more robust third reference (3 Oct)
+
+AK: "Can you come up with a more robust way of trimming them as well as a
+third reference?" Estimators compared on the seed distributions (central
+scale): plain mean, the study's trimming, median-of-means, symmetric
+quantile trimming, winsorising, Peng's tail-corrected mean.
+- Peng: unstable for Hill index ≈ 1.
+- Median-of-means: drifts with the number of groups in skewed bins.
+- Symmetric 0.5% trim with bootstrap errors: stable against the trim
+  fraction (0.25%/1%/2%: median shifts 0.27/0.28/0.49 errors), errors
+  1.2× the study's. Chosen.
+Added to `tools/merge_plain.py`; output and README in
+`proVBFH-cs/production/reference/hxswg136/symtrim/`.
+
+σ(ptj > 20): HH 2.07465 ± 0.00111, 11 2.09022 ± 0.00088, 22 2.11129 ±
+0.00072 pb, i.e. 0.02–0.04% above the study's trimmed values. Over all
+bins the symmetric trim is a median +0.05% above the study's values, but
+more than 3 errors away in 81 of 946 bins. The plain merge stays a median
++0.34 plain errors above. The trimmed estimators are biased low by the
+upper tail and the plain mean has unreliable errors, so for a comparison
+the symmetric trim and the plain merge bracket the reference.

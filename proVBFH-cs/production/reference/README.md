@@ -13,3 +13,5 @@
 - `hxswg136/plain/`: the direct (untrimmed) merge of the study's NNLO
   seeds per scale, and the central/min/max band built the same way as the
   study's (see its README), for estimating the bias of the trimming.
+- `hxswg136/symtrim/`: a third reference, the symmetric 0.5% trimmed mean
+  per bin with bootstrap errors (see its README), same band construction.

@@ -14,6 +14,12 @@ scale that gives the extremum.
 Format as the study's files: xlow xhigh value error fraction (per bin width;
 fraction = 1, all seeds kept).
 
+Also a robust third estimate (nnlo-*-symtrim.top): per bin the symmetric
+trimmed mean dropping the lowest and highest 0.5% of the seeds (fixed
+fraction, both tails equally, no off-by-one), error from 400 bootstrap
+resamplings of the seeds (the error of this estimator, unlike the study's
+combined VEGAS errors); the band built the same way.
+
 Usage: merge_plain.py RAWDIR_HH RAWDIR_11 RAWDIR_22 OUTDIR [STUDY_RESULTS_DIR]
 """
 import glob, os, re, sys
@@ -53,6 +59,17 @@ def load(d):
     return np.array(rows_v), np.array(rows_e), names, np.array(edges), used
 
 
+def symtrim(val, f=0.005, nboot=400, seed=1):
+    """symmetric trimmed mean per bin and its bootstrap error"""
+    n = val.shape[0]; k = int(f*n)
+    t = np.sort(val, axis=0)[k:n-k].mean(axis=0)
+    rng = np.random.default_rng(seed)
+    bt = np.empty((nboot, val.shape[1]))
+    for b in range(nboot):
+        bt[b] = np.sort(val[rng.integers(0, n, n)], axis=0)[k:n-k].mean(axis=0)
+    return t, bt.std(axis=0), 1 - 2*k/n
+
+
 def write(fn, names, edges, val, err, frac, header):
     with open(fn, 'w') as f:
         f.write('# ' + header + '\n# column 5 is the fraction of seeds used\n')
@@ -81,7 +98,7 @@ def main():
     out = sys.argv[4]
     study = sys.argv[5] if len(sys.argv) > 5 else None
     os.makedirs(out, exist_ok=True)
-    plain, perr, trim, terr = {}, {}, {}, {}
+    plain, perr, trim, terr, robust, rerr = {}, {}, {}, {}, {}, {}
     names = edges = None
     for sc, d in dirs.items():
         val, err, nm, ed, files = load(d)
@@ -93,6 +110,11 @@ def main():
         perr[sc] = val.std(axis=0, ddof=1)/np.sqrt(n)
         t = np.array([combine_runs(val[:, k], err[:, k]) for k in range(val.shape[1])])
         trim[sc], terr[sc] = t[:, 0], t[:, 1]
+        st, se, fk = symtrim(val)
+        robust[sc], rerr[sc] = st, se
+        write(os.path.join(out, 'nnlo-%s-symtrim.top' % sc), names, edges, st, se, np.full(len(names), fk),
+              'symmetric 0.5%% trimmed mean of %d seeds (%s), bootstrap error; merge_plain.py' % (n, sc))
+        print('%s: symmetric 0.5%% trim %.5f +- %.5f' % (sc, st[0], se[0]))
         write(os.path.join(out, 'nnlo-%s-plain.top' % sc), names, edges, plain[sc], perr[sc],
               np.ones(len(names)), 'plain mean of %d seeds (%s), error = seed scatter/sqrt(N); merge_plain.py' % (n, sc))
         print('%s: %d seeds; sig incl cuts (ptj > 20): plain %.5f +- %.5f, trimmed %.5f +- %.5f'
@@ -108,6 +130,16 @@ def main():
           'plain merge, per-bin minimum over HH, 11, 22; merge_plain.py')
     write(os.path.join(out, 'nnlo-max-plain.top'), names, edges, P[imax, k], PE[imax, k], one,
           'plain merge, per-bin maximum over HH, 11, 22; merge_plain.py')
+    R = np.array([robust[s] for s in ('HH', '11', '22')])
+    RE = np.array([rerr[s] for s in ('HH', '11', '22')])
+    jmin, jmax = R.argmin(axis=0), R.argmax(axis=0)
+    fr = np.full(len(names), 0.99)
+    write(os.path.join(out, 'nnlo-central-symtrim.top'), names, edges, R[1], RE[1], fr,
+          'symmetric 0.5% trim, central scale (11); merge_plain.py')
+    write(os.path.join(out, 'nnlo-min-symtrim.top'), names, edges, R[jmin, k], RE[jmin, k], fr,
+          'symmetric 0.5% trim, per-bin minimum over HH, 11, 22; merge_plain.py')
+    write(os.path.join(out, 'nnlo-max-symtrim.top'), names, edges, R[jmax, k], RE[jmax, k], fr,
+          'symmetric 0.5% trim, per-bin maximum over HH, 11, 22; merge_plain.py')
     if study:
         # check: the trimmed combinations reproduce the study's files, and
         # its min/max are the envelope of HH, 11, 22
