@@ -409,3 +409,18 @@ report's values; fixed c = 1.000000 for all, k_T → 0. NLO runs (ptcut 1,
 48674548-48674553. Problem 2 (missing initial-state FKS region) needs new
 flavour-list entries and a split of the four-quark matrix element by graph
 class; not done yet.
+- **Correction (5 Oct 17:30).** I first estimated problem 2 at ~0.1% of
+  σ(≥ 3 jets) per e-fold, so ~2% in total, "too small for the 6%". That
+  kept only the logarithmic part. The stage-3 emulation (notes of 2 Oct,
+  cs_estimate 6/7) found for the old code: missing region above 1 GeV plus
+  the collinear remnant that `btildecoll` adds anyway, 3.15 ± 0.15e-3 pb;
+  realised below 1 GeV 1.07 ± 0.30e-3; n_f mismatch 0.87e-3; together
+  5.1 of the 6.6e-3 pb excess. So problem 2 is the main driver; fixes 1
+  and 3 are expected to move POWHEG little. Pushing ptcut tests only the
+  log part (~0.17%/e-fold) and is not worth the CPU.
+- `doublefsr` (`find_regions.f:633`) only adds, for final-state regions
+  already found, the copy with emitter and radiated parton swapped; it
+  cannot create the missing initial-state region.
+- Problem 2 fix: delegated to a sub-agent (5 Oct 17:30) working only in a
+  new copy `VBF_HJJJ-lfl-fix123`, no job submissions; deliverables and
+  validation in `/ptmp/mpp/akarlber/h3j/fix2-tests/`.
