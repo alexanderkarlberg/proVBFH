@@ -374,3 +374,11 @@ queue below 2,500 and submits only never-started lines (no `done`, no
 p1506, nice 500. `resubmit.sh` is capped the same way (QCAP, default
 2,500). Lines that started but did not finish are left for `resubmit.sh`
 at the end.
+- **Cluster recovered (5 Oct ~10:00).** alma nodes stuck in completing:
+  74 at 08:00, 4-8 at 10:00; ~1,500 of my jobs running. The hourly cap
+  went to 20,000 automatically, but the feeder's first submission failed
+  ("Pathname ... too long": sbatch rejects an --array list of ~10,900
+  single indices); fixed by compressing the indices into ranges
+  (`slurm/ranges.py`). Fed 10,887 hxswg136 and 7,586 p1506 NNLO lines
+  (queue 20,000). ~2,000 p1506 lines that started earlier but never
+  finished (dead nodes, cancellations) are left for `resubmit.sh` at the end.
