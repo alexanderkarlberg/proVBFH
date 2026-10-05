@@ -361,3 +361,16 @@ keeps under the queue limit.
   `runs/nlo-nf5nc-nw-pt1` (20 + 700 seeds, arrays 48641982/3); the
   pending tasks of the Breit-Wigner run `nlo-nf5nc-pt1` were cancelled
   (its ~300 finished + 142 running seeds kept for comparison).
+
+## Smaller queue footprint (5 Oct 08:30)
+
+AK: "There is almost 40k jobs queueing so this is not sustainable." About
+22k of them were mine (pending NNLO exclusive tasks). Cancelled the pending
+tasks of the four NNLO exclusive arrays (48568055, 48603439, 48568057,
+48603568: 20,308 tasks, none started); my queue went from 22,780 to
+2,472. From now on `slurm/feed_missing.sh` (run hourly) keeps my total
+queue below 2,500 and submits only never-started lines (no `done`, no
+`time.log`), recording them in `jobs.list.fed`; hxswg136 first, then
+p1506, nice 500. `resubmit.sh` is capped the same way (QCAP, default
+2,500). Lines that started but did not finish are left for `resubmit.sh`
+at the end.

@@ -17,7 +17,7 @@ if [ -z "$missing" ]; then echo "$name: all $(wc -l < "$list") done"; exit 0; fi
 logs=$(dirname "$(dirname "$(dirname "$list")")")/../logs/$(basename "$(dirname "$(dirname "$(dirname "$list")")")")
 # stay under the per-user queue limit (25,000, with a margin); the rest goes
 # in a later round
-room=$((24800 - $(squeue -u "$USER" -h -r | wc -l)))
+room=$((${QCAP:-2500} - $(squeue -u "$USER" -h -r | wc -l)))
 [ "$room" -le 0 ] && { echo "$name: no room in the queue"; exit 0; }
 missing=$(echo "$missing" | tr ',' '\n' | head -n "$room" | paste -sd,)
 n=$(echo "$missing" | tr ',' '\n' | wc -l)
