@@ -22,7 +22,7 @@ room=$((${QCAP:-2500} - $(squeue -u "$USER" -h -r | wc -l)))
 missing=$(echo "$missing" | tr ',' '\n' | head -n "$room" | paste -sd,)
 n=$(echo "$missing" | tr ',' '\n' | wc -l)
 bad=$(paste -sd, /ptmp/mpp/akarlber/cs-production/bad_nodes 2>/dev/null)
-id=$(sbatch --parsable ${bad:+--exclude=$bad} --array="$missing" --time="$tlim" -J "$name" \
+id=$(sbatch --parsable ${bad:+--exclude=$bad} --array="$(echo "$missing" | "$here/ranges.py")" --time="$tlim" -J "$name" \
     --export=ALL,BIN="$bin",LIST="$list",OFFSET=0 \
     -o "$logs/%x.%A_%a.out" "$here/run_array.sh")
 echo "$name: resubmitted $n unfinished lines as array $id" | tee -a "$list.submitted"

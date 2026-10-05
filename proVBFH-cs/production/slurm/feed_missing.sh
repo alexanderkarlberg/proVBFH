@@ -18,7 +18,7 @@ lines=$(awk -v fedf="$fed" 'BEGIN { while ((getline l < fedf) > 0) f[l] = 1 }
 [ -z "$lines" ] && { echo "$name: no never-started lines left"; exit 0; }
 logs=$(dirname "$(dirname "$(dirname "$list")")")/../logs/$(basename "$(dirname "$(dirname "$(dirname "$list")")")")
 bad=$(paste -sd, /ptmp/mpp/akarlber/cs-production/bad_nodes 2>/dev/null)
-id=$(sbatch --parsable --nice="$nice" ${bad:+--exclude=$bad} --array="$lines" --time="$tlim" -J "$name" \
+id=$(sbatch --parsable --nice="$nice" ${bad:+--exclude=$bad} --array="$(echo "$lines" | "$here/ranges.py")" --time="$tlim" -J "$name" \
     --export=ALL,BIN="$bin",LIST="$list",OFFSET=0 -o "$logs/%x.%A_%a.out" "$here/run_array.sh")
 echo "$lines" | tr ',' '\n' >> "$fed"
 n=$(echo "$lines" | tr ',' '\n' | wc -l)
