@@ -1,0 +1,11 @@
+--- VBF_HJJJ-nf5nc-nw/compreal_hqqqq.f	2026-10-04 20:24:19.428793000 +0200
++++ VBF_HJJJ-lfl-fix1/compreal_hqqqq.f	2026-10-05 16:50:07.863072716 +0200
+@@ -526,7 +526,7 @@
+ 
+       if (k.le.4) then    
+ c k-ordering (1:8) is: uucc,uuss,ddcc,ddss (+tt for 1:4,+bb for 5:8)
+-         kl = k+4*ftype(7)-4
++         kl = k+4*(2-ftype(7)) ! h3j fix 1 (bug report): pair type was swapped
+ 
+          if (.not.new_vbfnlo)
+      &        call qqHqqQQ_nc_channel(pbar_cc,fsign,kl,res)

@@ -1,0 +1,11 @@
+--- VBF_HJJJ-nf5nc-nw/real.f	2026-10-04 20:24:20.776946000 +0200
++++ VBF_HJJJ-lfl-fix3/real.f	2026-10-05 16:50:15.494882924 +0200
+@@ -1131,7 +1131,7 @@
+ 
+ c up- or down-type quark:      
+       ftype(1) = 2-mod(abs(bflav(4)),2)         
+-      ftype(2) = 2-mod(abs(bflav(6)),2)      
++      ftype(2) = 2-mod(abs(bflav(5)),2) ! h3j fix 3 (bug report): second pair is legs 5, 7
+       ftype(4) = 2-mod(abs(bflav(7)),2)   
+       ftype(5) = 2-mod(abs(bflav(5)),2)
+ 

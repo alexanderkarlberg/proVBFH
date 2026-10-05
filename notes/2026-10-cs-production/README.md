@@ -390,3 +390,22 @@ at the end.
   16.84 ± 0.27 vs 16.97 ± 0.01. Breit-Wigner variant (646 seeds): 131.4 ±
   2.9. ptcut 1 / 0.1 GeV (4 flavours, 300 seeds each): 128.3 ± 1.7 / 130.0
   ± 1.3, no significant dependence. Page version 6.
+
+## POWHEG with the NLO bugs fixed (5 Oct 17:00)
+
+AK: "set up the fixed POWHEG variants, we need to get to the bottom of
+this. Also to make sure that we can actually fix the bugs." On top of the
+like-for-like build (`VBF_HJJJ-nf5nc-nw`): `VBF_HJJJ-lfl-fix1` (problem 1,
+`compreal_hqqqq.f:529`, `kl = k+4*(2-ftype(7))`), `-fix3` (problem 3,
+`real.f:1134` only, `ftype(2)` from `bflav(5)`; the same line text in the
+other gg branches is correct and unchanged), `-fix13` (both). Patches
+`h3j-crosscheck/powheg/patches/06-*`, `07-*`.
+
+Limit tests of the bug report (its appendix programs, extracted and built
+against both builds, `/ptmp/mpp/akarlber/h3j/limittest`): unfixed c =
+1.281746 / 0.780187 (problem 1, Q = u / d) and 0.780185 (problem 3), the
+report's values; fixed c = 1.000000 for all, k_T → 0. NLO runs (ptcut 1,
+20 + 700 seeds each): `runs/nlo-lfl-fix{1,3,13}-pt1`, arrays
+48674548-48674553. Problem 2 (missing initial-state FKS region) needs new
+flavour-list entries and a split of the four-quark matrix element by graph
+class; not done yet.
