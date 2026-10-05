@@ -1,0 +1,443 @@
+--- a/utilities/histograms.F	2024-06-19 17:00:58.000000000 +0200
++++ b/utilities/histograms.F	2026-10-03 19:36:30.422494000 +0200
+@@ -305,6 +305,9 @@
+ 
+       dw = dsig * weight
+ 
++c proVBFH-cs cross-check: fill the p1506_analysis.f observables
++      call p1506_fill(dw, rand, weight, jets, n_jets, v)
++
+ 
+ c fill histograms
+ 
+@@ -1222,6 +1225,9 @@
+ 
+       print*,' '
+ 
++c proVBFH-cs cross-check: write the p1506_analysis.f observables
++      call p1506_write
++
+ #ifdef WITH_ROOT
+       if (writeRoot) then 
+         call CloseRootHists
+@@ -1993,3 +1999,6 @@
+ 
+       return
+       end
++
++c proVBFH-cs cross-check: p1506_analysis.f observables
++#include "p1506hist.F"
+--- a/utilities/statistics.F	2024-06-19 17:00:58.000000000 +0200
++++ b/utilities/statistics.F	2026-10-03 19:36:30.424902000 +0200
+@@ -663,6 +663,9 @@
+       real time
+       integer sub, ps, nlo
+       
++c proVBFH-cs cross-check: close the p1506 histograms of this integration
++      call p1506_endpass(nlo)
++
+       final_xsec(sub,ps,nlo) = xsec
+       final_sdev2(sub,ps,nlo) = sdev2
+       final_time(sub,ps,nlo) = time
+--- a/utilities/p1506hist.F	1970-01-01 01:00:00.000000000 +0100
++++ b/utilities/p1506hist.F	2026-10-03 19:36:30.418653000 +0200
+@@ -0,0 +1,381 @@
++c*************************************************************************
++c     p1506hist.F: the observables of proVBFH-cs analysis/p1506_analysis.f
++c     (arXiv:1506.02660 VBF cuts; 2-, 3- and 4-jet histograms, same names,
++c     binning and normalisation), filled from VBFNLO's jets and weights.
++c     Added for the proVBFH-cs cross-check (included by histograms.F).
++c
++c     Jets: VBFNLO's jets array (anti-kt R = RJJ_MIN = 0.4, PGENKTJET = -1,
++c     E scheme, true rapidity, pT ordered), re-filtered with the analysis
++c     jet cuts pT > 25 GeV, |y| < 4.5. The analysis VBF cuts are then
++c     applied again (two hardest jets: pT > 25, |y| < 4.5, m_jj > 600,
++c     |y_j1 - y_j2| > 4.5, y_j1 y_j2 < 0). Higgs momentum = sum of v(:,i).
++c
++c     Statistics: the weights of one phase-space point (the real-emission
++c     event and all its dipole counter-events) are summed per bin before
++c     squaring; per integration (one call of AddToXsec)
++c       sigma_bin = S1,  var_bin = S2 - S1^2/Ncall,
++c     with Ncall the number of points of the last iteration (only the last
++c     iteration is histogrammed, as for VBFNLO's own histograms).
++c     The LO integration (AddToXsec with nlo = -1) goes to p1506_lo.top,
++c     all other integrations (virtual, real) are added in p1506_nlo.top.
++c     Output in pb, in the format of pwhg_bookhist-multi's pwhgtopout.
++c*************************************************************************
++
++      block data p1506_bd
++      implicit none
++#include "p1506hist.inc"
++      data booked /.false./, pending /.false./
++      data havepass /.false.,.false./
++      end
++
++      subroutine p1506_bookeq(string,binsize,xlow,xhigh)
++c     as bookupeqbins of pwhg_bookhist-multi.f
++      implicit none
++#include "p1506hist.inc"
++      character*(*) string
++      real*8 binsize,xlow,xhigh
++      real*8 xx(0:p15nbmax)
++      integer k
++      nh = nh+1
++      if (nh.gt.p15nhmax) stop 'p1506_bookeq: too many histograms'
++      xx(0) = xlow
++      do k=1,p15nbmax
++         xx(k) = xx(k-1)+binsize
++         if (abs(xx(k)/binsize).lt.1d-6) xx(k) = 0
++         if (xx(k)-(xhigh-binsize/1e4).gt.0) goto 10
++      enddo
++      stop 'p1506_bookeq: too many bins'
++ 10   continue
++      nb(nh) = k
++      do k=0,nb(nh)
++         edges(k,nh) = xx(k)
++      enddo
++      hname(nh) = string
++      end
++
++      subroutine p1506_book
++      implicit none
++#include "p1506hist.inc"
++      real*8 pi
++      parameter(pi = 3.141592653589793D0)
++      nh = 0
++      call p1506_bookeq('sig incl cuts',1d0, 0d0, 1d0)
++      call p1506_bookeq('sig(all VBF cuts 2 jets)',1d0, 0d0, 1d0)
++      call p1506_bookeq('sig(all VBF cuts 3 jets)',1d0, 0d0, 1d0)
++      call p1506_bookeq('sig(all VBF cuts 4 jets)',1d0, 0d0, 1d0)
++      call p1506_bookeq('ptj1',20d0, 0d0, 300d0)
++      call p1506_bookeq('ptj2',10d0, 0d0, 160d0)
++      call p1506_bookeq('ptH',20d0, 0d0, 300d0)
++      call p1506_bookeq('yj1',5d-1, -6d0, 6d0)
++      call p1506_bookeq('yj2',5d-1, -6d0, 6d0)
++      call p1506_bookeq('yH',5d-1, -6d0, 6d0)
++      call p1506_bookeq('HT_jets',50d0, 0d0, 600d0)
++      call p1506_bookeq('HT_all',50d0, 0d0, 1000d0)
++      call p1506_bookeq('M_Hjj',200d0, 0d0, 6000d0)
++      call p1506_bookeq('M_jj',200d0, 0d0, 6000d0)
++      call p1506_bookeq('rap(j1,j2)',5d-1, 0d0, 10d0)
++      call p1506_bookeq('phi(j1,j2)',pi/10d0, 0d0, pi)
++      call p1506_bookeq('R(j1,j2)',5d-1, 0d0, 10d0)
++      call p1506_bookeq('ptj3',5d0, 0d0, 100d0)
++      call p1506_bookeq('yj3',5d-1, -6d0, 6d0)
++      call p1506_bookeq('y*j3',5d-1, -6d0, 6d0)
++      call p1506_bookeq('min{rap(j1,j3),rap(j3,j2)}',2d-1, -5d0, 5d0)
++      call p1506_bookeq('ptj4',5d0, 0d0, 100d0)
++      call p1506_bookeq('yj4',5d-1, -6d0, 6d0)
++      buf = 0d0
++      s1 = 0d0
++      s2 = 0d0
++      res = 0d0
++      var = 0d0
++      booked = .true.
++      end
++
++      subroutine p1506_filld(string,xval,w)
++c     as filld of pwhg_bookhist-multi.f (under/overflow dropped)
++      implicit none
++#include "p1506hist.inc"
++      character*(*) string
++      real*8 xval,w
++      integer j,k
++      do j=1,nh
++         if (hname(j).eq.string) goto 10
++      enddo
++      print*,'p1506_filld: histogram not booked: ',string
++      stop
++ 10   continue
++      if (xval.lt.edges(0,j)) return
++      do k=1,nb(j)
++         if (xval.lt.edges(k,j)) then
++            buf(k,j) = buf(k,j) + w/(edges(k,j)-edges(k-1,j))
++            return
++         endif
++      enddo
++      end
++
++      subroutine p1506_flush
++c     end of a phase-space point: add its per-bin sums to S1, S2
++      implicit none
++#include "p1506hist.inc"
++      if (.not.pending) return
++      s1 = s1 + buf
++      s2 = s2 + buf**2
++      buf = 0d0
++      pending = .false.
++      end
++
++      subroutine p1506_fill(dw, rand, weight, jets, n_jets, v)
++      implicit none
++#include "global.inc"
++#include "p1506hist.inc"
++      real*8 dw, weight, rand(max_PS_dim)
++      real*8 jets(0:7,max_jets), v(0:3,max_v)
++      integer n_jets
++c     analysis cuts (proVBFH-cs production/h3j-crosscheck powheg-excl.input)
++      real*8 ptalljetmin, ptjetmin, yjetmax, mjjmin, deltay_jjmin
++      parameter (ptalljetmin=25d0, ptjetmin=25d0, yjetmax=4.5d0,
++     &     mjjmin=600d0, deltay_jjmin=4.5d0)
++      logical jet_opphem
++      parameter (jet_opphem=.true.)
++      integer maxjet
++      parameter (maxjet=4)
++      real*8 pj(0:3,maxjet), ptj(maxjet), yj(maxjet)
++      real*8 pH(0:3), pHjj(0:3), pt, y
++      real*8 ptH, yH, invmjj, rapj1j2, Rsepj1j2, delphi_jj, mHjj
++      real*8 ht_jets, ht_all, rapj1j3, rapj2j3, y3star, min_yj1yj2yj3
++      integer i, mu, njets
++      logical passed, pass_cuts, newpoint
++      real*8 p15rap, p15mjj, p15rsep, p15dphi
++      external p15rap, p15mjj, p15rsep, p15dphi
++
++      if (.not.booked) call p1506_book
++
++c     new phase-space point?
++      newpoint = .not.pending .or. weight.ne.lastweight
++      if (.not.newpoint) then
++         do i=1,min(max_PS_dim,p15nrand)
++            if (rand(i).ne.lastrand(i)) then
++               newpoint = .true.
++               exit
++            endif
++         enddo
++      endif
++      if (newpoint) then
++         call p1506_flush
++         lastweight = weight
++         do i=1,min(max_PS_dim,p15nrand)
++            lastrand(i) = rand(i)
++         enddo
++      endif
++      pending = .true.
++
++c     jets passing pT > ptalljetmin, |y| < yjetmax (as buildjets)
++      pj = 0d0
++      ptj = 0d0
++      yj = 0d0
++      njets = 0
++      do i=1,n_jets
++         pt = sqrt(jets(1,i)**2+jets(2,i)**2)
++         y = p15rap(jets(0,i))
++         if (pt.gt.ptalljetmin .and. abs(y).lt.yjetmax) then
++            njets = njets+1
++            if (njets.gt.maxjet) stop 'p1506_fill: more than 4 jets'
++            do mu=0,3
++               pj(mu,njets) = jets(mu,i)
++            enddo
++            ptj(njets) = pt
++            yj(njets) = y
++         endif
++      enddo
++c     the analysis orders its jets in pT (fastjet); VBFNLO's are too
++      do i=1,njets-1
++         if (ptj(i+1).gt.ptj(i)) stop 'p1506_fill: jets not pT ordered'
++      enddo
++
++c     VBF cuts (as vbfcuts)
++      passed = .false.
++      if (njets.ge.2) then
++         passed = (min(ptj(1),ptj(2)).gt.ptjetmin) .and.
++     &        (max(abs(yj(1)),abs(yj(2))).lt.yjetmax) .and.
++     &        (p15mjj(pj(0,1),pj(0,2)).gt.mjjmin) .and.
++     &        (abs(yj(1)-yj(2)).gt.deltay_jjmin)
++         if (jet_opphem) passed = passed .and. (yj(1)*yj(2).lt.0d0)
++      endif
++
++      call p1506_filld('sig incl cuts',0.5d0, dw)
++      if (.not.passed) return
++
++      pH = 0d0
++      do i=1,n_v
++         do mu=0,3
++            pH(mu) = pH(mu) + v(mu,i)
++         enddo
++      enddo
++      ptH = sqrt(pH(1)**2+pH(2)**2)
++      yH = p15rap(pH)
++
++      invmjj    = p15mjj(pj(0,1),pj(0,2))
++      rapj1j2   = yj(1) - yj(2)
++      Rsepj1j2  = p15rsep(pj(0,1),pj(0,2))
++      delphi_jj = p15dphi(pj(0,1),pj(0,2))
++      do mu=0,3
++         pHjj(mu) = pH(mu)+pj(mu,1)+pj(mu,2)
++      enddo
++      mHjj = sqrt(abs(pHjj(0)**2-pHjj(1)**2-pHjj(2)**2-pHjj(3)**2))
++      ht_jets = sum(ptj(:))
++      ht_all  = ht_jets + ptH
++      if (njets.gt.2) then
++         rapj1j3 = yj(1) - yj(3)
++         rapj2j3 = yj(2) - yj(3)
++         y3star  = yj(3) - (yj(1)+yj(2))*0.5d0
++         min_yj1yj2yj3 = min(abs(rapj1j3),abs(rapj2j3))
++         min_yj1yj2yj3 = sign(min_yj1yj2yj3,-rapj1j3*rapj2j3)
++      endif
++
++      pass_cuts = passed
++      call p1506_filld('sig(all VBF cuts 2 jets)',0.5d0, dw)
++      call p1506_filld('ptj1',ptj(1), dw)
++      call p1506_filld('ptj2',ptj(2), dw)
++      call p1506_filld('ptH',ptH, dw)
++      call p1506_filld('yj1',yj(1),dw)
++      call p1506_filld('yj2',yj(2),dw)
++      call p1506_filld('yH',yH,dw)
++      call p1506_filld('HT_jets',ht_jets,dw)
++      call p1506_filld('HT_all',ht_all,dw)
++      call p1506_filld('M_Hjj',mhjj,dw)
++      call p1506_filld('M_jj',invmjj,dw)
++      call p1506_filld('rap(j1,j2)',abs(rapj1j2),dw)
++      call p1506_filld('phi(j1,j2)',delphi_jj,dw)
++      call p1506_filld('R(j1,j2)',Rsepj1j2,dw)
++
++      if (njets.ge.3) pass_cuts = pass_cuts.and.(ptj(3).gt.ptalljetmin)
++      if ((njets.ge.3).and.pass_cuts) then
++         call p1506_filld('sig(all VBF cuts 3 jets)',0.5d0, dw)
++         call p1506_filld('ptj3',ptj(3),dw)
++         call p1506_filld('yj3',yj(3),dw)
++         call p1506_filld('y*j3',y3star,dw)
++         call p1506_filld('min{rap(j1,j3),rap(j3,j2)}',min_yj1yj2yj3,dw)
++      endif
++      if (njets.ge.4) pass_cuts = pass_cuts.and.(ptj(4).gt.ptalljetmin)
++      if ((njets.ge.4).and.pass_cuts) then
++         call p1506_filld('sig(all VBF cuts 4 jets)',0.5d0, dw)
++         call p1506_filld('ptj4',ptj(4),dw)
++         call p1506_filld('yj4',yj(4),dw)
++      endif
++      end
++
++      subroutine p1506_endpass(nlo)
++c     called from AddToXsec at the end of each integration
++      implicit none
++#include "p1506hist.inc"
++      integer nlo
++      integer iteration
++      integer*8 Ncall
++      common/Ncall1/Ncall,iteration
++      integer ipass, j3
++      if (.not.booked) return
++      call p1506_flush
++      if (nlo.eq.-1) then
++         ipass = 1
++      else
++         ipass = 2
++      endif
++      res(:,:,ipass) = res(:,:,ipass) + s1
++      var(:,:,ipass) = var(:,:,ipass) + abs(s2 - s1**2/dble(Ncall))
++      havepass(ipass) = .true.
++      j3 = 3
++      write(*,'(a,i4,a,i12,a,es16.8,a,es12.4,a)')
++     &     ' p1506hist: integration nlo =',nlo,', Ncall =',Ncall,
++     &     ', sig(all VBF cuts 3 jets) =',s1(1,j3),' +-',
++     &     sqrt(abs(s2(1,j3)-s1(1,j3)**2/dble(Ncall))),' fb'
++      s1 = 0d0
++      s2 = 0d0
++      end
++
++      subroutine p1506_write
++      implicit none
++#include "p1506hist.inc"
++      integer ipass, j, k, iun
++      character*20 fname
++      if (.not.booked) return
++      call p1506_flush
++      iun = 87
++      do ipass=1,2
++         if (.not.havepass(ipass)) cycle
++         if (ipass.eq.1) then
++            fname = 'p1506_lo.top'
++         else
++            fname = 'p1506_nlo.top'
++         endif
++         open(unit=iun,file=fname,status='unknown')
++         do j=1,nh
++            write(iun,'(a,i3)') '# '//trim(adjustl(hname(j)))//
++     &           ' index ',j-1
++            do k=1,nb(j)
++               write(iun,'(4(1x,e14.8))') edges(k-1,j), edges(k,j),
++     &              res(k,j,ipass)*1d-3, sqrt(var(k,j,ipass))*1d-3
++            enddo
++            write(iun,*)
++            write(iun,*)
++         enddo
++         close(iun)
++         print*,'p1506hist: written ',trim(fname),' (pb)'
++      enddo
++      end
++
++c     kinematics as in p1506_analysis.f (momenta p(0:3), E = p(0))
++      real*8 function p15rap(p)
++      implicit none
++      real*8 p(0:3)
++      p15rap = 0.5d0*log((p(0)+p(3))/(p(0)-p(3)))
++      end
++
++      real*8 function p15mjj(p1,p2)
++      implicit none
++      real*8 p1(0:3),p2(0:3),p(0:3)
++      p = p1+p2
++      p15mjj = sqrt(abs(p(0)**2-p(1)**2-p(2)**2-p(3)**2))
++      end
++
++      real*8 function p15azi(p)
++      implicit none
++      real*8 p(0:3), pi
++      parameter(pi = 3.141592653589793D0)
++      p15azi = atan(p(2)/p(1))
++      if (p(1).lt.0d0) then
++         if (p15azi.gt.0d0) then
++            p15azi = p15azi - pi
++         else
++            p15azi = p15azi + pi
++         endif
++      endif
++      end
++
++      real*8 function p15rsep(p1,p2)
++c     as rsepn
++      implicit none
++      real*8 p1(0:3),p2(0:3), pi, delphi
++      parameter(pi = 3.141592653589793D0)
++      real*8 p15azi, p15rap
++      external p15azi, p15rap
++      delphi = abs(p15azi(p1)-p15azi(p2))
++      if (delphi.gt.pi) delphi = 2*pi-delphi
++      p15rsep = sqrt((p15rap(p1)-p15rap(p2))**2 + delphi**2)
++      end
++
++      real*8 function p15dphi(p1,p2)
++c     as getdelphiv4
++      implicit none
++      real*8 p1(0:3),p2(0:3),pt1,pt2,tmp,tiny
++      parameter (tiny=1.d-5)
++      pt1 = sqrt(p1(1)**2+p1(2)**2)
++      pt2 = sqrt(p2(1)**2+p2(2)**2)
++      if (pt1.ne.0d0.and.pt2.ne.0d0) then
++         tmp = (p1(1)*p2(1)+p1(2)*p2(2))/(pt1*pt2)
++         if (abs(tmp).gt.1d0+tiny) stop 'p15dphi: cosine larger than 1'
++         if (abs(tmp).ge.1d0) tmp = sign(1d0,tmp)
++         tmp = acos(tmp)
++      else
++         tmp = 1d8
++      endif
++      p15dphi = tmp
++      end
+--- a/utilities/p1506hist.inc	1970-01-01 01:00:00.000000000 +0100
++++ b/utilities/p1506hist.inc	2026-10-03 19:36:01.715728582 +0200
+@@ -0,0 +1,15 @@
++c     p1506hist.F: histogram storage (p1506_analysis.f observables)
++      integer p15nhmax, p15nbmax, p15nrand
++      parameter (p15nhmax=30, p15nbmax=100, p15nrand=30)
++      integer nh, nb(p15nhmax)
++      real*8 edges(0:p15nbmax,p15nhmax)
++      real*8 buf(p15nbmax,p15nhmax)
++      real*8 s1(p15nbmax,p15nhmax), s2(p15nbmax,p15nhmax)
++      real*8 res(p15nbmax,p15nhmax,2), var(p15nbmax,p15nhmax,2)
++      real*8 lastrand(p15nrand), lastweight
++      logical booked, pending, havepass(2)
++      character*40 hname(p15nhmax)
++      common /p1506c/ edges, buf, s1, s2, res, var, lastrand,
++     &     lastweight, nh, nb, booked, pending, havepass
++      common /p1506n/ hname
++      save /p1506c/, /p1506n/

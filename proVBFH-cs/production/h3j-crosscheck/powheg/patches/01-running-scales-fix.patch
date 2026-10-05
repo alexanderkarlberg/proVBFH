@@ -1,0 +1,15 @@
+--- /tmp/claude-54935/-u-akarlber-work-proVBFH-proVBFH/cff5e0ab-c0cf-44bb-ac0c-b42af1c0877a/scratchpad/vbfhjjj-pristine/Born_phsp.f	2018-04-28 13:59:13.776500000 +0200
++++ VBF_HJJJ/Born_phsp.f	2026-10-04 11:14:51.786076000 +0200
+@@ -1044,6 +1044,12 @@
+          endif       
+       endif
+       
++c     h3j cross-check (2026-10-04): bug fix. The running-scale branches
++c     above compute muref but never set muf, mur, which are then left
++c     at their initial value (0) and raised to the floor sqrt(2) GeV
++c     below, i.e. mu_R = mu_F = 1.414 GeV for every runningscales > 0.
++       muf=muref
++       mur=muref
+       else
+        if (ini) then
+        muref=ph_Hmass/2d0

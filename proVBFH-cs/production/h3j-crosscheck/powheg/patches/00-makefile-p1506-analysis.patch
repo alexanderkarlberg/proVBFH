@@ -1,0 +1,26 @@
+--- /tmp/claude-54935/-u-akarlber-work-proVBFH-proVBFH/cff5e0ab-c0cf-44bb-ac0c-b42af1c0877a/scratchpad/vbfhjjj-pristine/Makefile	2016-10-09 14:11:42.361269000 +0200
++++ VBF_HJJJ/Makefile	2026-10-03 19:20:39.365485000 +0200
+@@ -8,8 +8,10 @@
+ # Choose Analysis: none, default
+ # default analysis requires FASTJET package, that has to be installed 
+ # separately (see below)
+-ANALYSIS=none
++#ANALYSIS=none
+ #ANALYSIS=default
++# p1506: proVBFH-cs/analysis/p1506_analysis.f (1506.02660 analysis)
++ANALYSIS=p1506
+ ## For static linking uncomment the following
+ #STATIC= -static
+ 
+@@ -86,6 +88,11 @@
+ PWHGANAL=pwhg_analysis_multi.o fastjetfortran.o pwhg_bookhist-multi.o 
+ # Also add required Fastjet drivers to PWHGANAL (examples are reported)
+ PWHGANAL+= fastjetsisconewrap.o fastjetktwrap.o 
++else ifeq ("$(ANALYSIS)","p1506")
++FASTJET_CONFIG=$(shell which fastjet-config)
++LIBSFASTJET += $(shell $(FASTJET_CONFIG) --libs --plugins ) -lstdc++
++FJCXXFLAGS+= $(shell $(FASTJET_CONFIG) --cxxflags)
++PWHGANAL=pwhg_analysis_p1506.o p1506_analysis.o fastjetfortran.o pwhg_bookhist-multi.o
+ else
+ PWHGANAL=pwhg_analysis-dummy.o pwhg_bookhist-multi.o  
+ endif

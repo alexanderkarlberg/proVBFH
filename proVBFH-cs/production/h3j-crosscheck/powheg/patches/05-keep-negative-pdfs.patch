@@ -1,0 +1,13 @@
+--- pdfcalls.f	2024-06-14 12:50:58.223018000 +0200
++++ VBF_HJJJ-nf5nc-nw/pdfcalls.f	2026-10-04 20:24:21.556667000 +0200
+@@ -144,7 +144,9 @@
+       do k=-pdf_nparton,pdf_nparton
+          if (ofx(k,irec).lt.0) then
+             call increasecnt("negative pdf values");
+-            ofx(k,irec)=0
++c           h3j cross-check: keep negative PDF values (as VBFNLO and
++c           proVBFH-cs do); the distributed code sets them to zero
++c            ofx(k,irec)=0
+          endif
+       enddo
+       fx=ofx(-pdf_nparton:pdf_nparton,irec)

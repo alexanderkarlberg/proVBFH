@@ -1,0 +1,1 @@
+--xcut ptj1-STXS 600 --xcut ptj2-STXS 300 --xcut ptH-STXS 600 --xcut ptHjj-STXS 300 --xcut mjj-STXS 3000 --xcut ptHjj-ptj20 300 --xcut ptHjj-ptj30 300

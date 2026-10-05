@@ -1,0 +1,54 @@
+! Public POWHEG-BOX-V2 VBF_HJJJ (svn r4135), fixed-order NLO, 1506.02660 set-up
+! Parameters as proVBFH-cs/production/h3j-crosscheck/old-provbfh/powheg.input
+! (13 TeV, NNPDF30_nnlo_as_0118, alpha_s from LHAPDF, mu_R = mu_F = mu0(pT,H)).
+! EW inputs, H mass/width in vbfnlo.input (W/Z widths imposed in init_couplings.f).
+
+ih1   1
+ih2   1
+ebeam1 6500d0
+ebeam2 6500d0
+lhans1 261000
+lhans2 261000
+alphas_from_pdf 1     ! alpha_s from LHAPDF (old card: alphas_from_lhapdf 1)
+
+bornonly   BORNONLY   ! 1: LO only, 0: NLO
+testplots  1          ! fill the NLO (fixed-order) histograms: pwg-XXXX-NLO.top
+withnegweights 1
+runningscales 4       ! mu_R = mu_F = mu0(pT,H) = sqrt(mH/2*sqrt(mH^2/4+pT,H^2)) (public code: mthscale; Born kinematics)
+renscfact  1d0
+facscfact  1d0
+ptcut PTCUT           ! Born generation cut on the three partons' p_T [GeV]
+bornsuppfact 0        ! no Born suppression
+ckm_offdiag 0
+smartsig 1
+fakevirt 0
+
+! integration
+ncall1  NCALL1
+itmx1   ITMX1
+ncall2  NCALL2
+itmx2   ITMX2
+foldcsi 1
+foldy   1
+foldphi 1
+nubound 0
+icsimax 5
+iymax   5
+xupbound 2d0
+numevts 0
+use-old-grid   1
+use-old-ubound 1
+
+manyseeds 1
+maxseeds 9999
+parallelstage  STAGE
+xgriditeration 1
+
+! analysis cuts (p1506_analysis.f)
+ptalljetmin    25d0
+yjetmax        4.5d0
+Rsep_jjmin     0.4d0
+ptjetmin       25d0
+mjjmin         600d0
+deltay_jjmin   4.5d0
+jet_opphem     1

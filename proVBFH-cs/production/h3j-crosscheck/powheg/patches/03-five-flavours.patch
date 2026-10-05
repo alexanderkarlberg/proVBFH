@@ -1,0 +1,11 @@
+--- VBF_HJJJ/init_processes.f	2014-05-29 13:26:49.474501000 +0200
++++ VBF_HJJJ-nf5nc-nw/init_processes.f	2026-10-04 20:24:19.993501000 +0200
+@@ -164,7 +164,7 @@
+ c     index of the first light coloured particle in the final state
+ c     (all subsequent particles are coloured)
+       flst_lightpart=4
+-      max_flav = 4
++      max_flav = 5 ! DIAGNOSTIC: b quarks
+ c init:
+       flst_nborn=0
+       flst_nreal=0

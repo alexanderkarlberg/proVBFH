@@ -1,0 +1,55 @@
+--- /tmp/claude-54935/-u-akarlber-work-proVBFH-proVBFH/cff5e0ab-c0cf-44bb-ac0c-b42af1c0877a/scratchpad/vbfhjjj-pristine/init_couplings.f	2014-06-30 09:21:51.026730000 +0200
++++ VBF_HJJJ/init_couplings.f	2026-10-03 19:21:19.749376000 +0200
+@@ -69,6 +69,16 @@
+       call inizialize_ph_CKM_matrix
+ 
+       call coup_powheg_to_vbfnlo
++c
++c     h3j cross-check (AK, 2026-10): impose the W and Z widths of the
++c     proVBFH/VBFNLO set-up (2.141 / 2.4952 GeV) instead of the values
++c     computed in KOPPLN (convert_coup.f: replace() is always true there,
++c     so WWIDTH/ZWIDTH in vbfnlo.input are ignored; it gives 2.0950 /
++c     2.5051 GeV). Overwrite every copy filled by KOPPLN/ctrans: the
++c     widths in /BRANCH/, mass*width in /BKOPOU/ and /BKOPOUshort/ (used
++c     by the VBFNLO matrix elements), and wwidth/zwidth in coupl.inc
++c     (HELAS). ph_Wwidth/ph_Zwidth are set from these below.
++      call h3j_impose_vwidths(2.141d0, 2.4952d0)
+ c fermion masses:
+       physpar_ml(1)=0.511d-3 ! e
+       physpar_ml(2)=0.1057d0 ! mu
+@@ -182,3 +192,35 @@
+       end
+ 
+ 
++
++
++c     h3j cross-check (AK, 2026-10): see the call in init_couplings
++      subroutine h3j_impose_vwidths(wwid, zwid)
++      implicit none
++      include 'coupl.inc'
++      real * 8 wwid, zwid
++      double precision BWNE,BWUD,BWTB,BZNN,BZEE,BZUU,BZDD,BZTT,
++     &                BHWW,BHZZ,BHGG,BHTT,BHBB,BHCC,BHTAU,BHMU,
++     &                BHGAM, BHGAMZ, XGW, XGZ, XGH, GAMT
++      COMMON /BRANCH/ BWNE,BWUD,BWTB,BZNN,BZEE,BZUU,BZDD,BZTT,
++     &                BHWW,BHZZ,BHGG,BHTT,BHBB,BHCC,BHTAU,BHMU,
++     &                BHGAM, BHGAMZ, XGW, XGZ, XGH, GAMT
++      DOUBLE PRECISION CLR,XM2,XMG,B,V,A
++      COMMON /BKOPOU/ CLR(4,5,-1:1),XM2(6),XMG(6),B(6,6,6),V(4,5),A(4,5)
++      double precision XM2s(6),XMGs(6)
++      COMMON /BKOPOUshort/ XM2s,XMGs
++      write(*,*) 'h3j: W, Z widths computed by KOPPLN: ',
++     &     wwidth, zwidth
++      XGW = wwid
++      XGZ = zwid
++      XMG(2) = sqrt(XM2(2))*XGZ
++      XMG(3) = sqrt(XM2(3))*XGW
++      XMG(4) = XMG(3)
++      XMGs(2) = XMG(2)
++      XMGs(3) = XMG(3)
++      XMGs(4) = XMG(4)
++      wwidth = XGW
++      zwidth = XGZ
++      write(*,*) 'h3j: W, Z widths imposed:            ',
++     &     wwidth, zwidth
++      end

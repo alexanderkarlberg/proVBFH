@@ -1,0 +1,5 @@
+#!/bin/bash
+# run VBFNLO in the current directory (for run_array.sh)
+export LD_LIBRARY_PATH=$HOME/.local/lib:/ptmp/mpp/akarlber/h3j/vbfnlo/install/lib:/ptmp/mpp/akarlber/h3j/vbfnlo/install/lib/VBFNLO:$LD_LIBRARY_PATH
+export LHAPDF_DATA_PATH=$HOME/.local/share/LHAPDF
+exec /ptmp/mpp/akarlber/h3j/vbfnlo/install/bin/vbfnlo --input=.

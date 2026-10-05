@@ -1,0 +1,11 @@
+--- VBF_HJJJ/Born_phsp.f	2026-10-04 11:14:51.786076000 +0200
++++ VBF_HJJJ-nf5nc-nw/Born_phsp.f	2026-10-04 20:24:21.567667367 +0200
+@@ -255,7 +255,7 @@
+       logical check
+       parameter(check=.false.)
+       logical BW
+-      parameter (BW=.true.)
++      parameter (BW=.false.) ! h3j: narrow-width Higgs, as VBFNLO and proVBFH-cs
+       real * 8 epsilon
+       parameter (epsilon=1d-10)
+       real * 8 pt1cut,pt2cut,pt1,pt2,m2jjmin
