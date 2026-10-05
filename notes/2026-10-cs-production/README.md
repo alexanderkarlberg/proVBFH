@@ -382,3 +382,11 @@ at the end.
   (`slurm/ranges.py`). Fed 10,887 hxswg136 and 7,586 p1506 NNLO lines
   (queue 20,000). ~2,000 p1506 lines that started earlier but never
   finished (dead nodes, cancellations) are left for `resubmit.sh` at the end.
+- **H+3j result, like-for-like (5 Oct 13:00).** POWHEG with the scale fix,
+  5 flavours, negative PDFs kept and narrow width: LO 131.29 ± 0.90 fb
+  (VBFNLO 130.39), NLO σ(≥ 3 jets) = 133.4 ± 3.0 fb (660 seeds; 40 lost to
+  a NODE_FAIL on et13), +6.1% above VBFNLO (125.69 ± 0.12), like the old
+  proVBFH (133.24, +6.0%); proVBFH-cs 127.16 ± 0.31 (+1.2%). σ(≥ 4 jets):
+  16.84 ± 0.27 vs 16.97 ± 0.01. Breit-Wigner variant (646 seeds): 131.4 ±
+  2.9. ptcut 1 / 0.1 GeV (4 flavours, 300 seeds each): 128.3 ± 1.7 / 130.0
+  ± 1.3, no significant dependence. Page version 6.

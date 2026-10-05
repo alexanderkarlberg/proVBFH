@@ -20,4 +20,4 @@ W3 = (2,2) of μ0(p_T,H). Exclusive + inclusive parts added.
 like-for-like LO with 5 flavours, negative PDFs kept and a narrow-width
 Higgs gives 131.29 ± 0.90 fb, see the notes),
 `powheg-nlo-pt1`, `powheg-nlo-pt01` (4 flavours, ptcut 1 / 0.1 GeV, 300
-seeds each). The like-for-like POWHEG NLO run is still running.
+seeds each). `powheg-lo-lfl`, `powheg-nlo-lfl-pt1`: like-for-like (scale fix, 5 flavours, negative PDFs kept, narrow-width Higgs), 100 and 660 seeds.
