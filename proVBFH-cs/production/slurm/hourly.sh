@@ -5,11 +5,11 @@ P=/ptmp/mpp/akarlber/cs-production; Q=$P/prod-lonlo; S=$(dirname "$0")
 # NNLO exclusive: keep at most ~2,500 of my jobs in the queue (AK, 5 Oct:
 # 40k jobs queueing is not sustainable); never-started lines are fed in
 # cap follows the cluster's health (AK: raise it if the cluster improves):
-# 20,000 while at least 80 alma nodes are healthy (allocated/mixed/idle and
+# 20,000 while at least 60 alma nodes are healthy (allocated/mixed/idle and
 # responding), else 2,500. (About 16 nodes stay stuck "completing" even when
 # the cluster runs well, so that count alone is not a good criterion.)
 nok=$(sinfo -p alma -h -N -o "%N %T" | awk '$2 ~ /^(allocated|mixed|idle)$/' | wc -l)
-if [ "$nok" -ge 80 ]; then export QCAP=20000; else export QCAP=2500; fi
+if [ "$nok" -ge 60 ]; then export QCAP=20000; else export QCAP=2500; fi
 echo "alma healthy nodes: $nok -> queue cap $QCAP"
 for s in hxswg136 p1506; do
     "$S/feed_missing.sh" $s-excl-nnlo $P/bin/proVBFH-cs-$s $P/prod-nnlo/$s/excl/jobs.list 12:00:00 $QCAP 500
