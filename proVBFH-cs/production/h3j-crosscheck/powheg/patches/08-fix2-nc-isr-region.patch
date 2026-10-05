@@ -1,0 +1,243 @@
+--- VBF_HJJJ-lfl-fix13/init_processes.f	2026-10-05 16:50:07.779473000 +0200
++++ VBF_HJJJ-lfl-fix123/init_processes.f	2026-10-05 17:23:03.615113000 +0200
+@@ -1044,9 +1044,71 @@
+               flst_realtags(6,flst_nreal)=5 !? is this ok?
+               flst_realtags(7,flst_nreal)=5 !? is this ok?
+             endif !tag
+-         enddo !i6   
++         enddo !i6
+       enddo !i
+ 
++c h3j fix 2 (bug report, problem 2): NC analogues of the CC entries
++c above with the pair tag (5) on an incoming quark, built from the
++c gluon-initiated NC Borns. They carry the graphs in which the incoming
++c quark of tag 5 only emits a t-channel gluon (the Z couples to the
++c q qbar line of the gluon Born), and give POWHEG the initial-state
++c region q -> q + g* of these graphs (underlying Born: the NC gq/qg
++c Born). Each of them has the flavour structure of one of the
++c outgoing-pair entries above; compreal_hqqqq splits the matrix element
++c between the two entries with a partition of unity (h3j fix 2 there),
++c so the sum over entries is unchanged.
++c     g q Borns: g(1) j(2) -> H i(4) j(5) -i(6), tags 0,2,0,1,2,1
++      do i=flst_nborn_ZZ_qq+1,flst_nborn_ZZ_gq
++         do i6 = -max_flav,max_flav
++            if (i6.eq.0) cycle
++            i7 = i6
++           flst_nreal=flst_nreal+1
++           if(flst_nreal.gt.maxprocreal) goto 999
++           flst_real(1,flst_nreal)=i6
++           flst_real(2,flst_nreal)=flst_born(2,i)
++           flst_real(3,flst_nreal)=flst_born(3,i)
++           flst_real(4,flst_nreal)=flst_born(4,i)
++           flst_real(5,flst_nreal)=flst_born(5,i)
++           flst_real(6,flst_nreal)=flst_born(6,i)
++           flst_real(7,flst_nreal)=i7
++           if (tag) then
++              flst_realtags(1,flst_nreal)=5
++              flst_realtags(2,flst_nreal)=flst_borntags(2,i)
++              flst_realtags(3,flst_nreal)=flst_borntags(3,i)
++              flst_realtags(4,flst_nreal)=flst_borntags(4,i)
++              flst_realtags(5,flst_nreal)=flst_borntags(5,i)
++              flst_realtags(6,flst_nreal)=flst_borntags(6,i)
++              flst_realtags(7,flst_nreal)=5
++            endif !tag
++         enddo !i6
++      enddo !i
++c     q g Borns: i(1) g(2) -> H i(4) j(5) -j(6), tags 1,0,0,1,2,2
++      do i=flst_nborn_ZZ_gq+1,flst_nborn_ZZ_qg
++         do i6 = -max_flav,max_flav
++            if (i6.eq.0) cycle
++            i7 = i6
++           flst_nreal=flst_nreal+1
++           if(flst_nreal.gt.maxprocreal) goto 999
++           flst_real(1,flst_nreal)=flst_born(1,i)
++           flst_real(2,flst_nreal)=i6
++           flst_real(3,flst_nreal)=flst_born(3,i)
++           flst_real(4,flst_nreal)=flst_born(4,i)
++           flst_real(5,flst_nreal)=flst_born(5,i)
++           flst_real(6,flst_nreal)=flst_born(6,i)
++           flst_real(7,flst_nreal)=i7
++           if (tag) then
++              flst_realtags(1,flst_nreal)=flst_borntags(1,i)
++              flst_realtags(2,flst_nreal)=5
++              flst_realtags(3,flst_nreal)=flst_borntags(3,i)
++              flst_realtags(4,flst_nreal)=flst_borntags(4,i)
++              flst_realtags(5,flst_nreal)=flst_borntags(5,i)
++              flst_realtags(6,flst_nreal)=flst_borntags(6,i)
++              flst_realtags(7,flst_nreal)=5
++            endif !tag
++         enddo !i6
++      enddo !i
++c end h3j fix 2
++
+       flst_nreal_ZZ_all = flst_nreal
+ 
+       if (debug) then
+--- VBF_HJJJ-lfl-fix13/compreal_hqqqq.f	2026-10-05 16:50:07.864707684 +0200
++++ VBF_HJJJ-lfl-fix123/compreal_hqqqq.f	2026-10-05 17:24:07.195221000 +0200
+@@ -24,6 +24,9 @@
+       real*8 polcol,polcolqq,polcolqq_no
+       real*8 res,res_cross
+       integer kl
++c h3j fix 2:
++      integer kl0
++      real*8 nc_up,nc_lo,wup_f,wup_i,wlo_f,wlo_i
+ 
+       real*8 N ! color factors
+       parameter(N=3d0)
+@@ -77,7 +80,15 @@
+       polcol = polcolqq
+ 
+ 
+-      if(alr_tag.eq.0) then
++      if(alr_tag.eq.0.and.realequiv_tag.gt.0) then
++c h3j fix 2: use the tags of the real entry when called for it (as in
++c printrealequiv); with tags, NC entries of the same flavours but with
++c the pair tag on the outgoing pair or on an incoming quark are routed
++c differently below
++      do i=1, nlegs
++         bflav_tag(i)=flst_real_tag(i,realequiv_tag)
++      enddo
++      elseif(alr_tag.eq.0) then
+       do i=1, nlegs
+          bflav_tag(i)=bflav(i)
+       enddo
+@@ -536,24 +547,39 @@
+          if (new_vbfnlo) then
+             call qqh4q(pbar_cc,fsign,NCmatrix_r,CCmatrix_r,lsymmcontrib)
+             
+-           if (kl.eq.1) then 
+-               res_vbf = NCmatrix_r(0,0,0,1,0)+NCmatrix_r(0,0,0,2,0) !uuccuu
+-            elseif (kl.eq.2) then 
+-               res_vbf = NCmatrix_r(0,1,0,1,0)+NCmatrix_r(0,1,0,2,0) !uussuu
+-            elseif (kl.eq.3) then
+-               res_vbf = NCmatrix_r(1,0,0,1,0)+NCmatrix_r(1,0,0,2,0) !ddccuu
+-            elseif (kl.eq.4) then
+-               res_vbf = NCmatrix_r(1,1,0,1,0)+NCmatrix_r(1,1,0,2,0) !ddssuu
+-            elseif (kl.eq.5) then
+-               res_vbf = NCmatrix_r(0,0,1,1,0)+NCmatrix_r(0,0,1,2,0) !uuccdd
+-            elseif (kl.eq.6) then
+-               res_vbf = NCmatrix_r(0,1,1,1,0)+NCmatrix_r(0,1,1,2,0) !uussdd
+-            elseif (kl.eq.7) then
+-               res_vbf = NCmatrix_r(1,0,1,1,0)+NCmatrix_r(1,0,1,2,0) !ddccdd
+-            elseif (kl.eq.8) then
+-               res_vbf = NCmatrix_r(1,1,1,1,0)+NCmatrix_r(1,1,1,2,0) !ddssdd               
++c h3j fix 2 (bug report, problem 2). kl = 1..8 is (flav1,flav3,flav5) =
++c (0,0,0),(0,1,0),(1,0,0),(1,1,0),(0,0,1),...: uuccuu ... ddssdd, as in
++c the original if-chain (which returned nc_up + nc_lo for every entry).
++c nc_up (index 1): the pair's gluon attached to line 1-2, coherently
++c  (12(56))-(34) [Z on line 12] + (56(12))-(34) [Z on the pair 56];
++c nc_lo (index 2): the same with line 3-4.
++c With the pair outgoing (col_del = 2), lines 12/34 are the incoming
++c quarks' lines and nc_up + nc_lo is the full NC matrix element; its
++c Z-on-pair graphs are singular when the outgoing quark of line 12 (34)
++c is collinear to beam 1 (2). With the pair tag on incoming quark 1
++c (col_del = 3, pair71) the roles of line 12 and pair 56 are swapped,
++c so nc_up is the same quantity as nc_up of the outgoing-pair entry of
++c the same flavours (nc_lo would be Higgs-strahlung-type graphs and is
++c not used); likewise nc_lo for the pair tag on incoming quark 2
++c (col_del = 1, pair72). The matrix element of each part is split
++c between the outgoing-pair entry (final-state region of the pair) and
++c the new entry (initial-state region) with a partition of unity
++c (h3j_nc4q_part below), so that each entry is singular only in the
++c region POWHEG builds for it and the sum over entries is the original.
++            kl0 = kl-1
++            nc_up = NCmatrix_r(mod(kl0/2,2),mod(kl0,2),kl0/4,1,0)
++            nc_lo = NCmatrix_r(mod(kl0/2,2),mod(kl0,2),kl0/4,2,0)
++            call h3j_nc4q_part(pin,col_del,wup_f,wup_i,wlo_f,wlo_i)
++            if (col_del.eq.2) then
++               res_vbf = nc_up*wup_f + nc_lo*wlo_f
++            elseif (col_del.eq.3) then
++               res_vbf = nc_up*wup_i
++            elseif (col_del.eq.1) then
++               res_vbf = nc_lo*wlo_i
++            else
++               stop 'compreal_hqqqq: h3j fix 2: unexpected col_del'
+             endif
+-            
++
+             res = res_vbf
+ 
+          if (test_amps) then 
+@@ -656,3 +682,81 @@
+ 
+       return
+       end
++
++c h3j fix 2 (bug report, problem 2): partition of unity for the NC
++c four-quark reals between the entry with the pair tag on the outgoing
++c pair (final-state region: the pair's q || qbar) and the entries with
++c the pair tag on incoming quark 1 or 2 (initial-state region: the
++c outgoing quark of the gluon-emitting line || its beam).
++c Distances as POWHEG's (getdistance, par_diexp = par_dijexp = 1) in the
++c partonic c.m. frame, written with invariants (P = p1 + p2, s = P^2):
++c   d_F  = 2 pU.pUb E_U E_Ub/(E_U+E_Ub)^2,   E_k = P.k/sqrt(s)
++c   d_I1 = 2 E_S^2 (1 - cos theta(S,p1)) = 4 (P.kS)(p1.kS)/s
++c   d_I2 = 4 (P.kC)(p2.kC)/s
++c with S (C) the outgoing quark of the line from beam 1 (2) and U, Ub
++c the q qbar pair attached to it by the gluon. The legs are assigned by
++c role, so all three entries of a flavour structure use the same
++c weights at the same physical point:
++c   col_del = 2 (pair outgoing): S = 4, C = 5, pair = 6, 7
++c   col_del = 3 (pair tag on incoming 1): S = 7, C = 5, pair = 4, 6
++c   col_del = 1 (pair tag on incoming 2): S = 4, C = 7, pair = 5, 6
++c Returned: wup_f = d_I1/(d_I1+d_F), wup_i = d_F/(d_I1+d_F) (and the
++c same for the lower line with d_I2), wup_f + wup_i = 1.
++      subroutine h3j_nc4q_part(pin,col_del,wup_f,wup_i,wlo_f,wlo_i)
++      implicit none
++      real*8 pin(0:3,7),wup_f,wup_i,wlo_f,wlo_i
++      integer col_del
++      integer iS,iC,iU,iUb,mu
++      real*8 pp(0:3),s,df,di1,di2,eu,eub,h3j_dot
++      external h3j_dot
++      if (col_del.eq.2) then
++         iS = 4
++         iC = 5
++         iU = 6
++         iUb = 7
++      elseif (col_del.eq.3) then
++         iS = 7
++         iC = 5
++         iU = 4
++         iUb = 6
++      elseif (col_del.eq.1) then
++         iS = 4
++         iC = 7
++         iU = 5
++         iUb = 6
++      else
++         stop 'h3j_nc4q_part: unexpected col_del'
++      endif
++      do mu=0,3
++         pp(mu) = pin(mu,1)+pin(mu,2)
++      enddo
++      s = h3j_dot(pp,pp)
++      eu = h3j_dot(pp,pin(0,iU))
++      eub = h3j_dot(pp,pin(0,iUb))
++      df = 2*h3j_dot(pin(0,iU),pin(0,iUb))*eu*eub/(eu+eub)**2
++      di1 = 4*h3j_dot(pp,pin(0,iS))*h3j_dot(pin(0,1),pin(0,iS))/s
++      di2 = 4*h3j_dot(pp,pin(0,iC))*h3j_dot(pin(0,2),pin(0,iC))/s
++      df = abs(df)
++      di1 = abs(di1)
++      di2 = abs(di2)
++      if (di1+df.gt.0d0) then
++         wup_f = di1/(di1+df)
++         wup_i = df/(di1+df)
++      else
++         wup_f = 0.5d0
++         wup_i = 0.5d0
++      endif
++      if (di2+df.gt.0d0) then
++         wlo_f = di2/(di2+df)
++         wlo_i = df/(di2+df)
++      else
++         wlo_f = 0.5d0
++         wlo_i = 0.5d0
++      endif
++      end
++
++      real*8 function h3j_dot(a,b)
++      implicit none
++      real*8 a(0:3),b(0:3)
++      h3j_dot = a(0)*b(0)-a(1)*b(1)-a(2)*b(2)-a(3)*b(3)
++      end

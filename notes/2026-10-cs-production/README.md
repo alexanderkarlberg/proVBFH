@@ -424,3 +424,46 @@ class; not done yet.
 - Problem 2 fix: delegated to a sub-agent (5 Oct 17:30) working only in a
   new copy `VBF_HJJJ-lfl-fix123`, no job submissions; deliverables and
   validation in `/ptmp/mpp/akarlber/h3j/fix2-tests/`.
+
+## Problem 2 fixed (sub-agent, 5 Oct 17:30-17:50)
+
+Build `VBF_HJJJ-lfl-fix123` (fixes 1 and 3 plus this), patch
+`h3j-crosscheck/powheg/patches/08-fix2-nc-isr-region.patch`; test programs
+in `tools/fix2/`, outputs in `/ptmp/mpp/akarlber/h3j/fix2-tests/`.
+- **Why tags alone are not enough:** entries with the same flavours but
+  different tags are separate processes in POWHEG (own matrix element, FKS
+  S functions only over their own regions), so a new entry returning the
+  full matrix element would double count; and in VBFNLO's `qqh4q` the
+  Z-on-line and Z-on-pair graphs interfere coherently.
+- **Fix:** 1,000 new NC entries with the pair tag on incoming 1 (from the
+  NC gq Borns, tags 5,2,0,1,2,1,5) and on incoming 2 (NC qg Borns, tags
+  1,5,0,1,2,2,5), analogous to the CC ones; reals 1,277 -> 2,277 (<
+  maxprocreal 2,392). The matrix element is split across the entries with a
+  smooth partition of unity built from POWHEG-type distances (d_F of the
+  pair, d_I1, d_I2 of the outgoing quark of each line to its beam): the
+  outgoing-pair entry gets nc_up d_I1/(d_I1+d_F) + nc_lo d_I2/(d_I2+d_F),
+  the new entries nc_up d_F/(d_I1+d_F) and nc_lo d_F/(d_I2+d_F); the
+  existing `pair71`/`pair72` routing of `compreal_hqqqq` gives exactly
+  nc_up/nc_lo there (checked). No VBFNLO change, no interference dropped;
+  btildecoll already adds the qg remnant to the gluon Borns.
+- **Validation:** (a) regions 2,432 -> 3,432: each new entry has one ISR
+  region (emitters 1 / 2), all old entries and CC unchanged; the bug
+  report's region program finds 660 = 160 CC + 500 NC entries with an ISR
+  region. (b) Collinear limit (outgoing s || beam 1): the 1/k_T^2 is now in
+  the new entry (c_in1 -> 0.99999966), the outgoing-pair entry tends to a
+  constant; c_sum equals fix13 digit for digit; summed over entries, every
+  NC flavour structure equals the unfixed matrix element to 8.9e-16 at
+  random points (checked by me in `compare_sum.log`), all other entries
+  bit-identical. (c) POWHEG's own soft/collinear checks: all new regions
+  converge, with the same ~0.5% offset as the untouched CC pair-on-beam
+  regions (1.0046 / 1.0068); not caused by the fix, not investigated.
+- **Side finding:** all like-for-like builds had `st_nlight = 4` with
+  `max_flav = 5`: γ_g (sigsoftvirt) misses the g -> b b̄ integrated
+  counterterm and the qg remnant misses the b-initiated regions. Patch
+  09 sets `st_nlight = 5` (old proVBFH, VBFNLO and proVBFH-cs use 5).
+  The like-for-like NLO numbers so far (133.4 ± 3.0 fb) and the fix1/3/13
+  runs use 4.
+- **Runs (5 Oct 18:00), ptcut 1, 20 + 700 seeds each:**
+  `nlo-lfl-fix123-nl5-pt1` (all three fixes, st_nlight 5; arrays
+  48674723/4) and the control `nlo-lfl-nl5-pt1` (like-for-like, bugs left
+  in, st_nlight 5; 48674725/6).

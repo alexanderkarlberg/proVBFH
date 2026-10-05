@@ -1,0 +1,11 @@
+--- VBF_HJJJ-nf5nc-nw/init_couplings.f	2026-10-04 20:24:21.551300000 +0200
++++ VBF_HJJJ-lfl-nl5/init_couplings.f	2026-10-05 17:35:18.781559000 +0200
+@@ -33,7 +33,7 @@
+       physpar_mq(5)=4.80d0   ! bottom
+ c
+ c     number of light flavors
+-      st_nlight = 4
++      st_nlight = 5 ! h3j: consistent with max_flav = 5 (b quarks)
+ c
+ c diagonal or non-diag. CKM matrix at event generation level? 
+ c (note: fixed order MEs are always with diag. CKM)
