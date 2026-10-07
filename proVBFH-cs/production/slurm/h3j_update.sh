@@ -44,8 +44,10 @@ comb vbfnlo-nlo-3j.top "$V/nlo/job-*/p1506_nlo.top"
 comb vbfnlo-lo-3j.top "$V/lo/job-*/p1506_lo.top"
 alts=()
 comb powheg-nlo-pt1.top "$W/nlo-pt1/pwg-[0-9][0-9][0-9][0-9]-NLO.top" && alts+=(--alt "POWHEG VBF_HJJJ NLO, ptcut 1 GeV" powheg-nlo-pt1.top powheg-nlo-pt1.top powheg-nlo-pt1.top)
-comb powheg-nlo-pt01.top "$W/nlo-pt01/pwg-[0-9][0-9][0-9][0-9]-NLO.top" && alts+=(--alt "POWHEG VBF_HJJJ NLO, ptcut 0.1 GeV" powheg-nlo-pt01.top powheg-nlo-pt01.top powheg-nlo-pt01.top)
 comb powheg-nlo-nf5-pt1.top "$W/nlo-nf5nc-nw-pt1/pwg-[0-9][0-9][0-9][0-9]-NLO.top" && alts+=(--alt "POWHEG VBF_HJJJ NLO, like-for-like (5 fl., narrow H, neg. PDFs), ptcut 1 GeV" powheg-nlo-nf5-pt1.top powheg-nlo-nf5-pt1.top powheg-nlo-nf5-pt1.top)
+# the plot has four alternative styles: the 0.1 GeV ptcut run (no effect) is
+# left out to show the like-for-like run with fixes 1-3 and st_nlight 5
+comb powheg-nlo-fix123.top "$W/nlo-lfl-fix123-nl5-pt1/pwg-[0-9][0-9][0-9][0-9]-NLO.top" && alts+=(--alt "POWHEG VBF_HJJJ NLO, like-for-like + fixes 1–3, st_nlight 5" powheg-nlo-fix123.top powheg-nlo-fix123.top powheg-nlo-fix123.top)
 loalt=()
 comb powheg-lo.top "$W/lo-prod/pwg-[0-9][0-9][0-9][0-9]-NLO.top" && loalt=(--alt "POWHEG VBF_HJJJ LO, 4 flavours" powheg-lo.top powheg-lo.top powheg-lo.top)
 comb powheg-lo-nf5.top "$W/lo-nf5fix/pwg-[0-9][0-9][0-9][0-9]-NLO.top" && loalt+=(--alt "POWHEG VBF_HJJJ LO, 5 flavours" powheg-lo-nf5.top powheg-lo-nf5.top powheg-lo-nf5.top)
@@ -62,5 +64,5 @@ nice python3 $T/plot_compare.py --new vbfnlo-lo-3j.top vbfnlo-lo-3j.top vbfnlo-l
     --oldshort proVBFH-cs --reflabel proVBFH-cs --ratio-range 0.9 1.1 --outdir plots-h3j-lo \
     --title "1506.02660, tree-level H+3j" --json summary-h3j-lo.json \
     --newlabel "VBFNLO 3.0, LO H+3j" --oldlabel "proVBFH-cs, NLO (≥3 jets: tree H+3j)" 2>&1 | grep -v Warn
-for f in vbfnlo-nlo-3j powheg-nlo-pt1 powheg-nlo-pt01 powheg-nlo-nf5-pt1 vbfnlo-lo-3j powheg-lo powheg-lo-nf5 powheg-lo-nf5nc cs-nnlo-W1 cs-nlo-W1 old-11; do
+for f in vbfnlo-nlo-3j powheg-nlo-pt1 powheg-nlo-nf5-pt1 powheg-nlo-fix123 vbfnlo-lo-3j powheg-lo powheg-lo-nf5 powheg-lo-nf5nc cs-nnlo-W1 cs-nlo-W1 old-11; do
   [ -f $f.top ] && echo "$f: $(grep -A1 'VBF cuts 3 jets' $f.top | tail -1 | awk '{printf "%.5f +- %.5f", $3, $4}')"; done

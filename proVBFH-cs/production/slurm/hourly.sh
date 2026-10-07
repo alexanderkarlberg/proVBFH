@@ -10,6 +10,9 @@ P=/ptmp/mpp/akarlber/cs-production; Q=$P/prod-lonlo; S=$(dirname "$0")
 # the cluster runs well, so that count alone is not a good criterion.)
 nok=$(sinfo -p alma -h -N -o "%N %T" | awk '$2 ~ /^(allocated|mixed|idle)$/' | wc -l)
 if [ "$nok" -ge 60 ]; then export QCAP=20000; else export QCAP=2500; fi
+# 7 Oct: every line has been fed; only small resubmissions remain, and the
+# disorder jobs of the same user would otherwise keep the queue above the cap
+export QCAP=30000
 echo "alma healthy nodes: $nok -> queue cap $QCAP"
 for s in hxswg136 p1506; do
     "$S/feed_missing.sh" $s-excl-nnlo $P/bin/proVBFH-cs-$s $P/prod-nnlo/$s/excl/jobs.list 12:00:00 $QCAP 500
@@ -20,6 +23,9 @@ for s in hxswg136 p1506; do
     "$S/resubmit_failed.py" $s-excl-nnlo $P/bin/proVBFH-cs-$s $P/prod-nnlo/$s/excl/jobs.list 12:00:00 $QCAP 500
 done
 "$S/resubmit_failed.py" hxswg136-nlo-excl $P/bin/proVBFH-cs-hxswg136 $Q/hxswg136/nlo-excl/jobs.list 6:00:00 $QCAP 100
+# fixed-scale (mu = m_H) H+3j cross-check (6 Oct); the VBFNLO array
+# (vbfnlo-nlo-fixmh, needs --mem=2000MB) is resubmitted by hand
+"$S/resubmit_failed.py" p1506-fixmh-excl $P/bin/proVBFH-cs-p1506 $P/fixmh/p1506/excl/jobs.list 12:00:00 $QCAP 50
 "$S/feed.sh" hxswg136-nlo-excl $P/bin/proVBFH-cs-hxswg136 $Q/hxswg136/nlo-excl/jobs.list 6:00:00
 # resubmit unfinished tasks of lists whose arrays have ended
 for s in p1506 hxswg136; do

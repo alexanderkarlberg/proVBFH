@@ -467,3 +467,138 @@ in `tools/fix2/`, outputs in `/ptmp/mpp/akarlber/h3j/fix2-tests/`.
   `nlo-lfl-fix123-nl5-pt1` (all three fixes, st_nlight 5; arrays
   48674723/4) and the control `nlo-lfl-nl5-pt1` (like-for-like, bugs left
   in, st_nlight 5; 48674725/6).
+
+### 5-6 Oct: node failures and a slow node
+- The et nodes keep failing: they go "Not responding" exactly on slurmctld's 1000 s ping cycle, come back on their own (ReturnToService=1), and fail again 1.5-3 h later, killing every running job each time. About 4,000 jobs were lost on 5 Oct; `resubmit_failed.py` reruns them.
+- Evidence sent to AK for the admins:
+  - The nodes do not reboot, and slurmstepd stays alive.
+  - They fail in fixed groups.
+  - IPv6 ping fails to 29 of 32 et nodes and works for all other alma nodes.
+- ct30 runs jobs about 1.8x slower than other ct nodes, so its 12 h jobs time out. It was added to `bad_nodes`, and the pending arrays were updated with `scontrol update ExcNodeList`.
+- Mean wall time of the NNLO exclusive jobs by node family: et 5.8 h, ct 6.3 h, kt 6.9 h, gt 7.5 h.
+
+### 6 Oct 03:50: POWHEG H+3j runs with the fixes (like-for-like, ptcut 1 GeV)
+σ(≥3 jets) at O(αs²), μ0, 1506.02660 cuts (`sigtot.py`; errors are the seed scatter):
+
+| run | seeds | σ(≥3 j) [fb] | σ(≥4 j) [fb] |
+|---|---|---|---|
+| like-for-like, no fixes (`nlo-nf5nc-nw-pt1`) | 660 | 133.4 ± 3.0 | 16.84 ± 0.27 |
+| + fix 1 | 698 | 134.0 ± 2.9 | 16.84 ± 0.25 |
+| + fix 3 | 668 | 133.3 ± 2.9 | 16.83 ± 0.26 |
+| + fixes 1, 3 | 658 | 134.5 ± 3.0 | 16.81 ± 0.27 |
+| + fixes 1, 2, 3, `st_nlight 5` | 700 | **127.4 ± 2.9** | 16.79 ± 0.25 |
+| proVBFH-cs (NNLO run) | | 127.16 ± 0.31 | 17.06 ± 0.23 |
+| VBFNLO 3.0 | 800 | 125.69 ± 0.12 | 16.98 ± 0.01 |
+
+- With all fixes, POWHEG agrees with proVBFH-cs. The χ² against proVBFH-cs is:
+
+  | observable | χ² with all fixes | χ² without fixes |
+  |---|---|---|
+  | ptj3 | 18.3/15 | 24.9/15 |
+  | yj3 | 10.9/18 | 25.7/18 |
+  | y*j3 | 12.7/24 | 39.2/24 |
+  | ptj4 | 40.2/15 | 30.2/15 |
+  | yj4 | 21.8/18 | 27.9/18 |
+
+  So POWHEG with all fixes now reproduces the new result, not the old proVBFH one (133.2 fb).
+- Fixes 1 and 3 have no visible effect at this precision (each run's error is ±2.2%). The shift comes from fix 2 and/or `st_nlight 5`.
+- To separate the two, the control run `nlo-lfl-nl5-pt1` (`st_nlight 5`, no fixes) is still running. Its stage-1 seed 3 was lost to a NODE_FAIL, which left stage 2 at DependencyNeverSatisfied. Seed 3 was rerun (48685521) and stage 2 (48674726) now depends on it.
+- `h3j_update.sh` now plots the run with all fixes instead of the 0.1 GeV ptcut run, because the plotter has only four alternative styles.
+
+### 6 Oct 07:10: control run, and which change causes the shift
+- The control run `nlo-lfl-nl5-pt1` (`st_nlight 5`, no fixes; 696 of 700 seeds) gives σ(≥3 j) = 133.2 ± 2.9 fb and σ(≥4 j) = 16.75 ± 0.25 fb.
+- All variants use the same `pwgseeds.dat`, so seed i of two runs shares its random numbers. The per-seed values are 92-100% correlated, so differences taken seed by seed are much more precise than the separate errors suggest:
+
+  | change | seeds | Δσ(≥3 j) [fb] | correlation |
+  |---|---|---|---|
+  | fix 2 (with fixes 1 and 3, `st_nlight 5` in both runs) | 696 | **−5.67 ± 1.14** | 0.92 |
+  | `st_nlight` 4 → 5 (no fixes) | 656 | −0.60 ± 0.64 | 0.98 |
+  | fixes 1 and 3 (`st_nlight 4`) | 618 | +0.17 ± 0.28 | 1.00 |
+
+- Problem 2, the missing initial-state FKS region for the NC four-quark graphs, accounts for the whole difference between the new and old proVBFH 3-jet rates: 127.16 − 133.24 = −6.1 fb.
+- Fixes 1 and 3 and the `st_nlight` choice change σ(≥3 j) by less than 0.5%.
+- Paired by seed: fix 1 alone +0.19 ± 0.26 fb on σ(≥3 j) and +0.013 ± 0.001 fb on σ(≥4 j). Fix 3 alone changes nothing: the .top files are bit-identical to the run without fixes, seed by seed.
+- Why fix 3 changes nothing (`tools/fix3/gg_all.f`, `gg_alr.f`, linked with `tools/fix2/link.sh`):
+  - The 33 gg real entries reach the faulty NC branch of `compreal_hjjj` in the entry order of `init_processes.f`; 25 do.
+  - POWHEG calls `setreal` with the flavour order of each FKS region (`flst_alr`) instead.
+  - None of the 132 gg regions reaches that branch with pairs of different types.
+  - So problem 3 is dormant in POWHEG runs. It is real when the routine is called in entry order, as in our limit test and in proVBFH's copy.
+- Bug report updated to version 5:
+  - New section "Effect on NLO predictions".
+  - Problem 3 marked as dormant in POWHEG runs.
+  - Effect sizes for problems 1 and 2 added.
+
+### 6 Oct 11:00: audit of VBFNLO's H+3j NLO (process 110), by a subagent
+- No omission, approximation or technical cut that could give the −1.2%:
+  - The virtual's gauge-check fallback (qqhqq.F:669-710) changes σ_virt by 2e-7 (tested via LD_PRELOAD).
+  - The pair-mass cut 2p_i·p_j < (0.1 GeV)² in the phase space, and the z > 0.999995 cutoff in the K/P terms, are negligible.
+  - VBFNLO uses full CS dipoles, with no α_dip parameter and no ycut.
+  - The I, K and P operators were checked analytically.
+  - All real subprocesses are present, including the NC pair graphs with their initial-state dipoles (so VBFNLO does not have POWHEG's problem 2), gg → H 4q, identical-flavour interference, and b quarks in NC.
+  - α_s comes from LHAPDF at μ_R everywhere, with the same PDF set. The μ0 patch is per configuration, and the dipole maps keep p_H.
+- Combination:
+  - VBFNLO's own printed total (inverse-variance weighting over 5 iterations) is 127.02 fb. It is biased upward by the heavy negative tail of the real weights.
+  - Our 125.69 is the plain mean of the last iterations, which is the right estimator.
+  - proVBFH-cs is not affected: its histograms weight every point equally (`pwhgaccumup` normalisation over all 3 iterations), and `combine_parts.py` takes a plain mean over jobs.
+  - POWHEG: `sigtot.py` takes a plain mean over seeds of the `pwhgaccumup`-normalised .top files.
+- The earlier fixed-scale comparison (μ = m_H) agreed: 125.82 ± 0.52 against 125.50 ± 0.67 fb. At μ0 the gap is 1.47 ± 0.33 fb. The two gaps differ by about 2σ only.
+- Agent files: `/ptmp/mpp/akarlber/h3j/vbfnlo/audit-2026-10-06/` (jobs.txt, real_iters.txt, preload tests).
+
+### 6 Oct 11:30: fixed-scale (μ = m_H) H+3j comparison, redone with plain means
+- **Why:** the stage-3 fixed-scale agreement (VBFNLO 125.82 ± 0.52, proVBFH-cs 125.50 ± 0.67 fb) came from 20 VBFNLO jobs on thA371a. Those runs are not reachable from here. Their μ0 value (126.58) is close to VBFNLO's biased printed total (127.02) and far from the plain mean (125.69), so they probably used the printed, inverse-variance-weighted totals. The agreement at μ = m_H may therefore be an artefact.
+- **Updated μ0 gap:** the current production gives σ(≥3 j) = 126.67 ± 0.16 fb (about 4,100 jobs, `combined/p1506/nnlo-W1.top`, 07:50). The 127.16 ± 0.31 in `h3j_update.sh` was from an older combination. The μ0 gap to VBFNLO is now 0.98 ± 0.20 fb (0.8%).
+- **New runs** (same seeds as the μ0 runs, so each code's scale effect can be compared seed by seed):
+  - **VBFNLO:** 800 jobs in `/ptmp/mpp/akarlber/h3j/vbfnlo/prod/nlo-fixmh` (seeds 2001-2800, ID_MUF = ID_MUR = 0, MUF_USER = MUR_USER = 125). Array 48695214, nice 0, 4 h, 2000 MB. Failed jobs are resubmitted by hand.
+  - **proVBFH-cs:** 2,000 NNLO exclusive jobs in `/ptmp/mpp/akarlber/cs-production/fixmh/p1506/excl` (seeds 1000201-1002200, the production card with `runningscales 0`, `cs_scales 1`, `ncall2 4800000`). Array 48695215, nice 50, so they run ahead of the production. `hourly.sh` resubmits failed jobs.
+- **Target errors:** about ±0.12 fb for VBFNLO and about ±0.2 fb for proVBFH-cs. This delays the NNLO production by roughly 2-3 h.
+- 13:55, VBFNLO at μ = m_H (778 of 800 jobs, plain mean of the last iteration): σ(≥3 j) = **125.24 ± 0.12 fb**.
+  - The stage-3 value of 125.82 ± 0.52 was 0.58 fb higher, consistent with that number being a printed, inverse-variance-weighted total.
+  - Seed by seed, μ0 minus m_H = +0.45 ± 0.18 fb. The pairing does not help here: the correlation is −0.01, because VBFNLO adapts its grids per run.
+  - The 2,000 proVBFH-cs jobs at μ = m_H are all running and should finish tonight.
+- 19:10, preliminary proVBFH-cs at μ = m_H (812 of 2,000 jobs, plain mean over jobs of pwg-EXCL.top): σ(≥3 j) = **126.21 ± 0.34 fb**.
+  - Against VBFNLO at μ = m_H (125.22 ± 0.12): +0.99 ± 0.36 fb.
+  - At μ0, from all 10,598 finished production jobs (plain mean of pwg-EXCL-W1.top): 126.88 ± 0.17 fb, i.e. +1.19 ± 0.21 fb against VBFNLO.
+  - So the gap is the same at fixed and dynamic scale. The dynamic-scale treatment is ruled out as its cause.
+  - Scale shift μ0 − m_H: proVBFH-cs 0.72 ± 0.28 fb (seed by seed, 793 seeds), VBFNLO 0.47 ± 0.17 fb. These are consistent.
+  - σ(≥4 j): μ0 17.13 ± 0.16 fb, m_H 14.88 ± 0.20 fb.
+
+### 6 Oct 23:00: channel split, first look at how to do it
+- Neither code has a channel switch: proVBFH-cs has no input option, and VBFNLO's process 110 has none either. Both need a small diagnostic patch, applied to copies and not to the production builds.
+- **Initial state** (qq, qg, gq, gg): per-beam flags on the PDFs, set by environment variables.
+  - The flags must act on every PDF evaluation: the Born, the reals, the dipoles, and the K/P terms at x/z.
+  - proVBFH-cs: `hoppetEval` fills `fB`, `fE` and friends per line.
+  - VBFNLO: `pdfproton` is called per beam in m2s_qqh3j.F:166/169 and in the K/P and real drivers. Patch at the call sites, because `pdfproton` does not know which beam it is evaluating.
+- **NC/CC:**
+  - proVBFH-cs: `compatible(w1,w2)` in cs_exclusive.f90 decides class pairs (NC: w1 = w2 = 0; CC: w1 = −w2 ≠ 0). A switch there selects NC or CC.
+  - VBFNLO: the subprocess loop in m2s_qqh3j.F (the `wbf_h3j` calls at lines 316-444), m2s_qqh4j.F and qqh4q_sub.F have to be checked for where ZZ and WW fusion are separated.
+- **Plan:** run at μ = m_H. Use 8 runs per code (NC/CC × qq/qg/gq/gg), or 4 with qg+gq together. Size each from the per-channel error of short pilots.
+
+### 7 Oct 01:45: fixed-scale comparison complete; p1506 NNLO production complete
+All values are plain means over jobs (`fixcmp.py` in the scratchpad: per-job sig(all VBF cuts N jets) values, seed-scatter errors).
+
+| σ [fb] | proVBFH-cs, μ = m_H (1,998 jobs) | VBFNLO, μ = m_H (800) | proVBFH-cs, μ0 (11,000) | VBFNLO, μ0 (800) |
+|---|---|---|---|---|
+| ≥3 jets | 126.19 ± 0.18 | 125.22 ± 0.12 | 126.88 ± 0.17 | 125.69 ± 0.12 |
+| ≥4 jets | 14.80 ± 0.10 | 14.815 ± 0.007 | 17.12 ± 0.16 | 16.976 ± 0.008 |
+
+- **≥3 jets, proVBFH-cs − VBFNLO:** +0.97 ± 0.21 fb at μ = m_H (+0.8%, 4.5σ) and +1.19 ± 0.20 fb at μ0 (+0.9%, 5.8σ). The offset is the same at both scales, so the dynamic scale is not its cause.
+- **Scale shift μ0 − m_H:** proVBFH-cs +0.87 ± 0.14 fb (paired, 1,998 seeds), VBFNLO +0.47 ± 0.17 fb. They differ by 1.8σ, which is not significant.
+- **≥4 jets:** both codes agree at both scales. The offset therefore sits in the exactly-3-jet part of the H+3j NLO: virtual, real minus dipoles, and K/P.
+- The stage-3 statement "proVBFH-cs agrees with VBFNLO at μ = m_H" is withdrawn. It rested on VBFNLO's printed, inverse-variance-weighted total (125.82) and on a proVBFH-cs value with a ±0.67 fb error.
+- The p1506 NNLO production is complete (11,000 of 11,000 exclusive jobs).
+
+### 7 Oct 07:45
+- hxswg136 NNLO: 10,858 of 11,000 done. The last 128 failed lines could not be resubmitted under the 2,500 cap: only 52 alma nodes are healthy, and the disorder jobs of the same user fill the queue. They were resubmitted by hand (48723694). `hourly.sh` now uses cap 30,000, since only small resubmissions remain.
+
+### 7 Oct 11:30: hxswg136 NNLO production closed at 10,872 of 11,000 jobs
+- The cluster broke down at about 10:20: about 18k jobs of another user, our 128 last hxswg136 resubmissions (after 2h47 of running), and about 7k disorder jobs failed.
+- AK: skip the last 128 jobs, they have no impact. The resubmission (48759353) was cancelled by id. The hourly loop is stopped.
+- Final sets: p1506 NNLO 11,000 of 11,000; hxswg136 NNLO 10,872 of 11,000; all LO/NLO sets complete (hxswg136 NLO excl 6,540 of 6,600).
+
+### 7 Oct 12:30: spikes in the p1506 NNLO plots (AK)
+`tools/spikescan.py` takes the 11,000 per-job W1 histograms. For each bin it finds the job whose removal moves the plain mean most, measured in seed-scatter errors.
+- **Single events dominate many tail bins.** In the worst bins one job sits 100-105 standard deviations from the mean (√11,000 ≈ 105). Removing it moves the mean by 1σ, i.e. that single job carries both the bin's value and its error.
+- **The same few jobs recur.** job-1005395 (22 bins with a shift above 0.5σ), 1008233 (15), 1001652 (12), 1004554 (10), 1009943 (7), 1010580 (6) and 1008322 (6).
+- **Example, job-1005395.** One event of about +3.2 pb/unit appears at the same time in yj1, yj2, yj3, yj4, yH, Δy_jj, R_jj and Δφ_jj, and in σ(≥4 jets): 1.60 pb in that job against a mean of 0.0171. So it is a single four-parton event passing the 4-jet cuts. It alone contributes 0.15 fb (1σ) to σ(≥4 jets).
+- **Below the logging threshold.** Only one point in all 11,000 jobs exceeded the logging threshold spike_min = 10 pb (job-1003743). Its real and dipole cancel (+10.40, −10.41). The events behind the visible spikes are therefore below that threshold.
+- **Next:** rerun the four worst jobs with the same seed (deterministic) and `cs_spikemin 0.2`. This logs the events with their random numbers, for `cs_replay` (kinematics, which piece, which flavour). Array 48759513, `/ptmp/.../cs-production/spikes/`, about 5.5 h.
