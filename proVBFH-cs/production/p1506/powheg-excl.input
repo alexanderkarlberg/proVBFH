@@ -102,4 +102,6 @@ cs_npow 0
 cs_cutoff 1d-5
 cs_order 3
 cs_hardfrac 0.3
+cs_hard2mode 1    ! second emission: flat channel only behind the hard first step (8 Oct pilots)
+cs_hardfrac2 0.7  ! its fraction; about 1.7x (3 jets) and 4.8x (4 jets) less CPU, see the notes
 cs_scales 3       ! on-the-fly scale points W1 (1,1), W2 (1/2,1/2), W3 (2,2)

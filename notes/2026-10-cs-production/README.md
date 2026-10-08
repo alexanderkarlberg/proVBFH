@@ -681,3 +681,4 @@ All values are plain means over jobs (`fixcmp.py` in the scratchpad: per-job sig
     - Gain over production: about 1.7× less CPU for σ(≥3 j) and 4.8× for σ(≥4 j), at the same CPU per job.
     - The largest jobs are still 10-14 sd out, so the tail is reduced but not gone.
   - Mode 1 at 0.3 and 0.5 is worse for 3 jets. Fewer second-step log samples behind a hard first step seem to hurt only when h2 is intermediate; the 300-job sets are noisy here.
+- 8 Oct (AK): `cs_hard2mode 1` and `cs_hardfrac2 0.7` are now the default in the production cards `proVBFH-cs/production/{p1506,hxswg136}/powheg-excl.input`. The H+3j cross-check card is unchanged, so that it matches the runs made with it. The channel is exact (the density test passes; the means agree in the pilots), so the change affects only the variance. It was validated on p1506; hxswg136 has not had its own pilot.
