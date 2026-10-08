@@ -620,3 +620,20 @@ All values are plain means over jobs (`fixcmp.py` in the scratchpad: per-job sig
     - Mode 1 keeps 75-85% of the gain of mode 0 at the same h2: the weight drops 2.5-6.3× at h2 = 0.5.
     - The drop is NOT orders of magnitude. With both steps hard, w4 is close to the flat phase-space volume of the line, about [Q²/(16π²)]² × logs/(h1 h2) ≈ 1e6 at Q² ≈ 1e4-6e4. So no second-step channel brings these events down to the typical 1e2-1e3. The remaining spikes are a large flat volume times a sizeable |R|.
 - **Pilots:** `/ptmp/.../hard3/m1h{0.3,0.5,0.7}/p1506/excl/`. These are the hard2 card (production card + `cs_scales 1`, ncall2 1.6M, seeds 3000001-3000300) with `cs_hardfrac2` h2 and `cs_hard2mode 1`. The binary is `bin/proVBFH-cs-p1506-hard3` (db6545a). Arrays 48790360 (0.3), 48790361 (0.5) and 48790362 (0.7), submitted with `hard3/submit.sh <h2> [range]`, which also resubmits since finished tasks are skipped.
+- **Pilot result** (8 Oct 13:40, coordinator; `tools/hard2_compare.py`). "eff" is error × √(total CPU); lower is better.
+
+  | setting | jobs | CPU/job | σ(≥3 j) [fb] | eff 3 j | σ(≥4 j) [fb] | eff 4 j | eff excl. 2 j | bins dominated by one job |
+  |---|---|---|---|---|---|---|---|---|
+  | production (mode 0, h2 0) | 300 | 2.60 h | 126.24 ± 0.56 | 15.7 | 16.98 ± 0.22 | 6.2 | 18.9 | 160 of 353 |
+  | mode 0, h2 0.3 | 300 | 2.61 | 125.97 ± 0.43 | 11.9 | 16.86 ± 0.26 | 7.2 | 16.4 | 124 |
+  | mode 0, h2 0.5 | 300 | 2.84 | 126.80 ± 0.65 | 18.9 | 16.80 ± 0.09 | 2.7 | 141 | 143 |
+  | mode 1, h2 0.3 | 275 | 2.82 | 127.29 ± 0.65 | 18.0 | 17.27 ± 0.44 | 12.3 | — | 163 |
+  | mode 1, h2 0.5 | 285 | 2.81 | 126.81 ± 0.85 | 24.1 | 16.94 ± 0.12 | 3.4 | 25.4 | 121 |
+  | **mode 1, h2 0.7** | 300 | 2.48 | 126.50 ± 0.44 | **12.0** | 16.83 ± 0.10 | **2.8** | **17.2** | **122** |
+
+  - All means agree within errors.
+  - **Recommendation: `cs_hard2mode 1`, `cs_hardfrac2 0.7`.**
+    - It has the 3-jet efficiency of the best flat setting (0.3), the 4-jet efficiency of the best flat setting (0.5), no 2-jet outliers, and the fewest dominated bins.
+    - Gain over production: about 1.7× less CPU for σ(≥3 j) and 4.8× for σ(≥4 j), at the same CPU per job.
+    - The largest jobs are still 10-14 sd out, so the tail is reduced but not gone.
+  - Mode 1 at 0.3 and 0.5 is worse for 3 jets. Fewer second-step log samples behind a hard first step seem to hurt only when h2 is intermediate; the 300-job sets are noisy here.
