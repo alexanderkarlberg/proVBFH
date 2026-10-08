@@ -12,8 +12,9 @@
 !                              dPhi_3(W),
 !      pa = pB/u, W^2 = Q^2 (1-u)/u, dPhi_3 flat (RAMBO) in the rest
 !      frame of pa + q.
-! Run with (four_hard, four_hard2) = (0, 0), (0.3, 0), (0.3, 0.3): the hard
-! channels of the first and second step.
+! Run with (four_hard, four_hard2, four_hard2mode) = (0, 0, 0), (0.3, 0, 0),
+! (0.3, 0.3, 0), (0.3, 0.5, 1): the hard channels of the first and second
+! step, and the second step's hard channel only after the first's.
 ! Exits with status 1 if a check fails.
 !----------------------------------------------------------------------
 program test_four
@@ -31,10 +32,12 @@ program test_four
   fail = .false.; errmax = 0
   cutoff = 1d-4
   call random_seed()
-  do ih = 1, 3
+  do ih = 1, 4
   four_hard = merge(0.0_dp, 0.3_dp, ih == 1)
   four_hard2 = merge(0.3_dp, 0.0_dp, ih == 3)
-  write(*,'(a,2f5.1)') ' four_hard, four_hard2 =', four_hard, four_hard2
+  if (ih == 4) four_hard2 = 0.5_dp
+  four_hard2mode = merge(1, 0, ih == 4)
+  write(*,'(a,2f5.1,i2)') ' four_hard, four_hard2, four_hard2mode =', four_hard, four_hard2, four_hard2mode
   do ipt = 1, 6
      call random_number(rr)
      xB = 0.02_dp + 0.5_dp*rr(1)

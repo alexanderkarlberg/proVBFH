@@ -11,6 +11,9 @@
 !             the four-parton generator; default 0
 !   cs_hardfrac2  the same for the second emission of the four-parton
 !             generator; default 0
+!   cs_hard2mode  0 (default): cs_hardfrac2 after every first step;
+!             1: only after the first step's hard channel (targeted at
+!             hard double emissions from one line, small xp)
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-6)
 !   cs_order  1: the O(alpha_s) exclusive part (NLO, default);
 !             2: also the O(alpha_s^2) (2,0) + (0,2) (stage 2)
@@ -28,7 +31,7 @@ program provbfh_cs
   use cs_nlo2, only: nlo2_ncount, nlo2_ncut, nlo2_emul_kappa
   use cs_memo, only: memo_hits, memo_misses
   use incl_parameters, only: incl_nscale, incl_scr, incl_scf
-  use cs_dipoles, only: spin_avg, four_hard, four_hard2
+  use cs_dipoles, only: spin_avg, four_hard, four_hard2, four_hard2mode
   use matrix_element, only: incl_only11
   implicit none
   integer, parameter :: maxdim = 20
@@ -73,6 +76,7 @@ program provbfh_cs
   if (powheginput('#cs_hardfrac') > 0) excl_hardfrac = powheginput('#cs_hardfrac')
   four_hard = excl_hardfrac
   if (powheginput('#cs_hardfrac2') > 0) four_hard2 = powheginput('#cs_hardfrac2')
+  if (powheginput('#cs_hard2mode') > 0) four_hard2mode = nint(powheginput('#cs_hard2mode'))
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.

@@ -58,7 +58,15 @@ computed and histogrammed at the VBF Born kinematics as in proVBFH.
    first step of the four-parton generator (`gen_four`, `four_weight`);
    its second emission has its own fraction (`cs_hardfrac2`, default 0:
    at NNLO a hard channel there costs more in the double-unresolved
-   corners than it gains in the tails).
+   corners than it gains in the tails). With `cs_hard2mode 1`
+   (2026-10-08) the second emission's hard channel (fraction h2 =
+   `cs_hardfrac2`) is used only when the first step took its hard
+   channel, so the density per path is
+   (1 − h1) g_log1 g_log2 + h1 g_hard1 [(1 − h2) g_log2 + h2 g_hard2]:
+   hard double emissions from one line at small x_p get the flat
+   second-step density, while after the logarithmic first step the
+   logarithmic second step keeps its full weight (the double-unresolved
+   corners). Default `cs_hard2mode 0`: h2 after every first step.
 3. Weights:
    - w_i = |M_{H+3j}|² for emission from line i × PDFs(ξ_i, x_j) × flux ×
      phase space;

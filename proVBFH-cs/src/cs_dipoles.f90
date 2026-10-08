@@ -29,10 +29,11 @@
 ! FI, which three-parton final parton split, order) of reaching the
 ! point, so that
 !   (dxi/xi) dPhi_{H+4} = (dx1/x1) dPhi_{H+2} * w * d^7 r
-! as line_radiation's wrad for three partons. All samplings are
-! logarithmic down to the cutoff (y, 1-x, min(z,1-z) >= cutoff), and the
-! seven random numbers must be uniform (VEGAS dimensions that are not
-! adapted).
+! as line_radiation's wrad for three partons. The samplings are
+! logarithmic down to the cutoff (y, 1-x, min(z,1-z) >= cutoff), with
+! optional hard channels (four_hard, four_hard2, four_hard2mode below),
+! and the seven random numbers must be uniform (VEGAS dimensions that are
+! not adapted).
 !
 ! The kernels: dipole = C * 8 pi alpha_s/(2 pi.pj) [/x for FI] * H, or
 ! C * 8 pi alpha_s/(2 pa.pi x) * H for IF, with C = -T_k.T_ij (numbers
@@ -63,6 +64,13 @@ module cs_dipoles
   ! logarithmic y (1-x) and z (at NNLO the second step's hard channel costs
   ! more in the double-unresolved corners than it gains, 2026-09-30)
   real(dp), public, save :: four_hard = 0, four_hard2 = 0
+  ! four_hard2mode (cs_hard2mode), how four_hard2 is used: 0 (default), in
+  ! every path; 1, only after the first step's hard channel (targeted, for
+  ! hard double emissions at small xp; 2026-10-08): the density per path is
+  !   (1-h1) g_log1 g_log2 + h1 g_hard1 ((1-h2) g_log2 + h2 g_hard2),
+  ! so the logarithmic second step keeps its full weight after the
+  ! logarithmic first step
+  integer, public, save :: four_hard2mode = 0
   ! diagnostic: azimuthally averaged spin correlations (not for physics runs)
   logical, public, save :: spin_avg = .false.
 
@@ -189,7 +197,7 @@ contains
     real(dp), intent(out) :: pa(0:3), k(0:3,3), w
     logical,  intent(out) :: ok
     real(dp) :: pin(0:3), a(0:3), b(0:3), xp, z3, wrad, e(0:3), o(0:3)
-    real(dp) :: y, x, z, phi, xi3, q(0:3,3), s
+    real(dp) :: y, x, z, phi, xi3, q(0:3,3), s, h2
     integer :: ipath, iperm, islot, ityp
     logical :: hard2
     integer, parameter :: perm(3,6) = reshape([1,2,3, 1,3,2, 2,1,3, 2,3,1, 3,1,2, 3,2,1], [3,6])
@@ -206,14 +214,18 @@ contains
     else
        e = b; o = a
     endif
-    hard2 = four_hard2 > 0 .and. r(5) >= 1 - four_hard2
+    ! the second step's hard fraction (mode 1: only if line_radiation
+    ! used its hard channel, r(1) >= 1 - four_hard)
+    h2 = four_hard2
+    if (four_hard2mode == 1 .and. .not. (four_hard > 0 .and. r(1) >= 1 - four_hard)) h2 = 0
+    hard2 = h2 > 0 .and. r(5) >= 1 - h2
     if (hard2) then
-       s = (r(5) - (1 - four_hard2))/four_hard2
+       s = (r(5) - (1 - h2))/h2
        z = r(6)
        if (min(z, 1 - z) < cutoff) return
     else
        s = r(5)
-       if (four_hard2 > 0) s = r(5)/(1 - four_hard2)
+       if (h2 > 0) s = r(5)/(1 - h2)
        z = symlog(r(6), cutoff)
     endif
     phi = 2*pi*r(7)
@@ -259,7 +271,7 @@ contains
   real(dp) function four_weight(pB, pOB, xB, pa, k, cutoff) result(w)
     real(dp), intent(in) :: pB(0:3), pOB(0:3), xB, pa(0:3), k(0:3,3), cutoff
     real(dp) :: ptij(0:3), ptk(0:3), pta(0:3), y, z, x, xi3, xp3, z3, wr, ws, dens, Q2
-    real(dp) :: lc, lh
+    real(dp) :: lc, lh, j1, j2, gl1, gh1, gl2, gh2
     integer :: ip, i, j, l, ityp
     integer, parameter :: pairs(3,3) = reshape([1,2,3, 1,3,2, 2,3,1], [3,3])
     Q2 = 2*mdot(pB, pOB)
@@ -271,7 +283,11 @@ contains
           if (ityp == 0) then
              call map_ff(k(:,i), k(:,j), k(:,l), ptij, ptk, y, z)
              if (y < cutoff .or. min(z, 1 - z) < cutoff) cycle
-             if (four_hard2 > 0) then
+             if (four_hard2mode == 1) then
+                ! jacobian and the densities of the two channels
+                j2 = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)
+                gl2 = 1/((y*lc)*(2*min(z, 1 - z)*lh)); gh2 = 1
+             elseif (four_hard2 > 0) then
                 ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)/((1 - four_hard2)/((y*lc)*(2*min(z, 1 - z)*lh)) + four_hard2)
              else
                 ws = 2*mdot(ptij, ptk)/(16*pi**2)*(1 - y)*(y*lc)*(2*min(z, 1 - z)*lh)
@@ -282,7 +298,10 @@ contains
              ptk = k(:,l)
              xi3 = xB*pta(0)/pB(0)
              if (1 - x < cutoff .or. min(z, 1 - z) < cutoff .or. 1 - xi3 <= cutoff) cycle
-             if (four_hard2 > 0) then
+             if (four_hard2mode == 1) then
+                j2 = 2*mdot(ptij, pa)/(16*pi**2)
+                gl2 = 1/(((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)); gh2 = 1/(x*log(1/xi3))
+             elseif (four_hard2 > 0) then
                 ws = 2*mdot(ptij, pa)/(16*pi**2)/((1 - four_hard2)/(((1 - x)*log((1 - xi3)/cutoff))*(2*min(z, 1 - z)*lh)) &
                      & + four_hard2/(x*log(1/xi3)))
              else
@@ -294,7 +313,14 @@ contains
           xp3 = 1 - mdot(ptij, ptk)/mdot(pta, ptij + ptk)
           z3 = mdot(pta, ptij)/mdot(pta, ptij + ptk)
           if (1 - xp3 < cutoff .or. min(z3, 1 - z3) < cutoff .or. 1 - xB <= cutoff) cycle
-          if (four_hard > 0) then
+          if (four_hard2mode == 1) then
+             ! the mixture of the four channel pairs (the header); wr, ws
+             ! only for the diagnostic output (wr: line_radiation's weight)
+             j1 = Q2/(16*pi**2)/xp3
+             gl1 = 1/(((1 - xp3)*log((1 - xB)/cutoff))*(2*min(z3, 1 - z3)*lh)); gh1 = 1/(xp3*log(1/xB))
+             wr = j1/((1 - four_hard)*gl1 + four_hard*gh1)
+             ws = j1*j2/((1 - four_hard)*gl1*gl2 + four_hard*gh1*((1 - four_hard2)*gl2 + four_hard2*gh2))/wr
+          elseif (four_hard > 0) then
              ! the density of line_radiation with its hard channel
              wr = Q2/(16*pi**2)/xp3/((1 - four_hard)/(((1 - xp3)*log((1 - xB)/cutoff))*(2*min(z3, 1 - z3)*lh)) &
                   & + four_hard/(xp3*log(1/xB)))
