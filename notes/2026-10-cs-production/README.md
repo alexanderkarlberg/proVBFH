@@ -613,3 +613,9 @@ Files: `proVBFH-cs/production/h3j-crosscheck/chsplit/`; runs in `/ptmp/mpp/akarl
 - Patches: proVBFH-cs `src/cs_chan.f90` + small changes in `cs_nlo2`, `cs_exclusive`, `cs_main`, Makefile (commit of this section); VBFNLO `vbfnlo-3.0-chsplit.patch` (on a copy, `/ptmp/.../chsplit/vbfnlo/{src,install}`).
 - Side fix: `p1506_analysis.f` / `hxswg136_analysis.f` had `dsig(7)`; more than 7 weights overflowed it (W8, W9 garbage in the first test). Now `dsig(10)` (= maxmulti). No effect on the production (≤ 7 weights).
 - VBFNLO K/P (checked while patching): m2s_qqh3j.F:279 uses `Cx(1)` for antiquarks on beam 2 where the other three cases use `Cx(2)`; harmless, `fincollinear` sets C(2) = C(1).
+
+**Validation (login node, short runs; `topcmp.py`, `vbfnlo_tests.sh`).**
+- proVBFH-cs (40k-point run of seed 1000201, `/ptmp/.../chsplit/test-cs`): patched binary with CHAN_MULTI: same VEGAS grid as the production binary (bit-identical `grids-excl.dat`), W1 = production result to 1e-15 in every bin (summation order only); W2 + … + W9 = W1 in all 426 bins to the 8-digit output precision. Env mode `CHAN_BOSON=CC CHAN_INIT=gq` on a fixed grid = W8 of the CHAN_MULTI run on the same grid, bit-identical in every bin. CPU of CHAN_MULTI ≈ the plain run (482 vs 417 s; ME cache).
+- VBFNLO (2^17 points, 1 iteration LO and NLO, seed 2001, so all runs see the same points): patched copy with no channel = original install, `p1506_nlo.top` bit-identical; NC + CC = all and qq + qg + gq + gg = all in all 426 bins to the 8-digit output precision.
+
+**Pilots (8 Oct 13:55).** proVBFH-cs CHAN_MULTI, the fixmh card, seeds 1000201-1000300 (the fixmh seeds: W1 must reproduce those jobs), array 48798835; VBFNLO 8 channels (NC/CC × qq/qg/gq/gg) × seeds 2001-2020, full fixmh size (2^23 × 5), array 48798836. Runner: the production `run_array.sh` (unchanged), via `submit.sh`.
