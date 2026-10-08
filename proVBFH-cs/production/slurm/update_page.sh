@@ -12,7 +12,8 @@ for s in p1506 hxswg136; do
     [ "$(ndone $R/prod-nnlo/$s/excl)" -ge 20 ] && [ "$(ndone $R/prod-nnlo/$s/incl)" -ge 10 ] && nice bash "$S/combine_and_plot.sh" $s nnlo $C
     [ "$(ndone $R/prod-lonlo/$s/nlo-excl)" -ge 20 ] && [ "$(ndone $R/prod-lonlo/$s/nlo-incl)" -ge 10 ] && nice bash "$S/combine_and_plot.sh" $s nlo $C
     [ "$(ndone $R/prod-lonlo/$s/lo-incl)" -ge 20 ] && nice bash "$S/combine_and_plot.sh" $s lo $C
-    opts=(); [ $s = hxswg136 ] && opts=(--ratio-range 0.85 1.15 $(cat "$S/hxswg136-xcuts.txt"))
+    opts=(--ratio-range 0.8 1.2 --ratio-frac 0.4)  # p1506: as in 1506.02660 (AK, 7 Oct)
+    [ $s = hxswg136 ] && opts=(--ratio-range 0.85 1.15 $(cat "$S/hxswg136-xcuts.txt"))
     nice python3 "$T/plot_orders.py" --dir $C/$s --outdir $C/$s/plots-orders --title "$s" "${opts[@]}" 2>&1 | grep -v Warning || true
 done
 rm -rf "$page"; mkdir -p "$page"

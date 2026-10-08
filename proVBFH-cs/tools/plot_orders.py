@@ -34,6 +34,8 @@ def main():
     ap.add_argument("--title", default="")
     ap.add_argument("--ratio-range", nargs=2, type=float, metavar=("LO", "HI"))
     ap.add_argument("--xcut", nargs=2, action="append", default=[], metavar=("NAME", "XMAX"))
+    ap.add_argument("--ratio-frac", type=float, default=1 / 3.2,
+                    help="fraction of the figure height taken by the ratio panel")
     a = ap.parse_args()
     plot_compare.XCUT.update({n: float(x) for n, x in a.xcut})
     orders = [o for o in ("lo", "nlo", "nnlo")
@@ -53,7 +55,8 @@ def main():
                 continue
             r = np.where(rc != 0, 1 / np.where(rc != 0, rc, 1), 0)
             fig, (ax, rx) = plt.subplots(2, 1, sharex=True, figsize=(6, 5.5),
-                                         gridspec_kw=dict(height_ratios=[2.2, 1], hspace=0.05))
+                                         gridspec_kw=dict(height_ratios=[1 - a.ratio_frac, a.ratio_frac],
+                                                          hspace=0.05))
             xc = 0.5 * (lo_ + hi_)
             vals = []
             for o in orders:

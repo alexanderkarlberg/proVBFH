@@ -602,3 +602,48 @@ All values are plain means over jobs (`fixcmp.py` in the scratchpad: per-job sig
 - **Example, job-1005395.** One event of about +3.2 pb/unit appears at the same time in yj1, yj2, yj3, yj4, yH, Δy_jj, R_jj and Δφ_jj, and in σ(≥4 jets): 1.60 pb in that job against a mean of 0.0171. So it is a single four-parton event passing the 4-jet cuts. It alone contributes 0.15 fb (1σ) to σ(≥4 jets).
 - **Below the logging threshold.** Only one point in all 11,000 jobs exceeded the logging threshold spike_min = 10 pb (job-1003743). Its real and dipole cancel (+10.40, −10.41). The events behind the visible spikes are therefore below that threshold.
 - **Next:** rerun the four worst jobs with the same seed (deterministic) and `cs_spikemin 0.2`. This logs the events with their random numbers, for `cs_replay` (kinematics, which piece, which flavour). Array 48759513, `/ptmp/.../cs-production/spikes/`, about 5.5 h.
+
+### 7 Oct 17:30: spike replays (jobs 1008233 and 1004554 done; 1005395 and 1001652 still running)
+- **Setup:** the reruns with the same seed and `cs_spikemin 0.2` (`/ptmp/.../cs-production/spikes/`) reproduce the production runs bit for bit (σ(≥4 j) of the job identical). The logged points were replayed with an instrumented scratch build (`spikes/build`, a copy; production code unchanged), which also prints the (1,1) event e3, e12, the cut decisions and the jets.
+- **Not the cause:** the largest logged points are (1,1) events (e3 ≈ +0.6…0.9 pb against e12 ≈ −1.2…−1.9 pb at the same point). They are soft 2-jet configurations whose e3 cancels against e12, so they are not the spikes.
+- **The spike events:** a single (2,0) four-parton event, i.e. one line radiating twice:
+  - job 1008233: point 162, line 2, wr·vw = 0.879 pb, giving 0.879/3 = 0.29 pb in the job's histograms (the job's σ(≥4 j) is 0.318 pb against a mean of 0.017);
+  - job 1004554: point 166, line 1, wr·vw = 0.948, giving 0.32 pb (σ(≥4 j) of the job 0.331).
+- **Character of these events:**
+  - Not a singular limit: every dipole map is resolved, min y/(1−x) = 0.04-0.05, and R − ΣD is about 40% of R. The dipoles (mainly maps 5, 6, FI) fall into 3-parton bins, so R alone fills the 4-jet bins.
+  - The phase-space weight is huge: four_weight w4 = 6.4e7 and 5.7e6, against about 1e2-1e3 for typical points. Also xi4 = 0.15-0.19, mapped x_p ≈ 0.025-0.035 (1 − xp3 ≈ 0.97), Q² = 1.5e4-6.4e4 GeV².
+  - So these are hard double emissions from one line at small x_p, a region the four-parton generator samples with very low density.
+- **Conclusion so far:** the spikes come from under-sampling (variance), not from a subtraction failure. The plain mean is unbiased, but its error is not reliable in the affected bins. Remedy: a sampling channel for small x_p with two hard emissions on one line, or more statistics.
+
+### 7 Oct 18:00: second-emission hard channel (AK: "add the sampling channel")
+- The per-path weights of the two spike events show that both sampling steps contribute (wr about 1e3-5e3, ws about 3e3-1.6e5).
+  - The first step is already in its hard channel (`cs_hardfrac 0.3`, log-uniform x_p).
+  - The second emission is sampled only logarithmically (y = cutoff^(1-s), symlog in z). For hard y and z ≈ 0.5 this has a density 10-15× lower than flat sampling.
+- `gen_four`/`four_weight` already contain a flat hard channel for the second emission (`cs_hardfrac2`, default 0). It was never used in the production.
+- **Pilots:** p1506 NNLO exclusive, the production card with `cs_scales 1` and ncall2 1.6M, seeds 3000001-3000300, `cs_hardfrac2` = 0, 0.3, 0.5, 300 jobs each. Arrays 48766595-97, in `/ptmp/.../cs-production/hard2/h*/`.
+- **Checks:**
+  - the integrals (all bins) agree between the settings;
+  - the per-bin single-job dominance (spikescan) and the scatter of σ(≥4 j) and σ(≥3 j) go down;
+  - the CPU per job.
+- 17:45, the last two reruns (bit-identical to the production as well):
+  - **job 1005395** (the worst job): point 154, line 2, wr·vw = 4.76, giving 4.76/3 = 1.59 pb, i.e. the whole of the job's σ(≥4 j) = 1.60 pb.
+    - Same pattern: hard double emission, w4 = 1.6e6, xi4 = 0.028, Q² = 1.2e4. No map near a singular limit (min y/(1−x) = 0.04).
+    - Here the FI dipoles 5 and 6 (−222, −225) nearly cancel R (495) at the point, but they fill 3-parton bins, so R alone makes the 4-jet spike.
+  - **job 1001652:** no single dominant logged event. The largest wr·vw is 0.41, i.e. 0.14 pb, against the job's σ(≥4 j) = 0.30. Its spikes come from several moderate events.
+  - So 3 of 4 jobs show the same single-event mechanism: under-sampled hard double emission from one line.
+- **20:25, pilots complete** (300 jobs each, `tools/hard2_compare.py`). Errors are plain means; "eff" is error × √(total CPU), i.e. lower is better.
+
+  | cs_hardfrac2 | CPU/job | σ(≥3 j) [fb] | eff 3 j | σ(≥4 j) [fb] | eff 4 j | eff excl. 2 j | bins dominated by one job |
+  |---|---|---|---|---|---|---|---|
+  | 0 | 2.60 h | 126.24 ± 0.56 | 15.7 | 16.98 ± 0.22 | 6.2 | 18.9 | 160 of 353 |
+  | 0.3 | 2.61 h | 125.97 ± 0.43 | **11.9** | 16.86 ± 0.26 | 7.2 | 16.4 | **124** |
+  | 0.5 | 2.84 h | 126.80 ± 0.65 | 18.9 | 16.80 ± 0.09 | **2.7** | **141** (one job at −1,513 fb) | 143 |
+
+  - All means agree within errors.
+  - 0.3 is a mild, safe gain: about 1.7× in CPU for σ(≥3 j) and fewer dominated bins, but no gain for 4 jets (one job at +17 sd).
+  - 0.5 gains about 5× in CPU for 4 jets, but the exclusive 2-jet part gets a huge outlier: the log channel, now at weight 0.5, undersamples the singular regions.
+  - So a flat second-emission channel is a trade-off between the 3-jet, 4-jet and 2-jet observables.
+- **Options:**
+  - (a) use 0.3 in future productions;
+  - (b) a targeted channel: hard second emission only together with the first step's hard channel (small x_p), keeping the log channels at full weight elsewhere;
+  - (c) a separate 3-/4-jet production with 0.5, where the 2-jet observables are taken from the main run.
