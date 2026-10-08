@@ -647,3 +647,37 @@ All values are plain means over jobs (`fixcmp.py` in the scratchpad: per-job sig
   - (a) use 0.3 in future productions;
   - (b) a targeted channel: hard second emission only together with the first step's hard channel (small x_p), keeping the log channels at full weight elsewhere;
   - (c) a separate 3-/4-jet production with 0.5, where the 2-jet observables are taken from the main run.
+### 8 Oct: targeted second-emission hard channel (`cs_hard2mode 1`, sub-agent)
+(Developed on branch `2026-10-cs-hard3`, based on 4c926eb, and merged into 2026-09-cs-p2b on 8 Oct.)
+- **Implementation** (`src/cs_dipoles.f90`, input `cs_hard2mode` in `src/cs_main.f90`). With `cs_hard2mode 1`, `gen_four` uses the second step's hard channel (fraction h2 = `cs_hardfrac2`) only when `line_radiation` took its hard channel (r(1) ≥ 1 − h1). `four_weight` uses the exact mixture per path: (1−h1) g_log1 g_log2 + h1 g_hard1 [(1−h2) g_log2 + h2 g_hard2], with the same g's as before. Mode 0 (the default) runs the old code unchanged.
+- **Validation:**
+  - (a) Bit-identical default: short runs (ncall 2000/6000) of the hard2 h0 card with the production binary and the new build give identical `pwg-EXCL.top` for `cs_hardfrac2` 0 and 0.3 (`/ptmp/.../hard3/bitcheck`).
+  - (b) `tests/test_four` now includes (h1, h2, mode) = (0.3, 0.5, 1). It passes: the gen_four and four_weight weights agree exactly, and the 48 integral pulls against flat RAMBO sampling all have |pull| ≤ 1.99. Negative control: generating with mode 1 but weighting with the factorised density g1·g2 fails at pulls of 6-79 (`hard3/negctl`).
+  - (c) w4 at the three spike points (replayed with a scratch build that prints four_weight for several settings, `hard3/spikebuild`):
+
+    | point | mode 0, h2=0 (production) | mode 0, 0.3 | mode 0, 0.5 | mode 1, 0.3 | mode 1, 0.5 | mode 1, 0.7 |
+    |---|---|---|---|---|---|---|
+    | 1008233 #162 | 6.41e7 | 2.16e7 | 1.50e7 | 2.57e7 | 1.84e7 | 1.43e7 |
+    | 1004554 #166 | 5.67e6 | 9.68e5 | 6.23e5 | 1.36e6 | 8.99e5 | 6.73e5 |
+    | 1005395 #154 | 1.58e6 | 5.66e5 | 3.97e5 | 8.46e5 | 6.47e5 | 5.23e5 |
+
+    - Mode 1 keeps 75-85% of the gain of mode 0 at the same h2: the weight drops 2.5-6.3× at h2 = 0.5.
+    - The drop is NOT orders of magnitude. With both steps hard, w4 is close to the flat phase-space volume of the line, about [Q²/(16π²)]² × logs/(h1 h2) ≈ 1e6 at Q² ≈ 1e4-6e4. So no second-step channel brings these events down to the typical 1e2-1e3. The remaining spikes are a large flat volume times a sizeable |R|.
+- **Pilots:** `/ptmp/.../hard3/m1h{0.3,0.5,0.7}/p1506/excl/`. These are the hard2 card (production card + `cs_scales 1`, ncall2 1.6M, seeds 3000001-3000300) with `cs_hardfrac2` h2 and `cs_hard2mode 1`. The binary is `bin/proVBFH-cs-p1506-hard3` (db6545a). Arrays 48790360 (0.3), 48790361 (0.5) and 48790362 (0.7), submitted with `hard3/submit.sh <h2> [range]`, which also resubmits since finished tasks are skipped.
+- **Pilot result** (8 Oct 13:40, coordinator; `tools/hard2_compare.py`). "eff" is error × √(total CPU); lower is better.
+
+  | setting | jobs | CPU/job | σ(≥3 j) [fb] | eff 3 j | σ(≥4 j) [fb] | eff 4 j | eff excl. 2 j | bins dominated by one job |
+  |---|---|---|---|---|---|---|---|---|
+  | production (mode 0, h2 0) | 300 | 2.60 h | 126.24 ± 0.56 | 15.7 | 16.98 ± 0.22 | 6.2 | 18.9 | 160 of 353 |
+  | mode 0, h2 0.3 | 300 | 2.61 | 125.97 ± 0.43 | 11.9 | 16.86 ± 0.26 | 7.2 | 16.4 | 124 |
+  | mode 0, h2 0.5 | 300 | 2.84 | 126.80 ± 0.65 | 18.9 | 16.80 ± 0.09 | 2.7 | 141 | 143 |
+  | mode 1, h2 0.3 | 275 | 2.82 | 127.29 ± 0.65 | 18.0 | 17.27 ± 0.44 | 12.3 | — | 163 |
+  | mode 1, h2 0.5 | 285 | 2.81 | 126.81 ± 0.85 | 24.1 | 16.94 ± 0.12 | 3.4 | 25.4 | 121 |
+  | **mode 1, h2 0.7** | 300 | 2.48 | 126.50 ± 0.44 | **12.0** | 16.83 ± 0.10 | **2.8** | **17.2** | **122** |
+
+  - All means agree within errors.
+  - **Recommendation: `cs_hard2mode 1`, `cs_hardfrac2 0.7`.**
+    - It has the 3-jet efficiency of the best flat setting (0.3), the 4-jet efficiency of the best flat setting (0.5), no 2-jet outliers, and the fewest dominated bins.
+    - Gain over production: about 1.7× less CPU for σ(≥3 j) and 4.8× for σ(≥4 j), at the same CPU per job.
+    - The largest jobs are still 10-14 sd out, so the tail is reduced but not gone.
+  - Mode 1 at 0.3 and 0.5 is worse for 3 jets. Fewer second-step log samples behind a hard first step seem to hurt only when h2 is intermediate; the 300-job sets are noisy here.
