@@ -1,0 +1,36 @@
+cs jobs 99 vbfnlo jobs/chan {'NC qq': 20, 'NC qg': 20, 'NC gq': 20, 'NC gg': 20, 'CC qq': 20, 'CC qg': 20, 'CC gq': 20, 'CC gg': 20}
+
+ sigma(all VBF cuts 2 jets) [fb]
+NC qq   cs    -23.620 +-  0.121  vb     29.163 +-  0.380  diff  -52.783 +-  0.399 pull -132.3
+NC qg   cs      2.960 +-  0.053  vb      3.879 +-  0.009  diff   -0.919 +-  0.054 pull -17.1
+NC gq   cs      3.180 +-  0.209  vb      3.886 +-  0.015  diff   -0.706 +-  0.209 pull  -3.4
+NC gg   cs     -0.072 +-  0.003  vb     -0.136 +-  0.001  diff   +0.064 +-  0.003 pull +18.5
+CC qq   cs    -73.363 +-  0.296  vb     72.335 +-  0.485  diff -145.698 +-  0.568 pull -256.4
+CC qg   cs      6.539 +-  0.130  vb      8.319 +-  0.020  diff   -1.780 +-  0.131 pull -13.6
+CC gq   cs      7.154 +-  0.558  vb      8.326 +-  0.020  diff   -1.172 +-  0.559 pull  -2.1
+CC gg   cs     -0.128 +-  0.005  vb     -0.235 +-  0.002  diff   +0.107 +-  0.006 pull +18.0
+sum     cs    -77.350 +-  1.029  vb    125.538 +-  0.482  diff -202.888 +-  1.137 pull -178.5
+
+ sigma(all VBF cuts 3 jets) [fb]
+NC qq   cs     29.848 +-  0.105  vb     29.163 +-  0.380  diff   +0.685 +-  0.394 pull  +1.7
+NC qg   cs      3.894 +-  0.037  vb      3.879 +-  0.009  diff   +0.015 +-  0.038 pull  +0.4
+NC gq   cs      3.988 +-  0.204  vb      3.886 +-  0.015  diff   +0.102 +-  0.205 pull  +0.5
+NC gg   cs     -0.135 +-  0.003  vb     -0.136 +-  0.001  diff   +0.001 +-  0.003 pull  +0.4
+CC qq   cs     71.929 +-  0.197  vb     72.335 +-  0.485  diff   -0.406 +-  0.524 pull  -0.8
+CC qg   cs      8.322 +-  0.086  vb      8.319 +-  0.020  diff   +0.003 +-  0.088 pull  +0.0
+CC gq   cs      8.661 +-  0.545  vb      8.326 +-  0.020  diff   +0.335 +-  0.545 pull  +0.6
+CC gg   cs     -0.233 +-  0.004  vb     -0.235 +-  0.002  diff   +0.001 +-  0.005 pull  +0.3
+sum     cs    126.274 +-  0.980  vb    125.538 +-  0.482  diff   +0.736 +-  1.092 pull  +0.7
+cs W1 (all) 126.274 +- 0.980
+max |W1-sum| per job 5.530000009912328e-06
+
+ sigma(all VBF cuts 4 jets) [fb]
+NC qq   cs      3.319 +-  0.068  vb      3.285 +-  0.008  diff   +0.035 +-  0.069 pull  +0.5
+NC qg   cs      0.688 +-  0.020  vb      0.686 +-  0.001  diff   +0.001 +-  0.020 pull  +0.1
+NC gq   cs      0.850 +-  0.190  vb      0.687 +-  0.001  diff   +0.164 +-  0.190 pull  +0.9
+NC gg   cs      0.028 +-  0.001  vb      0.028 +-  0.000  diff   +0.000 +-  0.001 pull  +0.2
+CC qq   cs      7.386 +-  0.135  vb      7.316 +-  0.030  diff   +0.070 +-  0.138 pull  +0.5
+CC qg   cs      1.380 +-  0.043  vb      1.377 +-  0.002  diff   +0.002 +-  0.043 pull  +0.1
+CC gq   cs      1.851 +-  0.523  vb      1.379 +-  0.002  diff   +0.472 +-  0.523 pull  +0.9
+CC gg   cs      0.044 +-  0.001  vb      0.044 +-  0.000  diff   +0.000 +-  0.001 pull  +0.1
+sum     cs     15.546 +-  0.915  vb     14.801 +-  0.032  diff   +0.745 +-  0.915 pull  +0.8

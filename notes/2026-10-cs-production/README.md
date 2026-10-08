@@ -619,3 +619,26 @@ Files: `proVBFH-cs/production/h3j-crosscheck/chsplit/`; runs in `/ptmp/mpp/akarl
 - VBFNLO (2^17 points, 1 iteration LO and NLO, seed 2001, so all runs see the same points): patched copy with no channel = original install, `p1506_nlo.top` bit-identical; NC + CC = all and qq + qg + gq + gg = all in all 426 bins to the 8-digit output precision.
 
 **Pilots (8 Oct 13:55).** proVBFH-cs CHAN_MULTI, the fixmh card, seeds 1000201-1000300 (the fixmh seeds: W1 must reproduce those jobs), array 48798835; VBFNLO 8 channels (NC/CC × qq/qg/gq/gg) × seeds 2001-2020, full fixmh size (2^23 × 5), array 48798836. Runner: the production `run_array.sh` (unchanged), via `submit.sh`.
+
+### 8 Oct: channel-split pilot results (σ ≥3 jets, all VBF cuts, μ = m_H, fb)
+99 of 100 proVBFH-cs jobs (1000201-1000300; job 83 still running, not used) and 8 × 20 VBFNLO seeds. Plain means over seeds, seed-scatter errors. Tools: `chsplit/chdiff.py` (table, output in `chdiff.out`), `chcombine.py` (combined tops `cs-W1..9.top`, `vbfnlo-{NC,CC}-{qq,qg,gq,gg}.top`).
+
+| channel | proVBFH-cs | VBFNLO | cs − VBFNLO | pull |
+|---|---|---|---|---|
+| NC qq | 29.848 ± 0.105 | 29.163 ± 0.380 | +0.69 ± 0.39 | +1.7 |
+| NC qg | 3.894 ± 0.037 | 3.879 ± 0.009 | +0.02 ± 0.04 | +0.4 |
+| NC gq | 3.988 ± 0.204 | 3.886 ± 0.015 | +0.10 ± 0.21 | +0.5 |
+| NC gg | −0.135 ± 0.003 | −0.136 ± 0.001 | +0.00 ± 0.00 | +0.4 |
+| CC qq | 71.929 ± 0.197 | 72.335 ± 0.485 | −0.41 ± 0.52 | −0.8 |
+| CC qg | 8.322 ± 0.086 | 8.319 ± 0.020 | +0.00 ± 0.09 | 0.0 |
+| CC gq | 8.661 ± 0.545 | 8.326 ± 0.020 | +0.34 ± 0.55 | +0.6 |
+| CC gg | −0.233 ± 0.004 | −0.235 ± 0.002 | +0.00 ± 0.01 | +0.3 |
+| sum | 126.27 ± 0.98 | 125.54 ± 0.48 | +0.74 ± 1.09 | +0.7 |
+
+- **Checks.** Sum of channels = W1 in every job (max 6e-6 fb); proVBFH-cs W1 = 126.27 ± 0.98 vs the earlier fixmh 126.19 ± 0.18 (1998 jobs), consistent. VBFNLO sum 125.54 ± 0.48 vs 125.22 ± 0.12 (800 jobs), consistent.
+- **Cannot localise the offset.** The pilot total difference is +0.74 ± 1.09 fb, so the pilot is ~5x less sensitive than the known +0.97 ± 0.21 fb. No channel deviates by more than 1.7σ. NC qq (+0.69 ± 0.39) and the gq channels (+0.10, +0.34, with errors 0.2-0.55) are the largest, but all are compatible with 0 and with carrying the whole offset. The gg, qg channels agree to <= 0.02 fb and the qg channels are tightly constrained (errors 0.04-0.09): they cannot carry 1 fb. The offset lies in qq (NC/CC) and/or gq, i.e. the channels with large errors.
+- **Asymmetry qg vs gq.** In VBFNLO qg = gq as it must be (3.879/3.886, 8.319/8.326). proVBFH-cs gq is noisy (per-job scatter 2.0 / 5.4 fb vs 0.4 / 0.9 for qg): a heavy tail, not a systematic shift.
+- **Single job.** job-1000297 has σ(≥3j) = 215 fb (+90 fb above the mean; gq driven: NC gq/CC gq feed it, σ(≥4j) NC gq... 22.6 fb total). Without it the proVBFH-cs W1 mean is 125.37 ± 0.38, i.e. *below* the earlier fixmh value and 0.15 ± 0.4 above VBFNLO; CC gq becomes 8.14 ± 0.15, NC gq 3.80 ± 0.08, NC qq 29.78 ± 0.08, CC qq 71.79 ± 0.15. So one event shifts the 99-job mean by ~0.9 fb (about the size of the offset). Whether the +0.97 fb of the 1998-job mean is carried by such rare events in the gq (and 4-jet-like) tails is not decided here; it is a possibility to test (spikescan on fixmh W1 jobs).
+- **σ(≥4 jets)** agrees in every channel (pulls ≤ 0.9); the sum differs by +0.75 ± 0.92, driven by the same job (gq channels). The 2-jet key is not meaningful in these NLO H+3j runs (VBFNLO prints the same value for 2, 3 jets; proVBFH-cs's is a negative real-minus-subtraction piece) and is not reported.
+- **Does this contradict earlier conclusions?** No. The 7 Oct statement (offset in the exactly-3-jet part, same at both scales) is untouched; the pilot is just too weak to confirm or localise it.
+- **Statistics needed.** Per-job cost is about 1.5 h on 1 core for proVBFH-cs (all nine weights at once), 1.5 h for VBFNLO CC and qg-type channels and 7.7 h for VBFNLO NC qq (one sample). To get errors of ~0.15 fb on the two qq differences: VBFNLO NC qq ~130 seeds (~1000 core-h), CC qq ~210 seeds (~320 core-h), proVBFH-cs ~170 jobs for CC qq (~260 core-h, the rest comes free through CHAN_MULTI); about 1.5-2k core-h in total. The gq channel of proVBFH-cs needs ~3000 jobs (~4.5k core-h) for 0.1 fb because of the heavy tail; a better route is a diagnosis of the tail events (spike replay) rather than brute force. Nothing submitted.
