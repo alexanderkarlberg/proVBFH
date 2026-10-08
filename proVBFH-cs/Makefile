@@ -65,7 +65,7 @@ EXE= proVBFH-cs
 endif
 
 # this package
-CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_nlo2.o cs_exclusive.o cs_main.o
+CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 
@@ -104,10 +104,11 @@ nonfact.o: helper.o constants.o incl_parameters.o nonfact_expressions.o
 constants.o: helper.o
 phase_space.o: matrix_element.o incl_parameters.o
 cs_kinematics.o: incl_parameters.o
+cs_chan.o: incl_parameters.o
 cs_dipoles.o: cs_kinematics.o
-cs_nlo2.o: cs_kinematics.o cs_dipoles.o cs_memo.o
-cs_exclusive.o: cs_kinematics.o cs_nlo2.o cs_memo.o incl_parameters.o phase_space.o matrix_element.o
-cs_main.o: cs_exclusive.o cs_nlo2.o incl_vbfh.o incl_parameters.o phase_space.o integration.o cs_memo.o
+cs_nlo2.o: cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o
+cs_exclusive.o: cs_kinematics.o cs_nlo2.o cs_memo.o cs_chan.o incl_parameters.o phase_space.o matrix_element.o
+cs_main.o: cs_exclusive.o cs_nlo2.o cs_chan.o incl_vbfh.o incl_parameters.o phase_space.o integration.o cs_memo.o
 
 clean:
 	rm -rf $(OBJ)

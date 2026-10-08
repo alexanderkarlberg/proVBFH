@@ -40,6 +40,7 @@ module cs_nlo2
   use cs_kinematics, only: mdot, line_radiation
   use cs_dipoles
   use cs_memo, only: memo_on, memo_get, memo_put, memo_nkey
+  use cs_chan, only: chan_pdf, chan_w_ok, chan_trivial, kp_beam
   implicit none
   private
   public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp, nlo2_test_limits
@@ -74,6 +75,7 @@ module cs_nlo2
      integer :: fl(7) = 0          ! flavours of the representative, same order
      integer :: fa(maxmem) = 0, fo(maxmem) = 0   ! members: incoming flavours
      real(dp) :: fp(8) = 0         ! fingerprint (matrix elements at test points)
+     logical :: nc = .true.        ! (cs_chan) NC: the Born-level line keeps its flavour
   end type real_group
   type(real_group), allocatable, save :: grp(:)
   integer, save :: ngrp = 0
@@ -156,6 +158,7 @@ contains
                 grp(ig)%n = nmem
                 grp(ig)%fa(nmem) = fl(1)
                 grp(ig)%fo(nmem) = fl(2)
+                if (grp(ig)%nc .neqv. (fl(2) == fl(7))) stop 'cs_nlo2: NC and CC entries in one group'
                 found = .true.
                 exit
              endif
@@ -166,6 +169,7 @@ contains
              grp(ngrp)%line = line; grp(ngrp)%s = s; grp(ngrp)%rep = j
              grp(ngrp)%leg = leg; grp(ngrp)%fl = fl; grp(ngrp)%fp = fp
              grp(ngrp)%n = 1; grp(ngrp)%fa(1) = fl(1); grp(ngrp)%fo(1) = fl(2)
+             grp(ngrp)%nc = fl(2) == fl(7)
           endif
        enddo
     enddo
@@ -393,8 +397,10 @@ contains
     xi4 = cur_xb(cur_line)*cur_pa(0)/cur_pb(0,cur_line)
     call hoppetEval(xi4, muf, f4)
     f4 = f4/xi4
+    call chan_pdf(cur_line, f4)
     do ig = 1, ngrp
        if (grp(ig)%line /= cur_line) cycle
+       if (.not. chan_w_ok(merge(0, 1, grp(ig)%nc))) cycle
        pdf = 0
        do i = 1, grp(ig)%n
           pdf = pdf + f4(grp(ig)%fa(i))*fo(grp(ig)%fo(i))
@@ -444,6 +450,7 @@ contains
     xi4 = cur_xb(cur_line)*cur_pa(0)/cur_pb(0,cur_line)
     call hoppetEval(xi4, muf, f4)
     f4 = f4/xi4
+    call chan_pdf(cur_line, f4)
     q2 = 2*mdot(cur_pb(:,cur_line), cur_pb(:,3+cur_line))
     write(unit,'(a,i2,a,es10.3,a,f9.5,a,es10.3)') ' line', cur_line, '  w4 =', cur_w4, '  xi4 =', xi4, '  Q^2 =', q2
     write(unit,'(a,3es10.2,a,3es10.2)') '   s_ij/Q^2 (12, 13, 23):', 2*mdot(cur_k(:,1), cur_k(:,2))/q2, &
@@ -464,6 +471,7 @@ contains
     sr = 0; sd = 0
     do ig = 1, ngrp
        if (grp(ig)%line /= cur_line) cycle
+       if (.not. chan_w_ok(merge(0, 1, grp(ig)%nc))) cycle
        pdf = 0
        do i = 1, grp(ig)%n
           pdf = pdf + f4(grp(ig)%fa(i))*fo(grp(ig)%fo(i))
@@ -734,6 +742,8 @@ contains
     dl = li2(1 - xi)
     call hoppetEval(xi, muf, f1)
     f1 = f1/xi
+    if (kp_beam == 0 .and. .not. chan_trivial()) stop 'cs_nlo2: kp_core without kp_beam'
+    if (kp_beam /= 0) call chan_pdf(kp_beam, f1)
     qqd = -CF*(5 - pi**2 + kqf + pi**2/3 - lm**2 - 2*dl + kqf*lm + (2*lm + xi + xi**2/2)*lsc)
     ggd = -CA*(50.0_dp/9 - pi**2 + kgf + pi**2/3 - lm**2 - 2*dl + kgf*lm + 2*lm*lsg) &
          & + TR*nf*16.0_dp/9 - gam_g*lsg
@@ -753,6 +763,7 @@ contains
           endif
           call hoppetEval(xi/z, muf, f)
           f = f/xi               ! f_a(xi/z)/z
+          if (kp_beam /= 0) call chan_pdf(kp_beam, f)
           l = log((1 - z)/z)
           qqp = CF*2/(1 - z)*(l - kqf/2) - CF*(1 + z**2)/(1 - z)*lsc
           ggp = CA*2/(1 - z)*(l - kgf/2) - CA*2/(1 - z)*lsg
@@ -774,6 +785,7 @@ contains
     enddo
     sq = 0
     fq(0) = 0
+    kp_beam = 0
   end subroutine kp_core
 
   ! the quark part of the collinear remnant of a gluon Born in the old

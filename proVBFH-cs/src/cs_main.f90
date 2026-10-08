@@ -26,7 +26,8 @@ program provbfh_cs
   use integration
   use cs_exclusive
   use cs_nlo2, only: nlo2_ncount, nlo2_ncut, nlo2_emul_kappa
-  use cs_memo, only: memo_hits, memo_misses
+  use cs_memo, only: memo_hits, memo_misses, memo_on
+  use cs_chan, only: chan_init, chan_multi, chan_trivial
   use incl_parameters, only: incl_nscale, incl_scr, incl_scf
   use cs_dipoles, only: spin_avg, four_hard, four_hard2
   use matrix_element, only: incl_only11
@@ -109,13 +110,22 @@ program provbfh_cs
      if (powheginput('#cs_scalecheck') == 2) then
         if (excl_nscale /= 7) stop 'cs_scalecheck 2 needs cs_scales 7'
         excl_scalecheck2 = .true.
-        sc_r = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 1.0_dp]
-        sc_f = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 1.0_dp]
+        sc_r(1:7) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 1.0_dp]
+        sc_f(1:7) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 1.0_dp]
         write(6,'(a)') ' cs_scalecheck 2: W1-W3 (1,1), (1/2,1/2), (2,2) with the beta0 shift, W4, W5 (1/2,1/2), (2,2)' &
              & //' with the virtual evaluated directly, W6 = W2 - W4, W7 = W3 - W5 (W6, W7: scale labels not meaningful)'
      endif
      write(6,'(a,i2,a)') ' proVBFH-cs: ', excl_nscale, ' scale points (mu_R/mu_R0, mu_F/mu_F0), weights W1, W2, ...:'
      write(6,'(7(a,f4.2,a,f4.2,a))') (' (', sc_r(i), ',', sc_f(i), ')', i = 1, excl_nscale)
+  endif
+  ! diagnostic channel split (cs_chan; environment CHAN_BOSON, CHAN_INIT, CHAN_MULTI)
+  call chan_init()
+  if (excl_estimate /= 0 .and. (chan_multi .or. .not. chan_trivial())) stop 'cs_chan: not with cs_estimate'
+  if (chan_multi) then
+     if (excl_nscale /= 1) stop 'cs_chan: CHAN_MULTI needs cs_scales 1'
+     excl_nscale = 9
+     memo_on = .true.
+     sc_r = 1; sc_f = 1
   endif
   if (powheginput('#cs_testlimits') >= 1) then
      call cs_excl_testlimits(nint(powheginput('#cs_testlimits')))

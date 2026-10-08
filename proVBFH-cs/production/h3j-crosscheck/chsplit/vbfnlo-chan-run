@@ -1,0 +1,8 @@
+#!/bin/bash
+# run the channel-split VBFNLO copy in the current directory (for run_array.sh);
+# the channel comes from ./chan.env (CHAN_BOSON=..., CHAN_INIT=...), if present
+[ -f chan.env ] && { set -a; . ./chan.env; set +a; }
+I=/ptmp/mpp/akarlber/chsplit/vbfnlo/install
+export LD_LIBRARY_PATH=$HOME/.local/lib:$I/lib:$I/lib/VBFNLO:$LD_LIBRARY_PATH
+export LHAPDF_DATA_PATH=$HOME/.local/share/LHAPDF
+exec $I/bin/vbfnlo --input=.
