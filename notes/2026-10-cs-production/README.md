@@ -602,3 +602,21 @@ All values are plain means over jobs (`fixcmp.py` in the scratchpad: per-job sig
 - **Example, job-1005395.** One event of about +3.2 pb/unit appears at the same time in yj1, yj2, yj3, yj4, yH, Δy_jj, R_jj and Δφ_jj, and in σ(≥4 jets): 1.60 pb in that job against a mean of 0.0171. So it is a single four-parton event passing the 4-jet cuts. It alone contributes 0.15 fb (1σ) to σ(≥4 jets).
 - **Below the logging threshold.** Only one point in all 11,000 jobs exceeded the logging threshold spike_min = 10 pb (job-1003743). Its real and dipole cancel (+10.40, −10.41). The events behind the visible spikes are therefore below that threshold.
 - **Next:** rerun the four worst jobs with the same seed (deterministic) and `cs_spikemin 0.2`. This logs the events with their random numbers, for `cs_replay` (kinematics, which piece, which flavour). Array 48759513, `/ptmp/.../cs-production/spikes/`, about 5.5 h.
+
+### 8 Oct: targeted second-emission hard channel (`cs_hard2mode 1`, sub-agent)
+(The 7 Oct 17:30-20:25 sections on the spike replays and the `cs_hardfrac2` pilots are in the main checkout, not yet committed. This work is on branch `2026-10-cs-hard3`, based on 4c926eb.)
+- **Implementation** (`src/cs_dipoles.f90`, input `cs_hard2mode` in `src/cs_main.f90`). With `cs_hard2mode 1`, `gen_four` uses the second step's hard channel (fraction h2 = `cs_hardfrac2`) only when `line_radiation` took its hard channel (r(1) ≥ 1 − h1). `four_weight` uses the exact mixture per path: (1−h1) g_log1 g_log2 + h1 g_hard1 [(1−h2) g_log2 + h2 g_hard2], with the same g's as before. Mode 0 (the default) runs the old code unchanged.
+- **Validation:**
+  - (a) Bit-identical default: short runs (ncall 2000/6000) of the hard2 h0 card with the production binary and the new build give identical `pwg-EXCL.top` for `cs_hardfrac2` 0 and 0.3 (`/ptmp/.../hard3/bitcheck`).
+  - (b) `tests/test_four` now includes (h1, h2, mode) = (0.3, 0.5, 1). It passes: the gen_four and four_weight weights agree exactly, and the 48 integral pulls against flat RAMBO sampling all have |pull| ≤ 1.99. Negative control: generating with mode 1 but weighting with the factorised density g1·g2 fails at pulls of 6-79 (`hard3/negctl`).
+  - (c) w4 at the three spike points (replayed with a scratch build that prints four_weight for several settings, `hard3/spikebuild`):
+
+    | point | mode 0, h2=0 (production) | mode 0, 0.3 | mode 0, 0.5 | mode 1, 0.3 | mode 1, 0.5 | mode 1, 0.7 |
+    |---|---|---|---|---|---|---|
+    | 1008233 #162 | 6.41e7 | 2.16e7 | 1.50e7 | 2.57e7 | 1.84e7 | 1.43e7 |
+    | 1004554 #166 | 5.67e6 | 9.68e5 | 6.23e5 | 1.36e6 | 8.99e5 | 6.73e5 |
+    | 1005395 #154 | 1.58e6 | 5.66e5 | 3.97e5 | 8.46e5 | 6.47e5 | 5.23e5 |
+
+    - Mode 1 keeps 75-85% of the gain of mode 0 at the same h2: the weight drops 2.5-6.3× at h2 = 0.5.
+    - The drop is NOT orders of magnitude. With both steps hard, w4 is close to the flat phase-space volume of the line, about [Q²/(16π²)]² × logs/(h1 h2) ≈ 1e6 at Q² ≈ 1e4-6e4. So no second-step channel brings these events down to the typical 1e2-1e3. The remaining spikes are a large flat volume times a sizeable |R|.
+- **Pilots:** `/ptmp/.../hard3/m1h{0.3,0.5,0.7}/p1506/excl/`. These are the hard2 card (production card + `cs_scales 1`, ncall2 1.6M, seeds 3000001-3000300) with `cs_hardfrac2` h2 and `cs_hard2mode 1`. The binary is `bin/proVBFH-cs-p1506-hard3` (db6545a). Arrays 48790360 (0.3), 48790361 (0.5) and 48790362 (0.7), submitted with `hard3/submit.sh <h2> [range]`, which also resubmits since finished tasks are skipped.
