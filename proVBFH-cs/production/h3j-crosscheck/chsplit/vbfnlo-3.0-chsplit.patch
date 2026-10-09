@@ -1,0 +1,264 @@
+--- a/amplitudes/hjjj/m2s_qqh3j.F
++++ b/amplitudes/hjjj/m2s_qqh3j.F
+@@ -164,9 +164,11 @@
+       
+       q_sf = sqrt(mufsq(1,1))
+       call pdfproton( xi(1), q_sf, pdf(-6,1,1)) !f_a/p(xi(1))
++      call chs_pdf(1, pdf(-6,1,1))
+ 
+       q_sf = sqrt(mufsq(2,1))
+       call pdfproton( xi(2), q_sf, pdf(-6,2,1)) !f_b/p(xi(2))
++      call chs_pdf(2, pdf(-6,2,1))
+   
+ #ifdef WITH_NLO       
+       if (nlo.eq.1) then 
+@@ -175,6 +177,7 @@
+          x1 = xi(1)/x1
+          J1 = (1.0d0 - xi(1))*2.0D0*RN
+          call pdfproton(x1, q_sf, pdf(-6,1,2)) ! f_a/p(xi(1)/z)
++         call chs_pdf(1, pdf(-6,1,2))
+          do i=-6,6
+             do j=2,4
+                   pdf(i,1,j+1) = pdf(i,1,2)
+@@ -186,6 +189,7 @@
+          J2 = (1.0d0 - xi(2))*2.0d0*RN
+      
+          call pdfproton(x2, q_sf, pdf(-6,2,2)) ! f_b/p(xi(2)/z)
++         call chs_pdf(2, pdf(-6,2,2))
+          do i=-6,6
+             do j=2,4
+                pdf(i,2,j+1) = pdf(i,2,2)
+@@ -601,6 +605,12 @@
+ c     get born + virt_finite  
+       call qqHqqj_c_virt(nlo,pbar,fsign,qbar,gsign,0,
+      1     uuccv,uussv,ddccv,ddssv,udscv,ducsv)  
++      call chs_nc(uuccv,3)
++      call chs_nc(uussv,3)
++      call chs_nc(ddccv,3)
++      call chs_nc(ddssv,3)
++      call chs_cc(udscv,3)
++      call chs_cc(ducsv,3)
+ 
+       if (ldoblha) then
+         return
+@@ -628,6 +638,12 @@
+ 
+          call qqHqqj_c_virt(0,pbar,fsign,qbar,gsign,0,
+      1        uuccb,uussb,ddccb,ddssb,udscb,ducsb) 
++      call chs_nc(uuccb,3)
++      call chs_nc(uussb,3)
++      call chs_nc(ddccb,3)
++      call chs_nc(ddssb,3)
++      call chs_cc(udscb,3)
++      call chs_cc(ducsb,3)
+ 
+ c     compute kinematic factors
+ c     21 quark current
+@@ -1410,3 +1426,95 @@
+ c    end subroutine fillColoredPartons_H3j
+ c
+ c*****************************************************************************
++
++c*****************************************************************************
++c     Diagnostic channel split (proVBFH notes/2026-10-cs-production, 8 Oct 2026)
++c     Environment: CHAN_BOSON = NC | CC | ALL; CHAN_INIT = ALL or two letters
++c     (beam 1, beam 2) out of q (quark or antiquark), g (gluon), a (any).
++c     chs_pdf: parton-type flags on every PDF evaluation of process 110
++c     (Born, virtual, I, K/P at x/z, reals, dipoles);
++c     chs_nc/chs_cc: NC (ZZ) and CC (WW) matrix elements on output of every
++c     matrix-element routine (Born, virtual, real, dipole Borns).
++c*****************************************************************************
++      subroutine chs_init
++      implicit none
++      double precision chq(2), chg(2), chnc, chcc
++      common /chsplit/ chq, chg, chnc, chcc
++      logical first
++      data first /.true./
++      save first
++      character*64 s
++      integer b
++      if (.not.first) return
++      first = .false.
++      chq(1) = 1d0
++      chq(2) = 1d0
++      chg(1) = 1d0
++      chg(2) = 1d0
++      chnc = 1d0
++      chcc = 1d0
++      call get_environment_variable('CHAN_BOSON', s)
++      if (s.eq.'NC' .or. s.eq.'nc') then
++         chcc = 0d0
++      elseif (s.eq.'CC' .or. s.eq.'cc') then
++         chnc = 0d0
++      elseif (s.ne.' ' .and. s.ne.'ALL' .and. s.ne.'all') then
++         stop 'chsplit: CHAN_BOSON must be NC, CC or ALL'
++      endif
++      call get_environment_variable('CHAN_INIT', s)
++      if (s.ne.' ' .and. s.ne.'ALL' .and. s.ne.'all') then
++         if (len_trim(s).ne.2) stop 'chsplit: CHAN_INIT'
++         do b = 1, 2
++            if (s(b:b).eq.'q' .or. s(b:b).eq.'Q') then
++               chg(b) = 0d0
++            elseif (s(b:b).eq.'g' .or. s(b:b).eq.'G') then
++               chq(b) = 0d0
++            elseif (s(b:b).ne.'a' .and. s(b:b).ne.'A') then
++               stop 'chsplit: CHAN_INIT'
++            endif
++         enddo
++      endif
++      write(6,'(a,2f4.1,a,2f4.1,a,2f4.1)') ' chsplit: NC CC',
++     &   chnc, chcc, '  q flags', chq, '  g flags', chg
++      end
++
++      subroutine chs_pdf(b, f)
++      implicit none
++      integer b, i
++      double precision f(-6:6)
++      double precision chq(2), chg(2), chnc, chcc
++      common /chsplit/ chq, chg, chnc, chcc
++      call chs_init
++      if (chq(b).eq.1d0 .and. chg(b).eq.1d0) return
++      f(0) = f(0)*chg(b)
++      do i = 1, 6
++         f(i) = f(i)*chq(b)
++         f(-i) = f(-i)*chq(b)
++      enddo
++      end
++
++      subroutine chs_nc(a, n)
++      implicit none
++      integer n, i
++      double precision a(n)
++      double precision chq(2), chg(2), chnc, chcc
++      common /chsplit/ chq, chg, chnc, chcc
++      call chs_init
++      if (chnc.eq.1d0) return
++      do i = 1, n
++         a(i) = a(i)*chnc
++      enddo
++      end
++
++      subroutine chs_cc(a, n)
++      implicit none
++      integer n, i
++      double precision a(n)
++      double precision chq(2), chg(2), chnc, chcc
++      common /chsplit/ chq, chg, chnc, chcc
++      call chs_init
++      if (chcc.eq.1d0) return
++      do i = 1, n
++         a(i) = a(i)*chcc
++      enddo
++      end
+--- a/amplitudes/hjjj/m2s_qqh4j.F
++++ b/amplitudes/hjjj/m2s_qqh4j.F
+@@ -164,9 +164,11 @@
+       do nd=1,n_kin
+         q_sf = sqrt(mufsq(1,nd))
+         call pdfproton( xi(1), q_sf, pdf(-6,1,nd)) !f_a/p(x1/x_{41,a})
++        call chs_pdf(1, pdf(-6,1,nd))
+ 
+         q_sf = sqrt(mufsq(2,nd))
+         call pdfproton( xi(2), q_sf, pdf(-6,2,nd)) !f_b/p(x2/x_{42,b})         
++        call chs_pdf(2, pdf(-6,2,nd))
+       enddo
+      
+ c
+@@ -701,6 +703,8 @@
+ c              
+       if (lok(1)) then
+          call qqh2q2g(pbar,fsign,qbar,gsign,NCmatrix_r,CCmatrix_r)
++         call chs_nc(NCmatrix_r,28)
++         call chs_cc(CCmatrix_r,14)
+ #if WITH_MADGRAPH
+          if (ldebugmg) then
+            call qqhqqgg_mg_c(pbar,fsign,qbar,gsign,
+@@ -759,6 +763,12 @@
+                   call qqhqqj_c_virt(0,pbar(0,1),fsign(1),qbar(0,1),gsign(1),nd,
+      $                 uucc_c,uuss_c,ddcc_c,
+      $                 ddss_c,udsc_c,ducs_c)
++      call chs_nc(uucc_c,3)
++      call chs_nc(uuss_c,3)
++      call chs_nc(ddcc_c,3)
++      call chs_nc(ddss_c,3)
++      call chs_cc(udsc_c,3)
++      call chs_cc(ducs_c,3)
+    
+ c     j = 1 is gluon emission of 21 line of born
+ c     j = 2 is gluon emission of 43 line of born
+@@ -775,6 +785,12 @@
+                   call qqHqqj_spcor(qvec(0,nd),pbar(0,1),fsign(1),
+      $               qbar(0,1),gsign(1),nd,uucc_c,uuss_c,
+      $               ddcc_c,ddss_c,udsc_c,ducs_c)
++      call chs_nc(uucc_c,3)
++      call chs_nc(uuss_c,3)
++      call chs_nc(ddcc_c,3)
++      call chs_nc(ddss_c,3)
++      call chs_cc(udsc_c,3)
++      call chs_cc(ducs_c,3)
+                   do j = 2,3
+                      NCmatrix_v(0,0,j-1,nd)=uucc_c(j) !q_mu q_nu M_b^mu M_b*^nu
+                      NCmatrix_v(0,1,j-1,nd)=uuss_c(j)
+@@ -1334,6 +1350,12 @@
+                   call qqhqqj_c_virt(0,pbar(0,1),fc,qbar(0,1),gc,nd,
+      $                 uucc_c,uuss_c,ddcc_c,
+      $                 ddss_c,udsc_c,ducs_c)
++      call chs_nc(uucc_c,3)
++      call chs_nc(uuss_c,3)
++      call chs_nc(ddcc_c,3)
++      call chs_nc(ddss_c,3)
++      call chs_cc(udsc_c,3)
++      call chs_cc(ducs_c,3)
+                   if(ldebug) then
+                      print*,"---------------"
+                      print*,"uucc_c=",uucc_c
+@@ -1360,6 +1382,12 @@
+                   call qqHqqj_spcor(qvec(0,nd),pbar(0,1),fc,
+      $                 qbar(0,1),gc,nd,uucc_c,uuss_c,
+      $                 ddcc_c,ddss_c,udsc_c,ducs_c)
++      call chs_nc(uucc_c,3)
++      call chs_nc(uuss_c,3)
++      call chs_nc(ddcc_c,3)
++      call chs_nc(ddss_c,3)
++      call chs_cc(udsc_c,3)
++      call chs_cc(ducs_c,3)
+                   do j = 2,3
+                      NCmatrix_v(0,0,j-1,nd)=uucc_c(j) !q_mu q_nu M_b^mu M_b*^nu
+                      NCmatrix_v(0,1,j-1,nd)=uuss_c(j)
+--- a/amplitudes/hjjj/qqh4q_sub.F
++++ b/amplitudes/hjjj/qqh4q_sub.F
+@@ -176,6 +176,8 @@
+ 
+       if (lok(1)) then
+         call qqh4q(pbar,fsign,NCmatrix_r,CCmatrix_r,lsymmcontrib)
++        call chs_nc(NCmatrix_r,32)
++        call chs_cc(CCmatrix_r,64)
+         if (ldebugmg) then
+           call qqh4qnc_mg_c(pbar,fsign,
+      $      uuccuu,uussuu,ddccuu,ddssuu,
+@@ -367,6 +369,12 @@
+                   call qqhqqj_c_virt(0,kbar,fc,qbar,gsign,nd,
+      $                 uucc_c,uuss_c,ddcc_c,
+      $                 ddss_c,udsc_c,ducs_c)
++      call chs_nc(uucc_c,3)
++      call chs_nc(uuss_c,3)
++      call chs_nc(ddcc_c,3)
++      call chs_nc(ddss_c,3)
++      call chs_cc(udsc_c,3)
++      call chs_cc(ducs_c,3)
+ c                          
+ c     j = 1 is gluon emission of 21 line of born
+ c     j = 2 is gluon emission of 43 line of born
+@@ -384,6 +392,12 @@
+                   call qqHqqj_spcor(qvec(0,nd),kbar,fc,
+      $                 qbar,gsign,nd,uucc_c,uuss_c,
+      $                 ddcc_c,ddss_c,udsc_c,ducs_c)
++      call chs_nc(uucc_c,3)
++      call chs_nc(uuss_c,3)
++      call chs_nc(ddcc_c,3)
++      call chs_nc(ddss_c,3)
++      call chs_cc(udsc_c,3)
++      call chs_cc(ducs_c,3)
+                   do j = 2,3
+                      NCmatrix_v(0,0,j-1,nd)=uucc_c(j) !|M_v|^2
+                      NCmatrix_v(0,1,j-1,nd)=uuss_c(j)

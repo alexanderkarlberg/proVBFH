@@ -171,7 +171,7 @@ c  You can substitute these with your favourite ones
       
       subroutine user_analysis(dsig0)
       implicit none
-      real * 8 dsig(7),dsig0
+      real * 8 dsig(10),dsig0
       include 'hepevt.h'
       include 'pwhg_math.h'  
       include 'nlegborn.h'

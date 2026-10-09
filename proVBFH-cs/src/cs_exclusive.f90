@@ -37,6 +37,7 @@ module cs_exclusive
   use cs_kinematics
   use cs_nlo2, dbg_mvar => mvar, dbg_mz => mz, dbg_w4 => cur_w4
   use cs_memo
+  use cs_chan
   implicit none
   private
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
@@ -106,10 +107,10 @@ module cs_exclusive
   ! weights at mu_R = sc_r(k) mu_R0, mu_F = sc_f(k) mu_F0, k = 1..excl_nscale,
   ! written as weights 1..n (files -W1.top ... -Wn.top); 3: symmetric
   ! (1,1), (1/2,1/2), (2,2); 7: the same, then (1/2,1), (1,1/2), (2,1), (1,2)
-  integer, parameter :: max_scales = 7
+  integer, parameter :: max_scales = 9   ! 7 scale points; 9 channel weights (cs_chan)
   integer, public, save :: excl_nscale = 1
-  real(dp), public, save :: sc_r(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp]
-  real(dp), public, save :: sc_f(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 2.0_dp]
+  real(dp), public, save :: sc_r(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp, 1.0_dp, 1.0_dp]
+  real(dp), public, save :: sc_f(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp, 1.0_dp]
   public :: cs_scales_setup
   ! cs_scalecheck 1: also evaluate the virtual directly at every shifted mu_R
   ! and record the largest deviation of the beta0 shift (memo_vi)
@@ -193,6 +194,8 @@ contains
   logical function compatible(w1, w2)
     integer, intent(in) :: w1, w2
     compatible = (w1 == 0 .and. w2 == 0) .or. (w1 /= 0 .and. w1 == -w2)
+    ! cs_chan: the selected boson only
+    if (compatible) compatible = chan_w_ok(w1)
   end function compatible
 
   real(dp) function pdfsum(f, c)
@@ -449,6 +452,7 @@ contains
     real(dp) :: se12(2,max_scales), se3(max_scales), fB0(-6:6,2), fE0(-6:6,2), as0(2)
 
     cs_excl_dsigma = 0
+    if (chan_multi) call chan_set(1)
     excl_stats(1) = excl_stats(1) + 1
     call gen_phsp(xrand(1:7))
     call set_phsp()
@@ -464,6 +468,7 @@ contains
     call hoppetEval(x1, muf(1), fB(:,1))
     call hoppetEval(x2, muf(2), fB(:,2))
     fB = fB/spread([x1, x2], 1, 13)       ! hoppet returns x f(x)
+    call chan_pdf(1, fB(:,1)); call chan_pdf(2, fB(:,2))
 
     ! radiation on each line
     do line = 1, 2
@@ -493,6 +498,7 @@ contains
        xi3(line) = merge(x1, x2, line == 1)/xp
        call hoppetEval(xi3(line), muf(line), fE(:,line))
        fE(:,line) = fE(:,line)/xi3(line)
+       call chan_pdf(line, fE(:,line))
     enddo
 
     ! normalisation check (cs_order 10): the LO cross section from cs_born2
@@ -578,17 +584,20 @@ contains
     endif
     do ks = 1, merge(5, ns, excl_scalecheck2)
     vi_direct = excl_scalecheck2 .and. ks >= 4
+    if (chan_multi) call chan_set(ks)
     if (ks > 1) then
        mur = [cs_mu(xmur*sc_r(ks), 1, Q1, Q2, ptH, .true.), cs_mu(xmur*sc_r(ks), 2, Q1, Q2, ptH, .true.)]
        muf = [cs_mu(xmuf*sc_f(ks), 1, Q1, Q2, ptH, .false.), cs_mu(xmuf*sc_f(ks), 2, Q1, Q2, ptH, .false.)]
        call hoppetEval(x1, muf(1), fB(:,1))
        call hoppetEval(x2, muf(2), fB(:,2))
        fB = fB/spread([x1, x2], 1, 13)
+       call chan_pdf(1, fB(:,1)); call chan_pdf(2, fB(:,2))
        do line = 1, 2
           if (.not. ok(line)) cycle
           as(line) = hoppetAlphaS(mur(line))
           call hoppetEval(xi3(line), muf(line), fE(:,line))
           fE(:,line) = fE(:,line)/xi3(line)
+          call chan_pdf(line, fE(:,line))
        enddo
     endif
     w = 0; wg = 0
@@ -730,6 +739,7 @@ contains
     sw(:,ks) = w; swv(:,ks) = wv; swr(:,ks) = wr; swd(:,:,ks) = wd; se12(:,ks) = e12; se3(ks) = e3
     enddo
     vi_direct = .false.
+    if (chan_multi) call chan_set(1)
     if (excl_scalecheck2) then
        sw(:,6:7) = sw(:,2:3) - sw(:,4:5); swv(:,6:7) = swv(:,2:3) - swv(:,4:5)
        swr(:,6:7) = swr(:,2:3) - swr(:,4:5); swd(:,:,6:7) = swd(:,:,2:3) - swd(:,:,4:5)
@@ -843,6 +853,7 @@ contains
     do l = 1, 2
        lo = log(mur(l)**2/Qs(l)**2)
        vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,l), pb(:,3+l), mur(l)**2)/twopi
+       kp_beam = l
        call nlo2_kp_dis(xb(l), pb(:,l), pb(:,3+l), muf(l), fq)
        do c = 1, ncls
           xa(c,l) = vi*pdfsum(fB(:,l), cls(c)) + pdfsum(fq, cls(c))/twopi
@@ -910,6 +921,7 @@ contains
        ! Born level: V + I and K + P
        lo = log(mur(line)**2/Qs(line)**2)
        vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,line), pb(:,3+line), mur(line)**2)/twopi
+       kp_beam = line
        call nlo2_kp_dis(xb(line), pb(:,line), pb(:,3+line), muf(line), fq)
        wb = 0
        do i1 = 1, ncls
@@ -979,6 +991,7 @@ contains
     integer :: i1, i2, bflav(6), o, il, io
     real(dp), parameter :: CF = 4.0_dp/3.0_dp, twopi = 6.283185307179586476925286766559005768394_dp
     o = 3 - line
+    kp_beam = line
     call nlo2_kp(xi3, p6(:,line), p6(:,3+line), p6(:,6), muf, fq, fg, fgq)
     if (excl_estimate == 6 .or. excl_estimate == 7) then
        ! emulation: minus the quark part of K + P of the NC gluon-initiated
@@ -1247,6 +1260,7 @@ contains
     o = 3 - l
     lo = log(mur(o)**2/Qs(o)**2)
     vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,o), pb(:,3+o), mur(o)**2)/twopi
+    kp_beam = o
     call nlo2_kp_dis(xb(o), pb(:,o), pb(:,3+o), muf(o), fq)
     if (oko) then
        pa = p6o(:,o); pk = p6o(:,3+o); pt = p6o(:,6)
@@ -1303,6 +1317,7 @@ contains
        do s2 = 1, ncls + ngcls
           j = e3_entry(s1,s2)
           if (j == 0) cycle
+          if (.not. chan_w_ok(state_w(s1))) cycle
           p2 = state_pdf(s2, fE(:,2))
           if (p2 == 0) cycle
           call e3_momenta(s1, s2, p7, pe)
