@@ -794,3 +794,26 @@ Sizing: the hi difference to 0.15 fb needs ~1,100 cs hi jobs x 6 h = ~6,600 core
 far above the 1,500 core-h budget; the lo slice is already at 0.14 fb. Pilot cost ~450 core-h wall
 (~120 core-h wasted on a first cs batch built with the default analysis, which has no >=3j/>=4j bins).
 No distributions made.
+
+### 10 Oct: low-slice statistics
+
+100 new seeds each of CHAN_XSLICE "0.02 lo1" / "0.02 lo2" (seeds 1200001-1200100, same seed in both; Slurm arrays 48834274 / 48834275, tasks 13-112 of jobs.list, 200/200 completed, 597 core-h), same binary/card/settings as the pilot (cs-xslice-run, p1506 analysis). Pilot (12 seeds each) included, so n = 112 per slice. Plain means, seed-scatter errors. Scripts: `proVBFH-cs/production/h3j-crosscheck/xslice/lowstat.py`, output `analysis-lowstat.txt`. (A first submission with the wrong array range 101-200 was cancelled within seconds, before any job finished; the dirs were not reused.)
+
+| fb | n | mean | median | sd | skew | largest (seed) | mean w/o top 1/3/5 |
+|---|---|---|---|---|---|---|---|
+| lo1 >=3j | 112 | 1.654 +- 0.098 | 1.455 | 1.04 | 5.7 | 8.78 (1200018), 8.64 (1200007), 3.75 | 1.590 / 1.505 / 1.484 |
+| lo2 >=3j | 112 | 1.474 +- 0.039 | 1.443 | 0.41 | -2.0 | 2.73 (1200061), 2.69, 2.40 | 1.463 / 1.443 / 1.428 |
+| lo  >=3j | 112 | 3.128 +- 0.108 | 2.909 | 1.14 | 4.2 | 10.36 (1200018), 10.06 (1200007), 5.24 | 3.063 / 2.979 / 2.946 |
+| lo1 >=4j | 112 | 0.0390 +- 0.0033 | 0.0294 | 0.035 | 3.8 | 0.24 (1200072), 0.20, 0.19 | 0.037 / 0.034 / 0.032 |
+| lo2 >=4j | 112 | 0.0362 +- 0.0020 | 0.0296 | 0.022 | 3.1 | 0.15 (1200079), 0.14, 0.11 | 0.035 / 0.034 / 0.033 |
+| lo  >=4j | 112 | 0.0752 +- 0.0038 | 0.0640 | 0.040 | 2.6 | 0.26 (1200072), 0.23, 0.21 | 0.0735 / 0.0708 / 0.0686 |
+
+VBFNLO lo (12 jobs): >=3j 3.068 +- 0.036, sd 0.13, skew 0.6, max 3.30; >=4j 0.0998 +- 0.0020, skew 1.4.
+
+Histogram of per-job lo >=3j (10 bins of 1.01 fb from 0.24): 2 3 81 18 6 0 0 0 0 2. Running mean lo >=3j after 12/25/50/75/100/112 jobs: 3.118 / 3.409 / 3.335 / 3.265 / 3.168 / 3.128. Running mean lo >=4j: 0.061 / 0.071 / 0.073 / 0.075 / 0.077 / 0.075.
+
+Verdict.
+- Heavy tail: yes, but only in lo1 (x1 < 0.02). Two jobs (seeds 1200018, 1200007) at +7 fb above the median each move the lo >=3j mean by about +0.06 fb apiece; skew 4.2 (VBFNLO 0.6). lo2 is not heavy-tailed (skew -2). The tail is much milder than in the production (jobs +90...+192 fb), so rare events at x < 0.02 can explain at most a few 0.1 fb, not +0.97 fb.
+- Mean: lo >=3j = 3.128 +- 0.108 vs VBFNLO 3.068 +- 0.034, difference +0.06 +- 0.11 (pull +0.5): agrees. Dropping the top 3 jobs gives 2.98 (diagnostic only). The running mean did NOT come out low at small n; the pilot (3.118) was already consistent and the mean settles at about 3.1. Hypothesis "small samples come out low" is not supported for >=3j.
+- Contradiction with the earlier interpretation: the production's +0.97 fb excess over VBFNLO is NOT reproduced by the dedicated low slice (lo 3.13 vs 3.07). If the production excess is real, it is not carried by the x < 0.02 region sampled here (cannot be mostly an upward fluctuation of rare events from this region at the level seen here; the production's own tail jobs, at x < 0.012, were larger than anything in these 224 jobs).
+- >=4j: the pilot value 0.061 +- 0.004 was low (small-sample, skewed); the mean is now 0.0752 +- 0.0038, still below VBFNLO 0.0998 +- 0.0020: diff -0.0246 +- 0.0043, pull -5.7 (pilot -8.7). The deficit survives (24% low) and does not go away without the top jobs (0.069). Given the skewness the quoted error is probably still optimistic, so the significance is indicative; the physics deficit in >=4j low slice remains unexplained.
