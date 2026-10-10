@@ -756,3 +756,41 @@ Scripts: `proVBFH-cs/tools/tail-diag/` (`dg3j-instrumentation.patch` = scratch-b
   - Controls: no entry above 8 fb; their sub-threshold bulk (117-122 fb) is the same as for the heavy jobs (120-131 fb): the excess is entirely the few points.
 - **Verdict.** No evidence of an artefact: every large point is a finite, hard 4-parton real (or an exactly cancelling E3/E12 pair) with a resolved dipole map and no cut at the technical cutoff; the dipoles that fail the cuts are far from their singular limit (their size exceeds R), so the NLO combination R·Θ(R passes) - D·Θ(D passes) is the legitimate cut-dependent result, not a missing counter-term. The tail is therefore a physically correct but rarely sampled region (hard double emission, one x below ~0.01, gluon-rich), i.e. variance, and the plain mean is the unbiased result. The data do not show whether VBFNLO misses or under-samples exactly this region (it cannot be seen from the proVBFH-cs side); a test would be a VBFNLO run with a dedicated sampling of x_small < 0.01 with hard jets. No code defect indicated, no file:line to report. The earlier suspicion of a dipole-map/cut mismatch (7 Oct) is explained by the cut decisions above: the mismatch is physical (cuts act on R and on D differently outside the singular limit), not a defect.
 - **Contradicts earlier notes.** (1) 9 Oct: "no single event explains job 1000297's gq excess": it does, one real at point 11527709 (x1 = 0.0022, +90.7 fb of the +89.6 fb excess); the earlier 0.2 pb replay did not find it (it logged a different point, vegas weights differ between stages). (2) 9 Oct "the tail is mostly qq, E3/E12 and (2,0) non-cancellation": here the dominant carriers are hard reals at small x of one beam (flavour-summed, so qq and qg/gq channels share them); E3/E12 pairs are minor (1001387, 1000975) and cancel to 0.03%. (3) The 9 Oct "gq is not the main carrier" stands only in the sense of the mean: for individual jobs the carrier channel is set by which beam is at small x (gq for 1000297, 1001262, 1001387; qg/qq for 1002198, 1001012, 1000975).
+
+### 10 Oct: small-x slice comparison (x0 = 0.02)
+
+Test of the 9 Oct hypothesis (VBFNLO under-samples the small-x region, hence the +0.97 +- 0.21 fb in
+sigma(>=3j)). Implementation: env `CHAN_XSLICE="0.02 hi|lo1|lo2"` in proVBFH-cs (`cs_chan.f90`) and in the
+VBFNLO chsplit patch. One flag per PDF factor, each evaluation with its own x (K/P at x/z, reals and dipoles
+at the real's x): hi = both x >= x0, lo1 = x1 < x0 (x2 any), lo2 = x1 >= x0 and x2 < x0. hi + lo1 + lo2 = all
+and "min(x1,x2) < x0" = lo1 + lo2 (a single-grid "lo" is not a product of per-PDF flags, hence two lo runs).
+Validation (same grid/points): sum of the three slices equals the unsliced run in all 426 bins to 1e-7
+(output precision) in both codes; switch off is bit-identical to the HEAD build (proVBFH-cs). Scripts and
+tables: `proVBFH-cs/production/h3j-crosscheck/xslice/` (analyze.py, analysis-pilot.txt, mkset.sh, submit.sh).
+Each slice has its own VEGAS grid; production cards (VBFNLO 2^23 x 5; proVBFH-cs ncall2 4.8M).
+
+Pilot, sigma [fb], plain means, seed-scatter errors (jobs: VBFNLO hi 112, lo1/lo2 12; cs hi 11, lo1/lo2 12):
+
+| >=3j | proVBFH-cs | VBFNLO | cs - vb |
+|---|---|---|---|
+| lo (lo1+lo2) | 3.118 +- 0.134 | 3.068 +- 0.034 | +0.05 +- 0.14 |
+| hi | 121.86 +- 0.99 | 122.51 +- 0.26 | -0.65 +- 1.03 |
+| lo + hi | 124.98 +- 1.00 | 125.58 +- 0.27 | -0.60 +- 1.04 |
+| production | 126.19 +- 0.18 | 125.22 +- 0.12 | +0.97 +- 0.21 |
+
+>=4j: lo 0.061 +- 0.004 (cs) vs 0.100 +- 0.002 (vb); hi 14.26 +- 0.15 vs 14.72 +- 0.02; production 14.80 +- 0.10 vs 14.82 +- 0.01.
+
+Findings. (1) The region x_min < 0.02 is only ~3.1 fb (2.5%) of sigma(>=3j) in both codes and the slices
+agree there (+0.05 +- 0.14), so it cannot carry the +0.97 fb. (2) VBFNLO: dedicated lo (3.07) is consistent
+with production - hi (2.71 +- 0.29; +0.36 +- 0.29): no sign of a missed small-x region; lo + hi = 125.58 +- 0.27
+agrees with its production 125.22 +- 0.12. So VBFNLO does not under-sample small x in the sense hypothesised.
+(3) The cs hi pilot (11 jobs, 3.3 fb/job vs 7.9 in production, 6 h/job) is too imprecise (+-1.0 fb) to
+decide whether the offset sits at x >= 0.02; central cs - vb = -0.65 there. This contradicts the 9 Oct
+statement "VBFNLO misses the small-x region" as the explanation of +0.97 fb; the offset is not in x < 0.02.
+(4) Odd: cs dedicated sums are below the cs production values (>=4j: 14.32 +- 0.15 vs 14.80 +- 0.10, 3 sigma
+on the cs side; >=3j 124.98 +- 1.0 vs 126.19), and cs lo for >=4j is 40% below VBFNLO (pull -8.7). Not
+understood; needs more cs hi jobs.
+Sizing: the hi difference to 0.15 fb needs ~1,100 cs hi jobs x 6 h = ~6,600 core-h (plus ~340 VBFNLO hi jobs),
+far above the 1,500 core-h budget; the lo slice is already at 0.14 fb. Pilot cost ~450 core-h wall
+(~120 core-h wasted on a first cs batch built with the default analysis, which has no >=3j/>=4j bins).
+No distributions made.
