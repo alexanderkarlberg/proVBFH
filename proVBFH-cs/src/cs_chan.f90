@@ -17,6 +17,12 @@
 !   CHAN_BOSON = NC | CC | ALL (default ALL)
 !   CHAN_INIT  = ALL (default) or two letters, beam 1 then beam 2, each
 !                q (quark or antiquark), g (gluon) or a (any)
+!   CHAN_XSLICE = "<x0> <slice>" (10 Oct 2026): slices in the momentum fractions
+!                x of the PDF evaluations (one flag per PDF factor, so the
+!                slices are IR finite and add up exactly): slice hi: both
+!                beams x >= x0; lo1: beam 1 x < x0, beam 2 any; lo2: beam 1
+!                x >= x0, beam 2 x < x0. hi + lo1 + lo2 = all; "min(x1,x2) < x0"
+!                is lo1 + lo2. Every evaluation passes its own x (K/P at x/z).
 !   CHAN_MULTI = 1: nine weights per event in one run, W1 = all,
 !                W2-W5 = NC qq, qg, gq, gg, W6-W9 = CC qq, qg, gq, gg
 !                (CHAN_BOSON and CHAN_INIT must then be unset or ALL)
@@ -33,6 +39,9 @@ module cs_chan
   real(dp), save :: env_q(2) = 1, env_g(2) = 1
   logical, save :: env_nc = .true., env_cc = .true.
   logical, save :: chan_multi = .false.
+  ! x slice: 0 off, 1 hi, 2 lo1, 3 lo2
+  integer, save :: xmode = 0
+  real(dp), save :: x0 = 0
   ! the beam of the K + P convolution that follows (set by the caller of
   ! nlo2_kp / nlo2_kp_dis; 0: not set)
   integer, save :: kp_beam = 0
@@ -63,8 +72,23 @@ contains
           end select
        enddo
     endif
+    call get_environment_variable('CHAN_XSLICE', s, l)
+    if (l > 0) then
+       s = adjustl(s)
+       l = index(s, ' ')
+       if (l < 2) stop 'cs_chan: CHAN_XSLICE must be "<x0> hi|lo1|lo2"'
+       read(s(1:l-1), *) x0
+       select case (trim(adjustl(upcase(s(l+1:)))))
+       case ('HI'); xmode = 1
+       case ('LO1'); xmode = 2
+       case ('LO2'); xmode = 3
+       case default; stop 'cs_chan: CHAN_XSLICE slice must be hi, lo1 or lo2'
+       end select
+       write(6,'(a,es10.3,i2)') ' cs_chan: x slice x0, mode (1 hi, 2 lo1, 3 lo2)', x0, xmode
+    endif
     call get_environment_variable('CHAN_MULTI', s, l)
     chan_multi = trim(s) == '1'
+    if (chan_multi .and. xmode /= 0) stop 'cs_chan: CHAN_MULTI with CHAN_XSLICE'
     if (chan_multi .and. .not. (env_nc .and. env_cc .and. all(env_q == 1) .and. all(env_g == 1))) &
          & stop 'cs_chan: CHAN_MULTI with CHAN_BOSON or CHAN_INIT'
     call chan_set(1)
@@ -101,14 +125,23 @@ contains
   end subroutine chan_set
 
   logical function chan_trivial()
-    chan_trivial = ch_nc .and. ch_cc .and. all(chq == 1) .and. all(chg == 1)
+    chan_trivial = ch_nc .and. ch_cc .and. all(chq == 1) .and. all(chg == 1) .and. xmode == 0
   end function chan_trivial
 
   ! number densities f(-6:6) of beam b: apply the parton-type flags
-  subroutine chan_pdf(b, f)
+  subroutine chan_pdf(b, f, x)
     integer, intent(in) :: b
     real(dp), intent(inout) :: f(-6:6)
+    real(dp), intent(in), optional :: x     ! the momentum fraction of this evaluation
     if (b /= 1 .and. b /= 2) stop 'cs_chan: chan_pdf without a beam'
+    if (xmode /= 0) then
+       if (.not. present(x)) stop 'cs_chan: chan_pdf without x in an x slice'
+       select case (xmode)
+       case (1); if (x < x0) f = 0
+       case (2); if (b == 1 .and. x >= x0) f = 0
+       case (3); if ((b == 1 .and. x < x0) .or. (b == 2 .and. x >= x0)) f = 0
+       end select
+    endif
     if (chq(b) == 1 .and. chg(b) == 1) return
     f(0) = f(0)*chg(b)
     f(-6:-1) = f(-6:-1)*chq(b)

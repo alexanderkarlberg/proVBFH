@@ -397,7 +397,7 @@ contains
     xi4 = cur_xb(cur_line)*cur_pa(0)/cur_pb(0,cur_line)
     call hoppetEval(xi4, muf, f4)
     f4 = f4/xi4
-    call chan_pdf(cur_line, f4)
+    call chan_pdf(cur_line, f4, xi4)
     do ig = 1, ngrp
        if (grp(ig)%line /= cur_line) cycle
        if (.not. chan_w_ok(merge(0, 1, grp(ig)%nc))) cycle
@@ -450,7 +450,7 @@ contains
     xi4 = cur_xb(cur_line)*cur_pa(0)/cur_pb(0,cur_line)
     call hoppetEval(xi4, muf, f4)
     f4 = f4/xi4
-    call chan_pdf(cur_line, f4)
+    call chan_pdf(cur_line, f4, xi4)
     q2 = 2*mdot(cur_pb(:,cur_line), cur_pb(:,3+cur_line))
     write(unit,'(a,i2,a,es10.3,a,f9.5,a,es10.3)') ' line', cur_line, '  w4 =', cur_w4, '  xi4 =', xi4, '  Q^2 =', q2
     write(unit,'(a,3es10.2,a,3es10.2)') '   s_ij/Q^2 (12, 13, 23):', 2*mdot(cur_k(:,1), cur_k(:,2))/q2, &
@@ -743,7 +743,7 @@ contains
     call hoppetEval(xi, muf, f1)
     f1 = f1/xi
     if (kp_beam == 0 .and. .not. chan_trivial()) stop 'cs_nlo2: kp_core without kp_beam'
-    if (kp_beam /= 0) call chan_pdf(kp_beam, f1)
+    if (kp_beam /= 0) call chan_pdf(kp_beam, f1, xi)
     qqd = -CF*(5 - pi**2 + kqf + pi**2/3 - lm**2 - 2*dl + kqf*lm + (2*lm + xi + xi**2/2)*lsc)
     ggd = -CA*(50.0_dp/9 - pi**2 + kgf + pi**2/3 - lm**2 - 2*dl + kgf*lm + 2*lm*lsg) &
          & + TR*nf*16.0_dp/9 - gam_g*lsg
@@ -763,7 +763,7 @@ contains
           endif
           call hoppetEval(xi/z, muf, f)
           f = f/xi               ! f_a(xi/z)/z
-          if (kp_beam /= 0) call chan_pdf(kp_beam, f)
+          if (kp_beam /= 0) call chan_pdf(kp_beam, f, xi/z)
           l = log((1 - z)/z)
           qqp = CF*2/(1 - z)*(l - kqf/2) - CF*(1 + z**2)/(1 - z)*lsc
           ggp = CA*2/(1 - z)*(l - kgf/2) - CA*2/(1 - z)*lsg

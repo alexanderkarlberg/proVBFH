@@ -468,7 +468,7 @@ contains
     call hoppetEval(x1, muf(1), fB(:,1))
     call hoppetEval(x2, muf(2), fB(:,2))
     fB = fB/spread([x1, x2], 1, 13)       ! hoppet returns x f(x)
-    call chan_pdf(1, fB(:,1)); call chan_pdf(2, fB(:,2))
+    call chan_pdf(1, fB(:,1), x1); call chan_pdf(2, fB(:,2), x2)
 
     ! radiation on each line
     do line = 1, 2
@@ -498,7 +498,7 @@ contains
        xi3(line) = merge(x1, x2, line == 1)/xp
        call hoppetEval(xi3(line), muf(line), fE(:,line))
        fE(:,line) = fE(:,line)/xi3(line)
-       call chan_pdf(line, fE(:,line))
+       call chan_pdf(line, fE(:,line), xi3(line))
     enddo
 
     ! normalisation check (cs_order 10): the LO cross section from cs_born2
@@ -591,13 +591,13 @@ contains
        call hoppetEval(x1, muf(1), fB(:,1))
        call hoppetEval(x2, muf(2), fB(:,2))
        fB = fB/spread([x1, x2], 1, 13)
-       call chan_pdf(1, fB(:,1)); call chan_pdf(2, fB(:,2))
+       call chan_pdf(1, fB(:,1), x1); call chan_pdf(2, fB(:,2), x2)
        do line = 1, 2
           if (.not. ok(line)) cycle
           as(line) = hoppetAlphaS(mur(line))
           call hoppetEval(xi3(line), muf(line), fE(:,line))
           fE(:,line) = fE(:,line)/xi3(line)
-          call chan_pdf(line, fE(:,line))
+          call chan_pdf(line, fE(:,line), xi3(line))
        enddo
     endif
     w = 0; wg = 0
