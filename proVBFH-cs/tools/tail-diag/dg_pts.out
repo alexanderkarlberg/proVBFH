@@ -1,0 +1,73 @@
+job 1000297
+  pt11527709 real l1 m0 c=+90.7 fb(all) CCgq x1=0.002 x2=0.243 Q=66,44 1-xp=0.025 z=2.4e-05 dm=0,0 comp=[0. 0. 0.]
+        E120 pt73 y+1.1; E40 pt27 y-0.9; E37 pt28 y-0.8; E869 pt32 y-4.0
+  pt3273654 real l1 m0 c=+5.9 fb(all) CCgq x1=0.006 x2=0.401 Q=89,51 1-xp=0.033 z=0.0066 dm=0,0 comp=[0. 0. 0.]
+        E33 pt28 y-0.6; E137 pt1e+02 y+0.8; E1 pt0.86 y+0.6; E1257 pt35 y-4.3
+  pt3273654 dipo l1 m5 c=-5.0 fb(all) CCgq x1=0.006 x2=0.401 Q=89,51 1-xp=0.033 z=0.0066 dm=1,0.99 comp=[0. 0. 0.]
+        E34 pt28 y-0.6; E137 pt1e+02 y+0.8; E1257 pt35 y-4.3
+  pt748455 real l2 m0 c=+3.6 fb(all) CCqg x1=0.275 x2=0.009 Q=66,82 1-xp=0.00024 z=0.86 dm=0,0 comp=[0. 0. 0.]
+        E131 pt71 y-1.2; E29 pt28 y+0.4; E0 pt0.0034 y-1.9; E1143 pt53 y+3.8
+job 1000860
+  pt5482555 real l1 m0 c=+7.2 fb(all) CCgq x1=0.006 x2=0.317 Q=100,69 1-xp=0.00014 z=0.053 dm=0,0 comp=[0. 0. 0.]
+        E114 pt1e+02 y+0.5; E36 pt25 y-0.9; E199 pt2.2 y+5.2; E1760 pt63 y-4.0
+  pt3241459 real l1 m0 c=+5.0 fb(all) CCgq x1=0.009 x2=0.239 Q=60,107 1-xp=0.35 z=0.08 dm=0,0 comp=[0. 0. 0.]
+        E28 pt28 y+0.0; E222 pt32 y+2.6; E6 pt0.37 y+3.5; E662 pt70 y-2.9
+  pt5482555 dipo l1 m6 c=-3.7 fb(all) CCgq x1=0.006 x2=0.317 Q=100,69 1-xp=0.00014 z=0.053 dm=0.35,1 comp=[0. 0. 0.]
+        E37 pt27 y-0.8; E114 pt1e+02 y+0.5; E1760 pt63 y-4.0
+job 1000975
+  pt10958939 real l2 m0 c=+59.6 fb(all) CCqg x1=0.203 x2=0.003 Q=76,91 1-xp=0.57 z=0.99 dm=0,0 comp=[0. 0. 0.]
+        E173 pt74 y-1.5; E93 pt28 y+1.9; E15 pt7 y-1.4; E646 pt53 y+3.2
+  pt8987329 e3 l0 m0 c=+41.3 fb(all) CCqg x1=0.485 x2=0.003 Q=71,96 1-xp=0.72 z=0.24 dm=0,0 comp=[0. 0. 0.]
+        E2324 pt60 y+4.4; E87 pt78 y-0.5; E86 pt2.2 y+4.4; E85 pt49 y+1.1
+  pt8987329 line l2 m0 c=-37.6 fb(all) CCqg x1=0.485 x2=0.003 Q=71,96 1-xp=0.72 z=0.24 dm=0,0 comp=[  2.7   0.7 -41. ]
+        E2410 pt62 y+4.4; E87 pt78 y-0.5; E85 pt49 y+1.1
+  pt10958939 dipo l2 m5 c=-20.8 fb(all) CCqg x1=0.203 x2=0.003 Q=76,91 1-xp=0.57 z=0.99 dm=0.87,0.91 comp=[0. 0. 0.]
+        E164 pt75 y-1.4; E93 pt28 y+1.9; E646 pt53 y+3.2
+  pt7333437 real l1 m0 c=+7.5 fb(all) CCgq x1=0.006 x2=0.277 Q=90,78 1-xp=0.17 z=0.73 dm=0,0 comp=[0. 0. 0.]
+        E57 pt36 y-1.0; E272 pt55 y+2.3; E2 pt0.074 y+3.8; E1538 pt72 y-3.8
+  pt7333437 dipo l1 m5 c=-3.9 fb(all) CCgq x1=0.006 x2=0.277 Q=90,78 1-xp=0.17 z=0.73 dm=0.99,1 comp=[0. 0. 0.]
+        E57 pt36 y-1.0; E272 pt55 y+2.3; E1538 pt72 y-3.8
+  pt7333437 dipo l1 m6 c=-3.6 fb(all) CCgq x1=0.006 x2=0.277 Q=90,78 1-xp=0.17 z=0.73 dm=0.99,1 comp=[0. 0. 0.]
+        E271 pt55 y+2.3; E57 pt36 y-1.0; E1538 pt72 y-3.8
+job 1001012
+  pt468018 real l2 m0 c=+114.5 fb(all) CCqq x1=0.220 x2=0.004 Q=33,143 1-xp=0.5 z=0.97 dm=0,0 comp=[0. 0. 0.]
+        E158 pt46 y+1.9; E40 pt32 y+0.7; E973 pt50 y-3.7; E586 pt21 y+4.0
+job 1001262
+  pt11484090 real l1 m0 c=+21.8 fb(all) CCgq x1=0.002 x2=0.385 Q=59,57 1-xp=2.8e-05 z=1 dm=0,0 comp=[0. 0. 0.]
+        E45 pt9.9 y-2.2; E28 pt28 y+0.2; E68 pt30 y+1.5; E2118 pt52 y-4.4
+  pt11642934 real l1 m0 c=+16.1 fb(all) CCgq x1=0.003 x2=0.241 Q=69,49 1-xp=0.00035 z=0.028 dm=0,0 comp=[0. 0. 0.]
+        E10 pt6.9 y+0.9; E58 pt31 y-1.2; E142 pt53 y+1.6; E727 pt33 y-3.8
+job 1001364
+  pt617535 real l2 m0 c=+4.9 fb(all) CCqg x1=0.332 x2=0.008 Q=109,123 1-xp=0.00012 z=0.00016 dm=0,0 comp=[0. 0. 0.]
+        E117 pt63 y-1.2; E70 pt32 y+1.4; E9 pt0.34 y-3.9; E1705 pt97 y+3.6
+  pt11103870 real l2 m0 c=+3.4 fb(all) CCqg x1=0.191 x2=0.011 Q=39,79 1-xp=3.1e-05 z=0.00048 dm=0,0 comp=[0. 0. 0.]
+        E66 pt31 y-1.4; E114 pt84 y-0.8; E1 pt0.088 y-3.2; E1026 pt35 y+4.1
+job 1001387
+  pt9568880 e3 l0 m0 c=+524.2 fb(all) CCgq x1=0.004 x2=0.417 Q=119,132 1-xp=0.00052 z=1 dm=0,0 comp=[0. 0. 0.]
+        E132 pt46 y-1.7; E1275 pt90 y-3.3; E110 pt62 y+1.2; E7 pt0.31 y-3.9
+  pt9568880 line l1 m0 c=-483.6 fb(all) CCgq x1=0.004 x2=0.417 Q=119,132 1-xp=0.77 z=0.93 dm=0,0 comp=[  32.5    8.2 -524.3]
+        E132 pt46 y-1.7; E1281 pt91 y-3.3; E110 pt62 y+1.2
+  pt5235650 real l1 m0 c=+3.3 fb(all) CCgq x1=0.015 x2=0.158 Q=120,52 1-xp=0.013 z=0.055 dm=0,0 comp=[0. 0. 0.]
+        E38 pt31 y-0.6; E190 pt67 y+1.7; E0 pt0.12 y-0.4; E737 pt44 y-3.5
+job 1001513
+  pt10955310 real l1 m0 c=+4.1 fb(all) CCqq x1=0.047 x2=0.030 Q=59,132 1-xp=0.0031 z=0.084 dm=0,0 comp=[0. 0. 0.]
+        E194 pt44 y+2.2; E2180 pt54 y+4.4; E1 pt0.0086 y+5.0; E181 pt1.2e+02 y-1.0
+job 1001652
+  pt9569367 real l1 m0 c=+146.0 fb(all) CCqq x1=0.011 x2=0.136 Q=211,87 1-xp=0.98 z=0.94 dm=0,0 comp=[0. 0. 0.]
+        E49 pt46 y+0.4; E191 pt1.7e+02 y-0.5; E2346 pt56 y+4.4; E274 pt48 y-2.4
+  pt1173074 real l1 m0 c=+5.6 fb(all) NCqq x1=0.003 x2=0.366 Q=79,218 1-xp=0.18 z=0.29 dm=0,0 comp=[0. 0. 0.]
+        E809 pt81 y+3.0; E58 pt36 y-1.1; E65 pt62 y-0.3; E765 pt1.2e+02 y-2.5
+job 1002128
+  pt10954018 e3 l0 m0 c=+5.0 fb(all) CCqq x1=0.223 x2=0.024 Q=35,251 1-xp=0.22 z=0.8 dm=0,0 comp=[0. 0. 0.]
+        E848 pt25 y+4.2; E241 pt2.3e+02 y-0.4; E60 pt2.2 y+4.0; E29 pt26 y+0.4
+  pt10954018 line l2 m0 c=-4.5 fb(all) CCqq x1=0.223 x2=0.024 Q=35,251 1-xp=0.22 z=0.8 dm=0,0 comp=[ 0.3  0.  -4.9]
+        E903 pt27 y+4.2; E241 pt2.3e+02 y-0.4; E29 pt26 y+0.4
+  pt10962610 real l1 m0 c=+3.4 fb(all) CCgq x1=0.048 x2=0.041 Q=59,57 1-xp=0.00032 z=1 dm=0,0 comp=[0. 0. 0.]
+        E763 pt36 y+3.7; E95 pt30 y+1.8; E2 pt0.03 y+4.8; E255 pt55 y-2.2
+job 1002198
+  pt8857694 real l2 m0 c=+192.4 fb(all) CCqq x1=0.428 x2=0.001 Q=25,108 1-xp=0.66 z=0.91 dm=0,0 comp=[0. 0. 0.]
+        E57 pt57 y-0.0; E423 pt1.5e+02 y+1.7; E955 pt72 y-3.3; E364 pt9.1 y+4.4
+  pt5378442 e3 l0 m0 c=+12.1 fb(all) CCgq x1=0.004 x2=0.120 Q=64,62 1-xp=2.8e-05 z=0.99 dm=0,0 comp=[0. 0. 0.]
+        E42 pt28 y-1.0; E275 pt37 y-2.7; E447 pt53 y+2.8; E3 pt0.41 y-2.6
+  pt5378442 line l1 m0 c=-11.2 fb(all) CCgq x1=0.004 x2=0.120 Q=64,62 1-xp=0.94 z=0.96 dm=0,0 comp=[  0.7   0.3 -12.2]
+        E42 pt28 y-1.0; E278 pt37 y-2.7; E447 pt53 y+2.8

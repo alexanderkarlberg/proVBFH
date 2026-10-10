@@ -1,0 +1,191 @@
+--- src/cs_exclusive.f90	2026-10-09 19:58:23.618416330 +0200
++++ /ptmp/mpp/akarlber/diag/build3/proVBFH-cs/src/cs_exclusive.f90	2026-10-10 04:06:59.822061000 +0200
+@@ -127,6 +127,11 @@
+   integer, save :: tb_n = 0
+ 
+   logical, save :: excl_fill = .false.
++  ! DIAGNOSTIC (9 Oct, build3): stage-2 log of every contribution to sigma(>=3 jets) above dg_thr pb
++  integer, save :: dg_type = 0, dg_line = 0, dg_m = 0
++  real(dp), save :: dg_vw = 0, dg_thr = -1, dg_info(6) = 0, dg_dm(2) = 0, dg_comp(3) = 0, dg_xr(20) = 0
++  real(dp), save :: dg_acc(4,9,2) = 0, dg_cnt(4,2) = 0
++  integer(8), save :: dg_pt = 0, dg_stat = 0
+   integer, save :: excl_npow = 0     ! 0: logarithmic sampling
+   ! fraction of the line radiations sampled in the hard channel (small
+   ! xp, z ~ 1/2; line_radiation), for the high-pT tails; 0: off
+@@ -442,6 +447,11 @@
+     logical :: dokt(6), okt
+     integer :: m
+     logical, external :: cs_passes
++    real(dp) :: tk(5), tot, spk_thr
++    logical, save :: spk_init = .false.
++    real(dp), save :: spk_cut = 0
++    character(len=32) :: spk_s
++    integer :: kk, spk_l
+     integer :: line, i1, i2, bflav(6)
+     real(dp), external :: hoppetAlphaS, cs_born2
+     integer vegas_ncall
+@@ -762,6 +772,63 @@
+        return
+     endif
+ 
++    ! DIAGNOSTIC (scratch build, 9 Oct): per-channel tail log (env CHAN_SPK, pb) and verbose dump
++    if (.not. spk_init) then
++       spk_init = .true.
++       call get_environment_variable('CHAN_SPK', spk_s, spk_l)
++       if (spk_l > 0) read(spk_s,*) spk_cut
++       if (spk_cut > 0) open(82, file='cs_chspikes.dat', status='replace')
++    endif
++    if (ns > 1 .and. (spk_cut > 0 .or. excl_verbose)) then
++       do kk = 1, ns
++          tk = 0
++          do line = 1, 2
++             if (need(line)) tk(line) = (sw(line,kk) + swv(line,kk) + se12(line,kk))*vegas_weight
++             if (needr(line)) tk(3+line) = (swr(line,kk) + sum(swd(:,line,kk)))*vegas_weight
++          enddo
++          if (need3) tk(3) = se3(kk)*vegas_weight
++          tot = sum(abs(tk))
++          if (excl_verbose) write(6,'(a,i2,a,5es12.4)') ' CHK ks', kk, ' l1 l2 e3 r1 r2', tk
++          if (spk_cut > 0 .and. tot > spk_cut .and. .not. excl_verbose) then
++             write(82,'(i2,es12.4,5es11.3,2x,l1,2x,3l1,2x,2l1,2x,2l1,2x,20es24.16)') kk, tot, tk, excl_fill, passB, need(1), need(2), okr(1), okr(2), pass(1), pass(2), xrand(1:20)
++             flush(82)
++          endif
++       enddo
++    endif
++    if (excl_verbose) then
++       write(6,'(a,4es13.5)') ' KIN x1 x2 Q1 Q2', x1, x2, Q1, Q2
++       do i1 = 1, 5
++          write(6,'(a,i2,4es13.5)') ' KIN pb', i1, pb(:,i1)
++       enddo
++       do line = 1, 2
++          write(6,'(a,i2,a,l2,a,3es13.5,a,l2,6l2)') ' KIN line', line, ' ok', ok(line), ' xp z wrad', dxp(line), dz(line), wrad(line), ' okr dok', okr(line), dok(:,line)
++          if (ok(line)) then
++             do i1 = 1, 6
++                write(6,'(a,i2,4es13.5)') ' KIN p6', i1, p6(:,i1,line)
++             enddo
++          endif
++          if (okr(line)) then
++             do i1 = 1, 7
++                write(6,'(a,i2,4es13.5)') ' KIN pr', i1, pr(:,i1,line)
++             enddo
++             write(6,'(a,6es13.5)') ' KIN wd(m) ks1', swd(:,line,1)*vegas_weight
++             do i2 = 1, 6
++                if (.not. dok(i2,line)) cycle
++                do i1 = 4, 6
++                   write(6,'(a,2i2,a,4es12.4,a,2es11.3)') ' KIN pd m', i2, i1, ' p', pd(:,i1,i2,line), ' pt,y', hypot(pd(1,i1,i2,line),pd(2,i1,i2,line)), &
++                        & 0.5_dp*log((pd(0,i1,i2,line)+pd(3,i1,i2,line))/(pd(0,i1,i2,line)-pd(3,i1,i2,line)))
++                enddo
++                write(6,'(a,i2,a,l2)') ' KIN pass dipole m', i2, ' ', passd(i2,line)
++             enddo
++             write(6,'(a,l2,a,l2)') ' KIN passr', passr(line), ' passB', passB
++          endif
++       enddo
++       if (ok3) then
++          do i1 = 1, 7
++             write(6,'(a,i2,4es13.5)') ' KIN p7', i1, p7(:,i1)
++          enddo
++       endif
++    endif
+     if (excl_dump .and. excl_phspcuts) then
+        do line = 1, 2
+           if (ok(line) .and. (pass(line) .neqv. passB) .and. 1 - dxp(line) < 1d-3 .and. ndbg < 5) then
+@@ -810,17 +877,43 @@
+        if (need3) call cs_analysis(7, p7, e3*vegas_ncall*vegas_weight)
+        call cs_analysis(5, pb, -(sum(w) + sum(wv) + sum(wr) + sum(wd) + sum(e12) + e3)*vegas_ncall*vegas_weight)
+     elseif (excl_fill) then
++       if (dg_thr < 0) then
++          call get_environment_variable('DG_THR', spk_s, spk_l)
++          dg_thr = 0.01_dp
++          if (spk_l > 0) read(spk_s,*) dg_thr
++          open(84, file='cs_dg.dat', status='replace'); open(83, file='cs_dgacc.dat', status='replace')
++       endif
++       dg_pt = dg_pt + 1; dg_stat = excl_stats(1); dg_vw = vegas_weight
++       dg_info(1:4) = [x1, x2, Q1, Q2]; dg_xr = xrand(1:20)
+        do line = 1, 2
+-          if (need(line)) call cs_analysis_m(6, p6(:,:,line), &
++          dg_line = line; dg_info(5:6) = [1 - dxp(line), dz(line)]; dg_dm = 0
++          if (need(line)) then
++             dg_type = 1; dg_m = 0
++             dg_comp = [sw(line,1), swv(line,1), se12(line,1)]*vegas_weight
++             call cs_analysis_m(6, p6(:,:,line), &
+                & (sw(line,1:ns) + swv(line,1:ns) + se12(line,1:ns))*vegas_ncall*vegas_weight)
++          endif
+           if (needr(line)) then
++             dg_type = 2; dg_m = 0; dg_comp = 0
+              call cs_analysis_m(7, pr(:,:,line), swr(line,1:ns)*vegas_ncall*vegas_weight)
+              do m = 1, 6
++                dg_type = 3; dg_m = m; dg_dm = [dmv(m,line), dmz(m,line)]
+                 if (dok(m,line)) call cs_analysis_m(6, pd(:,:,m,line), swd(m,line,1:ns)*vegas_ncall*vegas_weight)
+              enddo
+           endif
+        enddo
++       dg_type = 4; dg_line = 0; dg_m = 0; dg_comp = 0; dg_dm = 0
+        if (need3) call cs_analysis_m(7, p7, se3(1:ns)*vegas_ncall*vegas_weight)
++       dg_type = 0
++       if (mod(dg_pt, 2000_8) == 0) then
++          rewind(83)
++          write(83,'(a,i12)') 'points', dg_pt
++          do kk = 1, 4
++             write(83,'(a,i2,2es14.6,9es14.6)') 'grp below/above counts, sums kk1-9:', kk, dg_cnt(kk,:), dg_acc(kk,:,1)
++             write(83,'(a,i2,9es14.6)') 'above', kk, dg_acc(kk,:,2)
++          enddo
++          flush(83)
++       endif
+        call cs_analysis_m(5, pb, -(sum(sw(:,1:ns), 1) + sum(swv(:,1:ns), 1) + sum(swr(:,1:ns), 1) &
+             & + sum(sum(swd(:,:,1:ns), 1), 1) + sum(se12(:,1:ns), 1) + se3(1:ns))*vegas_ncall*vegas_weight)
+     endif
+@@ -1725,16 +1818,36 @@
+ 
+   ! cs_analysis with one weight per scale point (wgt(1): the central one);
+   ! a single scale point goes through cs_analysis unchanged
++  real(dp) function vegas_ncall_dg()
++    integer vegas_ncall
++    common/vegas_ncall/vegas_ncall
++    vegas_ncall_dg = vegas_ncall
++  end function vegas_ncall_dg
++
+   subroutine cs_analysis_m(n, p, wgt)
+     integer, intent(in) :: n
+     real(dp), intent(in) :: p(0:3,n), wgt(:)
++    logical dg3j
++    common/dg3j/dg3j
++    integer :: g, ia, kk
++    real(dp) :: c(9), pp(0:3,7)
+     if (size(wgt) == 1) then
+        call cs_analysis(n, p, wgt(1))
+        return
+     endif
++    dg3j = .false.
+     call cs_set_weights(size(wgt), wgt)
+     call cs_fill_phep(n, p)
+     call user_analysis(wgt(1))
++    if (dg3j .and. dg_type > 0 .and. dg_thr > 0) then
++       c = 0; c(1:size(wgt)) = wgt/vegas_ncall_dg()
++       g = min(dg_type, 4)
++       ia = 1; if (any(abs(c) >= dg_thr)) ia = 2
++       dg_acc(g,:,ia) = dg_acc(g,:,ia) + c
++       dg_cnt(g,ia) = dg_cnt(g,ia) + 1
++       pp = 0; pp(:,1:min(n,7)) = p(:,1:min(n,7))
++       if (ia == 2) write(84,'(i11,3i3,i2,9es12.4,3es11.3,6es12.4,3es11.3,2x,28es14.6,2x,20es22.14)') dg_stat, dg_type, dg_line, dg_m, n, c, dg_comp, dg_info, dg_dm, dg_vw, pp, dg_xr
++    endif
+   end subroutine cs_analysis_m
+ 
+   subroutine cs_analysis(n, p, wgt)
+--- analysis/p1506_analysis.f	2026-10-09 19:58:23.543264513 +0200
++++ /ptmp/mpp/akarlber/diag/build3/proVBFH-cs/analysis/p1506_analysis.f	2026-10-09 20:00:24.239830000 +0200
+@@ -51,6 +51,8 @@
+ 
+       subroutine user_analysis(dsig0)
+       implicit none
++      logical dg3j
++      common/dg3j/dg3j
+       real * 8 dsig(10),dsig0
+       include 'hepevt.h'
+       include 'pwhg_math.h'  
+@@ -218,6 +220,7 @@
+       
+       if((njets.ge.3).and.pass_cuts) then 
+          call filld('sig(all VBF cuts 3 jets)',0.5d0, dsig)
++         dg3j=.true.
+          call filld('ptj3',ptj(3),dsig)
+          call filld('yj3',yj(3),dsig)
+          call filld('y*j3',y3star,dsig)
