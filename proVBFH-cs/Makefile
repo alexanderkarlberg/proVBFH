@@ -65,7 +65,7 @@ EXE= proVBFH-cs
 endif
 
 # this package
-CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o cs_nlo2.o cs_exclusive.o cs_main.o
+CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o cs_smallx.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 
@@ -74,6 +74,8 @@ all: $(EXE)
 # unit tests of the kinematics (no matrix elements)
 tests/test_kinematics: cs_kinematics.o tests/test_kinematics.f90
 	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_kinematics.f90 $(OBJ)/cs_kinematics.o -o $@
+tests/test_smallx: cs_smallx.o tests/test_smallx.f90
+	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_smallx.f90 $(OBJ)/cs_smallx.o -o $@
 tests/test_four: cs_kinematics.o cs_dipoles.o tests/test_four.f90
 	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_four.f90 $(OBJ)/cs_kinematics.o $(OBJ)/cs_dipoles.o -o $@
 
@@ -107,8 +109,8 @@ cs_kinematics.o: incl_parameters.o
 cs_chan.o: incl_parameters.o
 cs_dipoles.o: cs_kinematics.o
 cs_nlo2.o: cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o
-cs_exclusive.o: cs_kinematics.o cs_nlo2.o cs_memo.o cs_chan.o incl_parameters.o phase_space.o matrix_element.o
-cs_main.o: cs_exclusive.o cs_nlo2.o cs_chan.o incl_vbfh.o incl_parameters.o phase_space.o integration.o cs_memo.o
+cs_exclusive.o: cs_kinematics.o cs_nlo2.o cs_memo.o cs_chan.o cs_smallx.o integration.o incl_parameters.o phase_space.o matrix_element.o
+cs_main.o: cs_smallx.o cs_exclusive.o cs_nlo2.o cs_chan.o incl_vbfh.o incl_parameters.o phase_space.o integration.o cs_memo.o
 
 clean:
 	rm -rf $(OBJ)

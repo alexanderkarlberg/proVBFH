@@ -38,6 +38,8 @@ module cs_exclusive
   use cs_nlo2, dbg_mvar => mvar, dbg_mz => mz, dbg_w4 => cur_w4
   use cs_memo
   use cs_chan
+  use cs_smallx
+  use integration, only: vegas_gdens
   implicit none
   private
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
@@ -426,8 +428,12 @@ contains
     excl_verbose = .false.
   end subroutine cs_excl_replay
 
-  double precision function excl_point(xrand, vegas_weight) result(cs_excl_dsigma)
-    real(dp), intent(in) :: xrand(*), vegas_weight
+  double precision function excl_point(xrand, vegas_weight_in) result(cs_excl_dsigma)
+    real(dp), intent(in) :: xrand(*), vegas_weight_in
+    real(dp) :: vegas_weight
+    ! small-x channel (cs_smallx): the Born variables of channel B, and the factor g_D/rho
+    real(dp) :: sx_fac, sx_xr(7), sx_b(5), sx_gA, sx_gD, sx_lnt, sx_u(5), sx_rho_tot
+    integer :: sx_ch, sx_j
     real(dp) :: pb(0:3,5), xb1, xb2, jacb, sbeams, common, ptH
     real(dp) :: Q1, Q2, mur(2), muf(2), as(2), fB(-6:6,2), fE(-6:6,2)
     real(dp) :: pin(0:3), a(0:3), b(0:3), xp, z, wrad(2), p6(0:3,6,2), w(2)
@@ -452,9 +458,35 @@ contains
     real(dp) :: se12(2,max_scales), se3(max_scales), fB0(-6:6,2), fE0(-6:6,2), as0(2)
 
     cs_excl_dsigma = 0
+    vegas_weight = vegas_weight_in
+    sx_fac = 1
+    sx_xr = xrand(1:7)
     if (chan_multi) call chan_set(1)
     excl_stats(1) = excl_stats(1) + 1
-    call gen_phsp(xrand(1:7))
+    if (sx_h > 0) then
+       ! the Higgs mass, hence taumin, does not depend on b = (r2..r6)
+       call gen_phsp(sx_xr)
+       call set_phsp()
+       call cs_get_born(pb, xb1, xb2, jacb, sbeams)
+       sx_lnt = log(mdot(pb(:,3), pb(:,3))/sbeams)
+       call sx_choose(xrand(sx_dim0 + 1), sx_h, sx_ch, sx_u(1))
+       sx_u(2:5) = xrand(sx_dim0 + 2:sx_dim0 + 5)
+       sx_b = xrand(2:6)
+       sx_gD = 1
+       do sx_j = 1, 5
+          sx_gD = sx_gD*vegas_gdens(sx_j + 1, xrand(sx_j + 1))
+       enddo
+       if (sx_ch > 0) call sx_gen(sx_ch, sx_u, sx_lnt, sx_x0, sx_b)
+       sx_gA = 1
+       do sx_j = 1, 5
+          sx_gA = sx_gA*vegas_gdens(sx_j + 1, sx_b(sx_j))
+       enddo
+       sx_rho_tot = (1 - sx_h)*sx_gA + sx_h*sx_rho(sx_b, sx_lnt, sx_x0)
+       sx_fac = sx_gD/sx_rho_tot
+       sx_xr(2:6) = sx_b
+       vegas_weight = vegas_weight_in*sx_fac
+    endif
+    call gen_phsp(sx_xr)
     call set_phsp()
     call cs_get_born(pb, xb1, xb2, jacb, sbeams)
     if (jacb == 0 .or. min(Q1_sq, Q2_sq) <= Qmin**2) return   ! as the inclusive dsigma
@@ -831,6 +863,7 @@ contains
             & wr*vegas_weight, sum(wd,1)*vegas_weight, xrand(1:20)
        flush(80)
     endif
+    cs_excl_dsigma = cs_excl_dsigma*sx_fac
   end function excl_point
 
   ! stage 3 validation: the complete (1,1) term at a point,

@@ -14,6 +14,9 @@
 !   cs_hard2mode  0 (default): cs_hardfrac2 after every first step;
 !             1: only after the first step's hard channel (targeted at
 !             hard double emissions from one line, small xp)
+!   cs_smallx  fraction h of the Born phase-space points in the small-x
+!             channels (cs_smallx.f90; default 0 = off), cs_smallx_x0 their
+!             x limit (default 0.03)
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-6)
 !   cs_order  1: the O(alpha_s) exclusive part (NLO, default);
 !             2: also the O(alpha_s^2) (2,0) + (0,2) (stage 2)
@@ -32,10 +35,11 @@ program provbfh_cs
   use cs_memo, only: memo_hits, memo_misses, memo_on
   use cs_chan, only: chan_init, chan_multi, chan_trivial
   use incl_parameters, only: incl_nscale, incl_scr, incl_scf
+  use cs_smallx, only: sx_h, sx_x0, sx_dim0
   use cs_dipoles, only: spin_avg, four_hard, four_hard2, four_hard2mode
   use matrix_element, only: incl_only11
   implicit none
-  integer, parameter :: maxdim = 20
+  integer, parameter :: maxdim = 25
   integer :: ndim
   real(dp) :: region(2*maxdim), integ, err, chi2, t0, t1
   real(dp) :: powheginput
@@ -171,6 +175,16 @@ program provbfh_cs
   if (excl_order >= 2 .and. excl_order /= 10 .and. excl_order /= 11 .and. excl_order /= 13) then
      ndim = 20
      jfreeze = 14
+  endif
+  ! small-x channel for the Born phase space (cs_smallx, cs_smallx_x0): five
+  ! extra, non-adapted dimensions (selector, four numbers)
+  if (powheginput('#cs_smallx') > 0) then
+     if (excl_order == 10 .or. excl_order == 11 .or. excl_order == 13) stop 'cs_smallx: not for the validation orders'
+     sx_h = powheginput('#cs_smallx')
+     if (powheginput('#cs_smallx_x0') > 0) sx_x0 = powheginput('#cs_smallx_x0')
+     sx_dim0 = ndim
+     ndim = ndim + 5
+     write(6,'(a,f6.3,a,f7.4,a,i3)') ' proVBFH-cs: small-x channel, fraction ', sx_h, ', x0 ', sx_x0, ', dimensions ', ndim
   endif
   region(1:ndim) = 0
   region(ndim+1:2*ndim) = 1
