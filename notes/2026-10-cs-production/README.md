@@ -956,3 +956,22 @@ Conclusion: the real matrix elements and the jet/cut logic are not the source of
 subtraction / integrated pieces at 4-parton level (the (2,0)/(0,2) and (1,1) real - dipole structure, cutoff handling of the
 mapped configurations), and the per-class sigma(>=3j) contributions, which this comparison cannot see.  Next steps: compare the
 LO H+3j sigma(>=3j) (tree level, phase space + cuts only), then per-class contributions.
+
+## 13 Oct: VBFNLO dipole limits
+
+Question: does real + sum(dipoles) vanish in the soft/collinear limits of VBFNLO 3.0 NLO H+3j (process 110)? The earlier
+harness (pointwise4, PW_LIM) gave (R+D)/R of 10-90 % that did not go to 0.  Verdict: harness artefact, VBFNLO's subtraction
+works.  Two harness bugs (details in proVBFH-cs/production/h3j-crosscheck/pointwise5/README.txt):
+1. the mapped Born configurations were not passed through VBFNLO's jet cuts (njets >= 3); dipoles whose Born keeps a soft parton as a
+   jet have an infinite Born and are switched off by lok(nd) in VBFNLO, but were kept in the harness (e.g. soft slot 5, 4q entries
+   R~1e-7 vs D~-6.7);
+2. the final-state collinear sequences made back-to-back pairs (s_35 stayed 1.5e5 GeV^2).
+With VBFNLO's own cuts on all 25 configurations (defineJets/Cuts as in reals_phasespacepoint) and a correct collinear construction
+(60 integrator points, singular ones only, lambda = 1e-2..1e-8), median / max |R+sum D|/R at lambda=1e-6: soft 1e-5..4e-5 / 7e-4,
+coll (5,6) 1e-4 / 1e-3, coll (3,5),(4,6) 1e-4..4e-4 / 4e-3, ISR 4e-4..7e-4 / 9e-3 (sqrt(lambda)-like); without the cuts the same
+sequences give 0.2-0.8 median (results_nocuts.txt).  No missing or mis-weighted dipole found in the sampled classes.
+Remaining feature: a lambda-independent soft residual (R+D)/R = -1e-7..-7e-4 (D slightly over-subtracts), flavour-independent at a
+given point; probably the colour-suppressed inter-line terms of the real that the line-factorised dipole Borns (msq_b(1|2)) omit.
+Bound on its effect: <= 7e-4 of the singular soft real (R alone ~400 +- 100 fb with cuts), i.e. O(0.1-0.3 fb) before log
+enhancement; it cannot account for the ~1 fb (0.8 %) difference with proVBFH-cs by itself.  Note the ISR "a1 || s3" limit is
+singular only when p3 points to the same beam as incoming 1 (create_ikj has dipoles (a,3,.) but no (b,3,.)).
