@@ -4,3 +4,4 @@ tests/test_kinematics
 test-nlo/
 runs/
 __pycache__/
+tests/test_smallx

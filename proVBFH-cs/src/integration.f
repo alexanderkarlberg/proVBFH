@@ -1,5 +1,5 @@
 c proVBFH-cs: copy of ../proVBFH/src/inclusive/integration.f with
-c MXDIM raised from 10 to 24 (the exclusive integrand has up to 20
+c MXDIM raised from 10 to 28 (the exclusive integrand has up to 20
 c dimensions), and dimensions j >= jfreeze not adapted: their grids stay
 c uniform, as needed where proVBFH-cs computes the sampling density itself
 c (the multichannel four-parton phase space).
@@ -9,17 +9,38 @@ c...............
       
       logical readin,writeout
       integer :: jfreeze = 1000
+c the grid of the current iteration (for vegas_gdens, the density of the
+c grid at a point; used by the small-x channel of proVBFH-cs)
+      double precision :: gxi(50,28)
+      integer :: gnd = 0
       character*72 ingridfile,outgridfile, outgridtopfile
       common/gridinfo_logic/readin,writeout
       common/gridinfo_char/ingridfile,outgridfile,outgridtopfile
 
       contains
 
+c density of the current VEGAS grid of dimension j at x in [0,1]
+      double precision function vegas_gdens(j, x)
+      integer j, i
+      double precision x, xl
+      if (gnd.le.0) then
+         vegas_gdens = 1.d0
+         return
+      endif
+      i = 1
+      do while (i.lt.gnd .and. gxi(i,j).lt.x)
+         i = i + 1
+      enddo
+      xl = 0.d0
+      if (i.gt.1) xl = gxi(i-1,j)
+      vegas_gdens = 1.d0/(gnd*(gxi(i,j) - xl))
+      end function
+
       SUBROUTINE vegas(region,ndim,fxn,init,ncall,itmx,nprn,
      >     tgral,sd,chi2a)
       INTEGER init,itmx,ncall,ndim,nprn,NDMX,MXDIM
       REAL*8 tgral,chi2a,sd,region(2*ndim),fxn,ALPH,TINY
-      PARAMETER (ALPH=1.5,NDMX=50,MXDIM=24,TINY=1.d-30)
+      PARAMETER (ALPH=1.5,NDMX=50,MXDIM=28,TINY=1.d-30)
       EXTERNAL fxn
 C     USES fxn,ran2,rebin
 C     
@@ -116,6 +137,8 @@ c---  read-in grid if necessary
             ilast = 1
          endif
          ti=0.d0
+         gxi(1:nd,1:ndim)=xi(1:nd,1:ndim)
+         gnd=nd
          if (ilast.ne.1.or.it.ne.itmx) goto 30
  30      tsi=0.d0
          do 16 j=1,ndim
