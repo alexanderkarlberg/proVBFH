@@ -1,0 +1,28 @@
+== real ME, (a,b)-level flavour-blind sums, 250 VBFNLO 4-parton points (ana9.py) ==
+events 250
+class(n gluons in)  ME-only: VB/CS_all  VB/CS_used   pdf-weighted: VB/CS_all  VB/CS_used
+0 0.99995 0.99995      0.99989 0.99989
+1 1.00064 1.00064      1.00002 1.00002
+2 1.00000 1.00000      1.00001 1.00001
+ALL 0.99999 0.99999      0.99994 0.99994
+
+== 4q-class variants vs CS (ana8.py; full / linterference off / CC flows 3,4 off), VB/CS ME-only per pair, with the restricted-key CS (superseded by ana9) ==
+(see README: the restricted-key numbers were an artefact: CS-only flavour keys missing)
+
+== jets+cuts accept/reject, VBFNLO lok vs CS p1506 analysis + njets>=3 (pw4_jets) ==
+accept(VBFNLO, CS) counts: [VB=0,CS=0] [VB=0,CS=1] [VB=1,CS=0] [VB=1,CS=1]
+real event (nd=1):            483       0       0     294
+mapped configs (nd>=2):     14089       0       0    4559
+
+== CS line-level limit test (nlo2_test_limits): max|R/D-1| at lambda=1e-6 over 104 groups ==
+groups 104 max 1.99E-02 mean 0.00598832
+  group 104 S 3 FF coll      roles 2 3 1  R/D:   8.108E-01  9.585E-01  9.893E-01  9.969E-01  R*lambda  4.58E-12  4.82E-1
+  group 104 S 3 FF coll      roles 3 2 1  R/D:   7.647E-01  9.383E-01  9.824E-01  9.946E-01  R*lambda  4.27E-12  4.71E-1
+
+== VBFNLO integrated real (no dipoles) with its cuts, 2 iterations of 2^17 points, PW_VAR override (stat error ~25%, indicative only) ==
+PW_VAR=1
+  QCD real emission:          400.12348563158702  +-      100.79027371228806 fb       25.18979198464009 %
+PW_VAR=2
+  QCD real emission:           15.84111444356348  +-        3.00099913541262 fb       18.94436875703512 %
+PW_VAR=3
+  QCD real emission:          382.74578747954143  +-       97.44484360354581 fb       25.45941635184017 %

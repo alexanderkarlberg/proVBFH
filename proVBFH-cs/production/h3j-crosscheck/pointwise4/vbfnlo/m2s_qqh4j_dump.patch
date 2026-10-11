@@ -1,0 +1,502 @@
+--- /ptmp/mpp/akarlber/chsplit/vbfnlo/src/amplitudes/hjjj/m2s_qqh4j.F	2026-10-10 08:22:16.947355000 +0200
++++ vb4/m2s_qqh4j_v2.F	2026-10-11 21:32:52.415729219 +0200
+@@ -4,7 +4,7 @@
+ c	Last modified:    2017 February, Michael Rauch
+ c   
+ c     
+-      subroutine m2s_wbfh4j(
++      subroutine m2s_wbfh4j_in(
+      1                   bos,   !in:  Boson identifier, 2 = Z, 6=H
+      3                   nlo,   !in:  NLO=1: create subtraction term; LO = 0
+      4                   lok,   !in:  need to calculate m2s(1:max_kin) T or F 
+@@ -523,6 +523,7 @@
+       endif                     !debug
+ #endif /* WITH_NLO */
+ 
++      call pw_dumpD(res,nmax,lok,p,v)
+       RETURN
+       END
+ 
+@@ -825,6 +826,7 @@
+                      res(k,1) = 0
+                   endif
+                   res(k,0) = res(k,1)
++      call pw_rec(iflav,k,res(k,1),pdf(sign1*iflav(1),1,1)*pdf(sign2*iflav(2),2,1))
+ #endif
+                else             !loop over color flow for LO 
+                   do ICOL = 1,6
+@@ -971,6 +973,7 @@
+                         res(k,1) = 0
+                      endif
+                      res(k,0) = res(k,1)
++      call pw_rec(iflav,k,res(k,1),pdf(sign1*iflav(1),1,1)*pdf(sign2*iflav(2),2,1))
+ #endif /* WITH_NLO */
+                   else          !loop over color flow
+                      do ICOL = 1,6
+@@ -1422,6 +1425,7 @@
+                   res(k,1) = 0
+                endif   
+                res(k,0) = res(k,1)
++      call pw_rec(iflav,k,res(k,1),pdf(sign1*iflav(1),1,1)*pdf(sign2*iflav(2),2,1))
+ #endif
+             else
+                do ICOL=1,6      !loop over color flows
+@@ -1616,6 +1620,7 @@
+                      res(k,1) = 0.0d0
+                   endif
+                   res(k,0)=res(k,1)
++      call pw_rec(iflav,k,res(k,1),pdf(sign1*iflav(1),1,1)*pdf(sign2*iflav(2),2,1))
+ #endif
+                else
+                   do ICOL=1,6   !loop over color flows
+@@ -2125,3 +2130,450 @@
+ 
+ 
+ 
++
++
++c-----------------------------------------------------------------------
++c  pointwise-comparison instrumentation (not part of VBFNLO)
++c-----------------------------------------------------------------------
++      block data pwbd
++      implicit none
++      integer pw_mode,pw_perm(4),pw_ntouch,pw_nzero
++      integer pw_flv(6,8000),pw_nd,pw_nev,pw_ncall
++      double precision pw_acc(0:1771560)
++      integer pw_touch(1771561)
++      common /pwc/ pw_acc,pw_touch,pw_flv,pw_mode,pw_perm,pw_ntouch,pw_nzero,pw_nd,pw_nev,pw_ncall
++      data pw_mode/0/,pw_ntouch/0/,pw_nzero/0/,pw_nd/0/,pw_nev/0/,pw_ncall/0/
++      data pw_perm/1,2,3,4/
++      end
++
++      subroutine pw_rec(ifl,k,val,pp)
++      implicit none
++      integer ifl(6),k
++      double precision val,pp
++      integer pw_mode,pw_perm(4),pw_ntouch,pw_nzero
++      integer pw_flv(6,8000),pw_nd,pw_nev,pw_ncall
++      double precision pw_acc(0:1771560)
++      integer pw_touch(1771561)
++      common /pwc/ pw_acc,pw_touch,pw_flv,pw_mode,pw_perm,pw_ntouch,pw_nzero,pw_nd,pw_nev,pw_ncall
++      double precision pw_pp(0:1771560)
++      common /pwpp/ pw_pp
++      integer fm(4),i,idx
++      do i=1,6
++         pw_flv(i,k)=ifl(i)
++      enddo
++      if (pw_mode.eq.0) return
++      if (val.eq.0d0) return
++      if (pp.eq.0d0) then
++         pw_nzero=pw_nzero+1
++         return
++      endif
++      do i=1,4
++         fm(pw_perm(i))=ifl(2+i)
++      enddo
++      idx=(((((ifl(1)+5)*11+(ifl(2)+5))*11+(fm(1)+5))*11+(fm(2)+5))*11+(fm(3)+5))*11+(fm(4)+5)
++      if (pw_acc(idx).eq.0d0) then
++         pw_ntouch=pw_ntouch+1
++         pw_touch(pw_ntouch)=idx
++      endif
++      pw_pp(idx)=pp
++      pw_acc(idx)=pw_acc(idx)+val/pp
++      end
++
++      subroutine pw_dumpD(res,nmax,lok,p,v)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++#include "VBFNLO/utilities/lha.inc"
++      double precision res(maxnumsubproc,0:max_kin)
++      double precision p(0:3,max_p,max_kin), v(0:3,max_v,max_kin)
++      integer nmax
++      logical lok(max_kin)
++      integer pw_mode,pw_perm(4),pw_ntouch,pw_nzero
++      integer pw_flv(6,8000),pw_nd,pw_nev,pw_ncall
++      double precision pw_acc(0:1771560)
++      integer pw_touch(1771561)
++      common /pwc/ pw_acc,pw_touch,pw_flv,pw_mode,pw_perm,pw_ntouch,pw_nzero,pw_nd,pw_nev,pw_ncall
++      integer k,nd,i
++      logical any
++      double precision pw_r4q,pw_rgl
++      common /pwr/ pw_r4q,pw_rgl
++      pw_r4q=0d0
++      pw_rgl=0d0
++      do k=1,nmax
++         if (res(k,1).ne.0d0) then
++            if (pw_flv(1,k).ne.0.and.pw_flv(2,k).ne.0.and.pw_flv(3,k).ne.0.and.pw_flv(4,k).ne.0.and.pw_flv(5,k).ne.0.and.pw_flv(6,k).ne.0) then
++               pw_r4q=pw_r4q+res(k,1)
++            else
++               pw_rgl=pw_rgl+res(k,1)
++            endif
++         endif
++      enddo
++      if (pw_mode.eq.3) then
++         do k=1,nmax
++            if (res(k,1).ne.0d0) then
++               pw_rgl=0d0
++               do nd=2,n_kin
++                  pw_rgl=pw_rgl+res(k,nd)
++               enddo
++               write(98,'(a,6i3,2es16.8,es12.4)') 'LK ',(pw_flv(i,k),i=1,6),res(k,1),pw_rgl,(res(k,1)+pw_rgl)/res(k,1)
++               if (pw_flv(1,k).eq.2.and.pw_flv(2,k).eq.1.and.pw_flv(3,k).eq.1.and.pw_flv(4,k).eq.2.and.pw_flv(5,k).eq.0) then
++                  write(98,'(a,25es10.2)') 'LD ',(res(k,nd)/res(k,1),nd=2,n_kin)
++               endif
++            endif
++         enddo
++         return
++      endif
++      if (pw_mode.ne.2) return
++      do k=1,nmax
++         any=.false.
++         do nd=2,n_kin
++            if (res(k,nd).ne.0d0) any=.true.
++         enddo
++         if (any) then
++            write(97,'(a,7i3,es24.16,25es24.16)') 'D ',k,(pw_flv(i,k),i=1,6),res(k,1),(res(k,nd),nd=2,n_kin)
++         endif
++      enddo
++      end
++
++      subroutine m2s_wbfh4j(bos,nlo,lok,xi,p,v,xuz,m2s)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++#include "VBFNLO/utilities/scales.inc"
++      integer bos,nlo
++      double precision xi(nx), p(0:3,max_p,max_kin), v(0:3,max_v,max_kin),
++     1     xuz(2,2:max_kin), m2s(0:max_kin)
++      logical lok(max_kin)
++      integer pw_mode,pw_perm(4),pw_ntouch,pw_nzero
++      integer pw_flv(6,8000),pw_nd,pw_nev,pw_ncall
++      double precision pw_acc(0:1771560)
++      integer pw_touch(1771561)
++      common /pwc/ pw_acc,pw_touch,pw_flv,pw_mode,pw_perm,pw_ntouch,pw_nzero,pw_nd,pw_nev,pw_ncall
++      double precision pw_pp(0:1771560)
++      common /pwpp/ pw_pp
++      double precision pp(0:3,max_p,max_kin), m2sd(0:max_kin)
++      logical lokd(max_kin), anyok
++      integer nd,i,j,mu,a,b,c,d,idx,ip,ndump_max,nperm_max,stride
++      integer perms(4,24)
++      integer fm(6),r
++      logical first
++      integer nperm,pwvar,ilen,pwlim,nlimdone
++      character*20 envv
++      double precision pw_r4q,pw_rgl
++      common /pwr/ pw_r4q,pw_rgl
++      data first/.true./,nperm/0/,pwvar/-1/,pwlim/-1/,nlimdone/0/
++      save first,perms,nperm,pwvar,pwlim,nlimdone
++      ndump_max=800
++      nperm_max=250
++      stride=3
++      if (first) then
++         first=.false.
++         ip=0
++         do a=1,4
++          do b=1,4
++           do c=1,4
++            do d=1,4
++             if (a.ne.b.and.a.ne.c.and.a.ne.d.and.b.ne.c.and.b.ne.d.and.c.ne.d) then
++                ip=ip+1
++                perms(1,ip)=a
++                perms(2,ip)=b
++                perms(3,ip)=c
++                perms(4,ip)=d
++             endif
++            enddo
++           enddo
++          enddo
++         enddo
++      endif
++      if (pwvar.lt.0) then
++         pwvar=0
++         call get_environment_variable('PW_VAR',envv,ilen)
++         if (ilen.gt.0) read(envv,*) pwvar
++      endif
++      pw_ncall=pw_ncall+1
++      anyok=.false.
++      do nd=1,n_kin
++         if (lok(nd)) anyok=.true.
++      enddo
++      if (pwvar.gt.0) ndump_max=0
++      if (pwlim.lt.0) then
++         pwlim=0
++         call get_environment_variable('PW_LIM',envv,ilen)
++         if (ilen.gt.0) read(envv,*) pwlim
++      endif
++      if (nlo.eq.1 .and. anyok .and. mod(pw_ncall,stride).eq.0 .and. pw_nev.lt.ndump_max) then
++         pw_nev=pw_nev+1
++         if (pw_nev.eq.1) open(97,file='pw4_vbfnlo.dat',status='replace')
++         write(97,'(a,i6,i4,4es24.16,25l2)') 'EV ',pw_nev,n_kin,xi(1),xi(2),als(1,1),mursq(1,1),(lok(nd),nd=1,n_kin)
++         do nd=1,n_kin
++            write(97,'(a,i3,l2,6(4es24.16))') 'P ',nd,lok(nd),((p(mu,i,nd),mu=0,3),i=1,6)
++         enddo
++         pw_mode=2
++         pw_ntouch=0
++         pw_nzero=0
++         do i=1,4
++            pw_perm(i)=i
++         enddo
++         call m2s_wbfh4j_in(bos,nlo,lok,xi,p,v,xuz,m2s)
++         if (lok(1) .and. nperm.lt.nperm_max) then
++            nperm=nperm+1
++            pw_mode=1
++            do ip=2,24
++               do i=1,4
++                  pw_perm(i)=perms(i,ip)
++               enddo
++               pp=p
++               do i=1,4
++                  do mu=0,3
++                     pp(mu,2+i,1)=p(mu,2+pw_perm(i),1)
++                  enddo
++               enddo
++               lokd=.false.
++               lokd(1)=.true.
++               call m2s_wbfh4j_in(bos,nlo,lokd,xi,pp,v,xuz,m2sd)
++            enddo
++         endif
++         pw_mode=0
++         if (pwlim.gt.0 .and. lok(1) .and. nlimdone.lt.pwlim) then
++            nlimdone=nlimdone+1
++            write(99,'(a,i6)') 'LIMEVENT ',pw_nev
++            call pw_limits(bos,nlo,xi,p,v)
++         endif
++         do j=1,pw_ntouch
++            idx=pw_touch(j)
++            r=idx
++            do i=6,1,-1
++               fm(i)=mod(r,11)-5
++               r=r/11
++            enddo
++            write(97,'(a,6i3,2es24.16)') 'A ',(fm(i),i=1,6),pw_acc(idx),pw_pp(idx)
++            pw_acc(idx)=0d0
++         enddo
++         write(97,'(a,2i8)') 'END ',pw_ntouch,pw_nzero
++         call flush(97)
++         pw_ntouch=0
++      else
++         call m2s_wbfh4j_in(bos,nlo,lok,xi,p,v,xuz,m2s)
++         if (pwvar.eq.1) m2s(0)=m2s(1)
++         if (pwvar.eq.2) m2s(0)=pw_r4q
++         if (pwvar.eq.3) m2s(0)=pw_rgl
++      endif
++      end
++
++
++c-----------------------------------------------------------------------
++c  limit sequences: R and the sum of dipoles of VBFNLO at momenta that approach soft / collinear limits
++c-----------------------------------------------------------------------
++      subroutine pw_boostscale(a,b,scal,pin,pout)
++c     p -> scal * Lambda p with Lambda the boost taking the unit timelike vector a to b
++      implicit none
++      double precision a(0:3),b(0:3),scal,pin(0:3),pout(0:3)
++      double precision ab,pa,pab,s(0:3)
++      integer mu
++      ab=a(0)*b(0)-a(1)*b(1)-a(2)*b(2)-a(3)*b(3)
++      pa=pin(0)*a(0)-pin(1)*a(1)-pin(2)*a(2)-pin(3)*a(3)
++      do mu=0,3
++         s(mu)=a(mu)+b(mu)
++      enddo
++      pab=(pin(0)*s(0)-pin(1)*s(1)-pin(2)*s(2)-pin(3)*s(3))/(1d0+ab)
++      do mu=0,3
++         pout(mu)=scal*(pin(mu)-pab*s(mu)+2d0*pa*b(mu))
++      enddo
++      end
++
++      subroutine pw_limits(bos,nlo,xi,p,v)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++#include "VBFNLO/utilities/scales.inc"
++      integer bos,nlo
++      double precision xi(nx), p(0:3,max_p,max_kin), v(0:3,max_v,max_kin)
++      double precision pl(0:3,max_p,max_kin), vl(0:3,max_v,max_kin), xuzl(2,2:max_kin), m2sl(0:max_kin)
++      logical lokl(max_kin)
++      double precision lam(7), Ptot(0:3), Pm(0:3), Oo(0:3), On(0:3), a(0:3), b(0:3), mo2, mn2, scal
++      double precision R, S, axis(3), pn, pc(0:3), pLong, pTr(3), pnew(0:3), sq
++      integer ilim,il,mu,i,j,k,nM,nR,M(2),Rr(3),slot,ii
++      integer ie
++      integer pw_mode,pw_perm(4),pw_ntouch,pw_nzero,pw_flv(6,8000),pw_nd,pw_nev,pw_ncall
++      double precision pw_acc(0:1771560)
++      integer pw_touch(1771561)
++      common /pwc/ pw_acc,pw_touch,pw_flv,pw_mode,pw_perm,pw_ntouch,pw_nzero,pw_nd,pw_nev,pw_ncall
++      double precision pw_sij
++      external pw_sij
++      data lam/1d0,0.3d0,0.1d0,0.03d0,0.01d0,1d-3,1d-4/
++      character*14 name(7)
++      data name/'soft slot5    ','soft slot6    ','coll (3,5)    ','coll (4,6)    ','coll (5,6)    ','ISR a1 || s5  ','ISR a1 || s3  '/
++      do mu=0,3
++         Ptot(mu)=p(mu,3,1)+p(mu,4,1)+p(mu,5,1)+p(mu,6,1)
++      enddo
++      do ilim=1,7
++         do il=1,7
++            pl=p
++            vl=v
++            lokl=.true.
++c           modified set M and recoil set Rr
++            nM=0
++            nR=0
++            if (ilim.eq.1) then
++               nM=1; M(1)=5; nR=3; Rr(1)=3; Rr(2)=4; Rr(3)=6
++            elseif (ilim.eq.2) then
++               nM=1; M(1)=6; nR=3; Rr(1)=3; Rr(2)=4; Rr(3)=5
++            elseif (ilim.eq.3) then
++               nM=2; M(1)=3; M(2)=5; nR=2; Rr(1)=4; Rr(2)=6
++            elseif (ilim.eq.4) then
++               nM=2; M(1)=4; M(2)=6; nR=2; Rr(1)=3; Rr(2)=5
++            elseif (ilim.eq.5) then
++               nM=2; M(1)=5; M(2)=6; nR=2; Rr(1)=3; Rr(2)=4
++            elseif (ilim.eq.6) then
++               nM=1; M(1)=5; nR=3; Rr(1)=3; Rr(2)=4; Rr(3)=6
++            else
++               nM=1; M(1)=3; nR=3; Rr(1)=4; Rr(2)=5; Rr(3)=6
++            endif
++            if (ilim.le.2) then
++c              soft: scale the momentum
++               do mu=0,3
++                  pl(mu,M(1),1)=lam(il)*p(mu,M(1),1)
++               enddo
++            elseif (ilim.eq.6.or.ilim.eq.7) then
++c              collinear to incoming parton 1 (along +z or -z): scale transverse momentum by sqrt(lam)
++               sq=sqrt(lam(il))
++               pl(1,M(1),1)=sq*p(1,M(1),1)
++               pl(2,M(1),1)=sq*p(2,M(1),1)
++               pl(0,M(1),1)=sqrt(pl(1,M(1),1)**2+pl(2,M(1),1)**2+p(3,M(1),1)**2)
++            else
++c              collinear pair: transverse momenta (w.r.t. the pair momentum) scaled by sqrt(lam)
++               do mu=0,3
++                  pc(mu)=p(mu,M(1),1)+p(mu,M(2),1)
++               enddo
++               pn=sqrt(pc(1)**2+pc(2)**2+pc(3)**2)
++               do k=1,3
++                  axis(k)=pc(k)/pn
++               enddo
++               sq=sqrt(lam(il))
++               do ii=1,2
++                  pLong=p(1,M(ii),1)*axis(1)+p(2,M(ii),1)*axis(2)+p(3,M(ii),1)*axis(3)
++                  do k=1,3
++                     pTr(k)=p(k,M(ii),1)-pLong*axis(k)
++                  enddo
++                  do k=1,3
++                     pl(k,M(ii),1)=pLong*axis(k)+sq*pTr(k)
++                  enddo
++                  pl(0,M(ii),1)=sqrt(pl(1,M(ii),1)**2+pl(2,M(ii),1)**2+pl(3,M(ii),1)**2)
++               enddo
++            endif
++c           recoil: others -> boost+scale so that the total outgoing momentum is conserved
++            do mu=0,3
++               Oo(mu)=0d0
++               On(mu)=Ptot(mu)
++            enddo
++            do j=1,nR
++               do mu=0,3
++                  Oo(mu)=Oo(mu)+p(mu,Rr(j),1)
++               enddo
++            enddo
++            do j=1,nM
++               do mu=0,3
++                  On(mu)=On(mu)-pl(mu,M(j),1)
++               enddo
++            enddo
++            mo2=Oo(0)**2-Oo(1)**2-Oo(2)**2-Oo(3)**2
++            mn2=On(0)**2-On(1)**2-On(2)**2-On(3)**2
++            if (mo2.le.0d0 .or. mn2.le.0d0) then
++               write(99,'(a,2i3,2es12.4)') 'LIM skip',ilim,il,mo2,mn2
++               goto 100
++            endif
++            do mu=0,3
++               a(mu)=Oo(mu)/sqrt(mo2)
++               b(mu)=On(mu)/sqrt(mn2)
++            enddo
++            scal=sqrt(mn2/mo2)
++            do j=1,nR
++               call pw_boostscale(a,b,scal,p(0,Rr(j),1),pl(0,Rr(j),1))
++            enddo
++c           mapped momenta (dipole kinematics)
++            call ptilde(pl,xuzl,vl)
++            do i=2,n_kin
++               call pw_valid(pl,vl,i,lokl(i))
++            enddo
++            if (il.eq.7 .and. ilim.le.2) call pw_checkmom(pl,vl,ilim)
++            if (il.eq.7) then
++               pw_mode=3
++               write(98,'(a,a,es10.2)') 'LKHEAD ',name(ilim),lam(il)
++            endif
++            call m2s_wbfh4j_in(bos,nlo,lokl,xi,pl,vl,xuzl,m2sl)
++            pw_mode=0
++            R=m2sl(1)
++            S=0d0
++            do i=2,n_kin
++               S=S+m2sl(i)
++            enddo
++            write(99,'(a,a,es10.2,2es16.8,es12.4,a,es12.4)') 'LIM ',name(ilim),lam(il),R,S,(R+S)/R,'  s_ij/s ',pw_sij(pl)
++ 100        continue
++         enddo
++      enddo
++      end
++
++      double precision function pw_sij(pl)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++      double precision pl(0:3,max_p,max_kin), s, d
++      integer i,j
++      s=1d300
++      do i=3,5
++         do j=i+1,6
++            d=2d0*(pl(0,i,1)*pl(0,j,1)-pl(1,i,1)*pl(1,j,1)-pl(2,i,1)*pl(2,j,1)-pl(3,i,1)*pl(3,j,1))
++            if (d.lt.s) s=d
++         enddo
++      enddo
++      pw_sij=s
++      end
++
++      subroutine pw_checkmom(pl,vl,ilim)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++      double precision pl(0:3,max_p,max_kin), vl(0:3,max_v,max_kin)
++      integer ilim,nd,i,mu,nout
++      double precision tot(0:3), hm(0:3), mh2, viol
++      do nd=1,n_kin
++         nout=6
++         if (nd.gt.1) nout=5
++         do mu=0,3
++            hm(mu)=0d0
++            do i=1,n_v
++               hm(mu)=hm(mu)+vl(mu,i,nd)
++            enddo
++            tot(mu)=pl(mu,1,nd)+pl(mu,2,nd)-hm(mu)
++            do i=3,nout
++               tot(mu)=tot(mu)-pl(mu,i,nd)
++            enddo
++         enddo
++         mh2=hm(0)**2-hm(1)**2-hm(2)**2-hm(3)**2
++         viol=abs(tot(0))+abs(tot(1))+abs(tot(2))+abs(tot(3))
++         write(98,'(a,i2,i3,3es12.4)') 'CHK ',ilim,nd,viol,sqrt(abs(mh2)),pl(0,1,nd)
++      enddo
++      end
++
++      subroutine pw_valid(pl,vl,nd,ok)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++      double precision pl(0:3,max_p,max_kin), vl(0:3,max_v,max_kin)
++      integer nd,i,mu
++      logical ok
++      double precision hm(0:3), mh2, e2, tot(0:3)
++      ok=.true.
++      do i=3,5
++         e2=pl(0,i,nd)
++         if (e2.le.0d0) ok=.false.
++         if (abs(pl(0,i,nd)**2-pl(1,i,nd)**2-pl(2,i,nd)**2-pl(3,i,nd)**2).gt.1d-6*max(e2*e2,1d0)) ok=.false.
++      enddo
++      do mu=0,3
++         hm(mu)=0d0
++         do i=1,n_v
++            hm(mu)=hm(mu)+vl(mu,i,nd)
++         enddo
++      enddo
++      mh2=hm(0)**2-hm(1)**2-hm(2)**2-hm(3)**2
++      if (abs(mh2-125d0**2).gt.1d0) ok=.false.
++      do mu=0,3
++         tot(mu)=pl(mu,1,nd)+pl(mu,2,nd)-hm(mu)-pl(mu,3,nd)-pl(mu,4,nd)-pl(mu,5,nd)
++      enddo
++      if (abs(tot(0))+abs(tot(1))+abs(tot(2))+abs(tot(3)).gt.1d-6*pl(0,1,1)) ok=.false.
++      if (pl(0,1,nd).le.0d0 .or. pl(0,2,nd).le.0d0) ok=.false.
++      end

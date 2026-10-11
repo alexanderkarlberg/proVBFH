@@ -912,3 +912,47 @@ the cs dipoles in the pair (g -> q qbar, qq-bar identical-flavour interference) 
 recombination, |y| vs |eta|); (3) real matrix elements in the soft/collinear corners (bundled real_vbfnlo.f /
 compreal_hqqqq_new.f vs VBFNLO 3.0 qqh4q_*.F, which has bug fixes of 2018-02) that do not show in sigma(>=4j).
 A cheap discriminator for (2): run both codes with tagging-jet-only 3-jet definition without merging (R -> 0.1).
+
+## 12 Oct: pointwise 4-parton comparison
+
+Follow-up of the 3-parton pointwise comparison (Born, V + I, K + P agree): the 4-parton ingredients of H+3j against VBFNLO 3.0, to
+localise the +0.8% in sigma(>=3j) (126.185 +- 0.163 fb against 125.221 +- 0.120 fb; sigma(>=4j) 14.757 +- 0.042 against
+14.815 +- 0.007 fb).  Tools, patches and outputs: `proVBFH-cs/production/h3j-crosscheck/pointwise4/` (README.txt, results.txt).
+Scratch on the node-local /tmp: /ptmp was at its hard file quota (1,572,025 of 1,572,864 files) and refused every new file.
+
+Method: the chsplit VBFNLO copy is instrumented through LD_PRELOAD (wrapper around m2s_wbfh4j) and dumps 777 four-parton points
+of a short run (PROCESS 110, fixed mu = m_H, cuts.dat of p1506): momenta and lok(nd) of the real point and of all 24 dipole-mapped
+configurations, the real and dipole terms per subprocess, and for 250 points the real matrix elements (no PDFs) summed over
+all subprocess classes and all 24 assignments of the four outgoing momenta to the outgoing slots, keyed by the flavours at the
+momenta.  proVBFH-cs is evaluated at the same momenta (setreal through cs_real_me, all 2333 real entries, same 24 assignments).
+
+1. Real matrix elements.  Per incoming pair (a, b), summed over all outgoing flavour assignments (the cuts do not depend on flavour):
+   gluon channels (qq -> qqgg, qg -> qqqg, gg) agree to 1e-7 (global constant 97.2708 = VBFNLO / proVBFH-cs for the
+   normalisation, the same for all channels), quark-initiated sum VBFNLO / proVBFH-cs = 1.00000 (all channels 0.99999, PDF-weighted
+   0.99994), the four-quark final states 0.99995 (0.99989 PDF-weighted).  The remaining -3e-4 (ME only) is in pairs with
+   identical flavours (u u, d d, u c, d s, ...) and disappears with linterference = .false. in VBFNLO, i.e. it is the
+   identical-quark interference that proVBFH's compreal_hqqqq switches off.  Bound on sigma(>=3j): the four-quark real is
+   about 16 fb of the ~400 fb of unsubtracted real (VBFNLO, own cuts, 2 x 2^17 points, +-25%: all 400, four-quark 15.8, gluon
+   383 fb), so the effect is < 0.02 fb.  proVBFH-cs uses all 2333 real entries (those of the (2,0)/(0,2) classes by
+   tags plus class 12): the sum over the used entries equals the sum over all.
+   Two traps: (a) VBFNLO's four-quark CC branch sums four colour/flavour columns into one subprocess labelled with the flavours
+   of column 1, so per-flavour-assignment comparisons look discrepant (s <-> d swaps) although the sums agree; (b) restricting
+   the proVBFH-cs evaluation to the flavour keys VBFNLO has produced a spurious 0.25% deficit (CS-only assignments
+   missing).  The b-quark channels with a gluon in the final state that VBFNLO has (b c -> b-bar g d s etc., 0.016% of the
+   ME, 0.002% with PDFs) are absent in proVBFH-cs.  The bundled qqh4q_me_new.f / qqh4q_me.F of VBFNLO 3.0 differ only
+   by the anomalous couplings and the proVBFH tag factors tfac.
+2. Dipoles.  Not comparable one to one: VBFNLO has 20-24 dipoles per point (CS dipoles with the other extra parton and both
+   incoming partons as spectators), proVBFH-cs has 6 maps per line; the mapped three-parton configurations differ.  proVBFH-cs
+   line-level limit test (nlo2_test_limits, 104 groups): R/D -> 1 like sqrt(lambda) (e.g. 0.81, 0.96, 0.99, 0.997 at
+   lambda = 1e-4 ... 1e-7), max |R/D - 1| at 1e-6: 2.0%, mean 0.6%.  A VBFNLO limit harness (rescaled momenta + recoil, its
+   own ptilde) did not converge to R + sum D = 0 (residual 10-90%, point dependent); a natural VBFNLO point at 2 p.p ~ 2 GeV^2
+   has 2.5e-3.  Treated as a harness problem (not understood), not as a VBFNLO result.  Untested.
+3. Jets and cuts.  VBFNLO's lok(nd) against proVBFH-cs (fastjet anti-kt R = 0.4, buildjets, vbfcuts of p1506_analysis.f, plus
+   njets >= 3, which VBFNLO's Hjjj cuts require): 0 disagreements in 777 real points (294 accepted, 483 rejected) and 18648
+   mapped configurations (4559 accepted); an independent python anti-kt (E-scheme) reproduces both.  Without njets >= 3
+   the dijet cuts alone accept 39 (real) and 2664 (mapped) additional configurations on top of VBFNLO's 294 and 4559.  Recombination scheme, y against eta and the Y_P_MAX = 10 parton
+   cut make no difference at this level.
+Conclusion: the real matrix elements and the jet/cut logic are not the source of the offset; what is left is the dipole
+subtraction / integrated pieces at 4-parton level (the (2,0)/(0,2) and (1,1) real - dipole structure, cutoff handling of the
+mapped configurations), and the per-class sigma(>=3j) contributions, which this comparison cannot see.  Next steps: compare the
+LO H+3j sigma(>=3j) (tree level, phase space + cuts only), then per-class contributions.
