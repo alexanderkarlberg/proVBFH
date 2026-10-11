@@ -850,3 +850,18 @@ lo1 / lo2 separately (new): >=3j 1.539 +- 0.114 (skew 3.3) / 1.521 +- 0.048 (ske
 
 (off: 60 of the 150 planned seeds were cancelled for budget, b-on has 149 of 150 finished.) Means agree with production within errors; the off arm reproduces the heavy tail (one job at 311 fb). Error at equal CPU is 6x smaller for >=3j and 26x for >=4j, i.e. 36x and ~680x in CPU for the same error (the off value is dominated by one job; against the production sd the gain is 3.8x and 10x in error). The channel also runs 33% cheaper per job (fewer points need the matrix elements; ng = 1). Core-h used: about 560 (diagnosis 18, a 70, b-on 190, b-off ~280).
 Not done: h and x0 were not scanned; the hard2 option (second step) was not combined; no production.
+
+### 11 Oct: small-x channel statistics
+
+600 new seeds of the pilot "on" arm (fixmh card, ncall2 1.2M, `cs_smallx 0.3`, default x0 0.03; seeds 1303001-1303600, `/ptmp/mpp/akarlber/smallx/c-on`, array 48855861, 600/600 completed, 823 core-h). With the 149 finished pilot jobs (1302001-, b-on) n = 749. VBFNLO: the 800 fixmh seeds. Plain means, seed-scatter errors, fb. Scripts: `proVBFH-cs/production/h3j-crosscheck/smallx/stat_final.py`, output `analysis-final.txt`. (The wait loop was killed by its 2 h limit; the jobs had finished.)
+
+| fb | proVBFH-cs (749) | VBFNLO (800) | difference | pull |
+|---|---|---|---|---|
+| sigma(>=3j) | 126.185 +- 0.163 (sd 4.46, skew 0.19) | 125.221 +- 0.120 | +0.96 +- 0.20 (+0.77%) | +4.8 |
+| sigma(>=4j) | 14.757 +- 0.042 (sd 1.16, skew 4.3) | 14.815 +- 0.007 | -0.058 +- 0.043 | -1.4 |
+| exactly 3j | 111.428 +- 0.160 | 110.406 +- 0.120 | +1.02 +- 0.20 (+0.93%) | +5.1 |
+
+- Running mean of >=3j: 125.90 (50), 125.64 (100), 126.27 (200), 126.28 (400), 126.18 (600), 126.19 (749). Stable from 200 jobs on; largest jobs 145.8, 144.8, 142.3 fb (no heavy tail; the pilot value was 126.06 +- 0.37). The >=4j has a mild tail (skew 4.3, largest job 31 fb against a mean of 14.8); its mean is consistent with VBFNLO.
+- Agrees with the production (126.19 +- 0.18, 1,998 jobs): same value, now from a tail-free sample.
+- Distributions (plain means per bin, errors from seed scatter, chi2 ignores correlations between bins): ptj3 18.8/15, yj3 40.7/18, ptj4 34.3/15. The >=3j excess is spread over all bins (sum of pulls ptj3 +6.3, yj3 +21.3 over 18 bins, ptj4 -9.0): a roughly uniform +0.8% shift, not a localised region (only isolated bins at 2-3 sigma: yj3 [-4.5,-4], [1.5,2]; ptj4 high-pT bins slightly low).
+- Verdict: the offset is real: proVBFH-cs is +0.96 +- 0.20 fb (+0.8%, 4.8 sigma) above VBFNLO for >=3j, all of it in the exactly-3-jet part; >=4j agrees. This confirms the earlier +0.9-1.0 fb offset and no longer leaves room for the heavy-tail explanation. It contradicts the 10 Oct reading (low-slice statistics: offset consistent with fluctuation) only in the sense that the offset is not a low-x effect (the low slice agrees); the difference sits at x > 0.02 and is flat in the observables.
