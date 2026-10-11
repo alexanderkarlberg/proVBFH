@@ -865,3 +865,50 @@ Not done: h and x0 were not scanned; the hard2 option (second step) was not comb
 - Agrees with the production (126.19 +- 0.18, 1,998 jobs): same value, now from a tail-free sample.
 - Distributions (plain means per bin, errors from seed scatter, chi2 ignores correlations between bins): ptj3 18.8/15, yj3 40.7/18, ptj4 34.3/15. The >=3j excess is spread over all bins (sum of pulls ptj3 +6.3, yj3 +21.3 over 18 bins, ptj4 -9.0): a roughly uniform +0.8% shift, not a localised region (only isolated bins at 2-3 sigma: yj3 [-4.5,-4], [1.5,2]; ptj4 high-pT bins slightly low).
 - Verdict: the offset is real: proVBFH-cs is +0.96 +- 0.20 fb (+0.8%, 4.8 sigma) above VBFNLO for >=3j, all of it in the exactly-3-jet part; >=4j agrees. This confirms the earlier +0.9-1.0 fb offset and no longer leaves room for the heavy-tail explanation. It contradicts the 10 Oct reading (low-slice statistics: offset consistent with fluctuation) only in the sense that the offset is not a low-x effect (the low slice agrees); the difference sits at x > 0.02 and is flat in the observables.
+
+### 12 Oct: pointwise comparison with VBFNLO 3.0 (sub-agent)
+
+Task: find the cause of the +0.8% (+0.96 fb) offset of NLO H+3j. Scripts: `proVBFH-cs/production/h3j-crosscheck/pointwise/`
+(README.txt there). Method: a scratch copy of VBFNLO's `m2s_qqh3j.F` dumps, for 200 3-parton points of a real NLO run
+(fixmh card), the momenta, Born, finite virtual, (V+I) and the K+P convolutions (own 96-point Gauss integral over
+VBFNLO's z variable, same PDF as the run); `pw_cs.f90` evaluates proVBFH-cs (current objects, scratch build) at the
+same momenta. Nothing in production code or in the VBFNLO install was changed.
+
+**Conventions audit (identical unless noted)**
+- alpha_s: both LHAPDF NNPDF30_nnlo_as_0118 order 2, alpha_s(125) = 0.1126399 (VBFNLO, LHAPDF) vs 0.1126382
+  (cs, hoppet 3-loop from alpha_s(MZ)=0.118, thresholds from LHAPDF): -1.6e-5, negligible. nf = 5 in all explicit
+  logs, ffunc, gamma_g (VBFNLO `nflav = 5d0` in m2s_qqh3j.F:556,1063; cs `ffunc` nf = st_nlight, qqhqqj-virt.f:828).
+- EW: both 1/alpha = 132.3407, sin^2 = 0.2226459 (scheme 3, G_F 1.16637e-5, MW 80.398, MZ 91.1876). b quarks in NC
+  (VBFHASB = T, nflVBF = 5), not in CC. Diagonal CKM. mu_F = mu_R = 125 both.
+- Widths differ: cs reads WWIDTH 2.141, ZWIDTH 2.4952, HWIDTH 4.03e-3 (vbfnlo.input); VBFNLO computes 2.0977, 2.5084,
+  4.134e-3 internally. Irrelevant for the points below (see Born).
+- Jets: cs anti-kt R = 0.4 (fastjet, E-scheme) on all partons, then pT > 25, |y| < 4.5; VBFNLO RJJ_MIN 0.4, PGENKTJET -1,
+  Y_P_MAX 10 (parton cut, irrelevant). Not compared point by point.
+- VBFNLO technical cut: z < 0.999995 in the K+P integrand (m2s_qqh3j.F:1057), effect < 1e-4 of K+P.
+
+**Pointwise results** (200 points: 100 final-state-gluon, 100 initial-gluon; each both lines, NC flavours uu/ud/du/dd,
+CC both types for final-state gluon)
+- (V+I)/B, VBFNLO `uucc(jc)/uuccb(jc) - 1` over alpha_s against cs `virt/B + (I_line + I_DIS,other)/2pi`: agreement
+  to 2e-14 (absolute, values -3..-5) for all 1200 quark-initiated (NC+CC, qq, q qbar, qbar q, qbar qbar) and all
+  400 gluon-initiated NC cases. So the finite virtual, the constants (pi^2, 8, nf, CDR conversion) and the I
+  operator are identical, including the other line's vertex correction.
+- K+P (colour-weighted line pieces and the DIS-like other line), VBFNLO / cs: equal up to the PDF normalisation
+  (VBFNLO x f(x), cs f(x)); after that median deviation 7e-5 (quark), 8e-5 (gluon), maximum 1-2% only at a few
+  points with large x or near zeros of the K+P combination (PDF interpolation hoppet vs LHAPDF).
+- Born: cs/VBFNLO = 0.00253527 (pure normalisation, alpha_s = 1 and spin/colour averaging) at high Q^2, but lower by
+  up to 1.0e-3 when both boson virtualities are around 1-3 GeV^2*1e3. The deviation equals sum_i M^2 Gamma^2/(Q_i^2+M^2)^2
+  (predicted 8.8e-4, 1.0e-3, 1.0e-3, observed 8.8e-4, 1.0e-3, 1.0e-3): cs includes the width in the space-like
+  propagators, VBFNLO 3.0 does not. Integrated effect on the Born about -(3-4)e-4, i.e. ~0.05 fb. Not the offset.
+
+**Conclusion**: all 3-parton ingredients (Born up to the width term, V+I, K+P) agree between the codes, for quark and
+gluon initial states, NC and CC. The +0.8% is therefore not in the 3-parton pieces. (This contradicts the earlier
+suspicion list of "virtual constants / nf / identical conventions"; the nf = 4 vs 5 mismatch of the old code is indeed gone.)
+Note also that the channel-split pilot cannot localise a uniform +0.8%: qg (3.9 fb, +-0.04) and CC qq are
+statistically compatible with it, so "the difference sits in qq" is not established.
+Remaining suspects, ranked: (1) the 4-parton real minus dipoles in the unresolved region (the two codes use
+different dipole sets, only their sums agree; not testable point by point; a limits/IR-sum test of VBFNLO's real or of
+the cs dipoles in the pair (g -> q qbar, qq-bar identical-flavour interference) channels would be the next step);
+(2) a hidden jet-merging/cut difference acting only on 4-parton events clustered to 3 jets (E-scheme vs other
+recombination, |y| vs |eta|); (3) real matrix elements in the soft/collinear corners (bundled real_vbfnlo.f /
+compreal_hqqqq_new.f vs VBFNLO 3.0 qqh4q_*.F, which has bug fixes of 2018-02) that do not show in sigma(>=4j).
+A cheap discriminator for (2): run both codes with tagging-jet-only 3-jet definition without merging (R -> 0.1).

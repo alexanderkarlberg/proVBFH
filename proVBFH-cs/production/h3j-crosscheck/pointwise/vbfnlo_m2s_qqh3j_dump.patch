@@ -1,0 +1,125 @@
+--- /ptmp/mpp/akarlber/chsplit/vbfnlo/src/amplitudes/hjjj/m2s_qqh3j.F	2026-10-10 08:22:16.948394000 +0200
++++ /ptmp/mpp/akarlber/pointwise/vb/m2s_qqh3j.F	2026-10-11 17:23:14.618074000 +0200
+@@ -539,6 +539,10 @@
+       real*8 lns21,lnt21,lnu21,lns43,lnt43,lnu43
+       real*8 s21,t21,u21,s43,t43,u43,asotpi
+       real*8 musq,l21,l43,fac(3)
++      integer ndump,ncall,kk
++      real*8 skp(-5:5,4),f0kp(-5:5,2)
++      save ndump,ncall
++      data ndump/0/,ncall/0/
+ c     variables for convolution of pdf's
+       integer iflav(5),diagToPhys(5),FL_H3j
+       real*8 dot0p
+@@ -708,6 +712,33 @@
+             ducs(i) = ducsv(i) + (fac(i)+fac(1)) * ducsb(i)
+          enddo
+ 
++         ncall=ncall+1
++         if (ndump.lt.200 .and. mod(ncall,2).eq.0) then
++            ndump = ndump+1
++            if (ndump.eq.1) open(97,file='pw_vbfnlo.dat',status='replace')
++            write(97,'(a,2i4,4i4,5i4)') 'PT',gsign,nlo,(fsign(i),i=1,4),(physToDiag(i),i=1,5)
++            write(97,'(a,5es24.16)') 'XI',xi(1),xi(2),als(1,1),als(2,1),mursq(1,1)
++            do i=1,5
++               write(97,'(a,4es24.16)') 'P ',(p(mu,i,1),mu=0,3)
++            enddo
++            write(97,'(a,4es24.16)') 'H ',(v(mu,1,1),mu=0,3)
++            write(97,'(a,3es24.16)') 'FAC',fac(1),fac(2),fac(3)
++            write(97,'(a,6es24.16)') 'UUCC',uuccb(2),uuccb(3),uuccv(2),uuccv(3),uucc(2),uucc(3)
++            write(97,'(a,6es24.16)') 'UUSS',uussb(2),uussb(3),uussv(2),uussv(3),uuss(2),uuss(3)
++            write(97,'(a,6es24.16)') 'DDCC',ddccb(2),ddccb(3),ddccv(2),ddccv(3),ddcc(2),ddcc(3)
++            write(97,'(a,6es24.16)') 'DDSS',ddssb(2),ddssb(3),ddssv(2),ddssv(3),ddss(2),ddss(3)
++            write(97,'(a,6es24.16)') 'UDSC',udscb(2),udscb(3),udscv(2),udscv(3),udsc(2),udsc(3)
++            write(97,'(a,6es24.16)') 'DUCS',ducsb(2),ducsb(3),ducsv(2),ducsv(3),ducs(2),ducs(3)
++            call pw_kp(xi,p,skp,f0kp)
++            do i=1,4
++               write(97,'(a,i2,11es24.16)') 'KP',i,(skp(k,i),k=-5,5)
++            enddo
++            do i=1,2
++               write(97,'(a,i2,11es24.16)') 'F0',i,(f0kp(k,i),k=-5,5)
++            enddo
++            call flush(97)
++         endif
++
+       endif !nlo.eq.1
+ #endif /* WITH_NLO */
+ 
+@@ -1558,3 +1589,77 @@
+          a(i) = a(i)*chcc
+       enddo
+       end
++
++      subroutine pw_kp(xi,p,S,f0)
++      implicit none
++#include "VBFNLO/utilities/global.inc"
++#include "VBFNLO/utilities/scales.inc"
++#include "color.inc"
++      real*8 xi(2),p(0:3,max_p,max_kin),S(-5:5,4),f0(-5:5,2)
++      real*8 Aq(2),Bq(3),Cq(3),Dq(3),rn,x1,Jac,fx(-6:6),f1(-6:6),qsf,asotpi
++      real*8 xn(96),wn(96),t,p1,p2,p3,pp,t1
++      integer ipp(4),app(4),typ(4),i,jx,n,jj,it,bm
++      integer nn
++      real*8 sumq
++      parameter (nn=96)
++      data ipp/3,5,4,5/, app/1,1,2,2/, typ/1,2,1,2/
++      do i=1,(nn+1)/2
++         t=cos(3.141592653589793d0*(i-0.25d0)/(nn+0.5d0))
++         do it=1,100
++            p1=1d0
++            p2=0d0
++            do jj=1,nn
++               p3=p2
++               p2=p1
++               p1=((2*jj-1)*t*p2-(jj-1)*p3)/jj
++            enddo
++            pp=nn*(t*p1-p2)/(t*t-1d0)
++            t1=t
++            t=t1-p1/pp
++            if (abs(t-t1).lt.1d-15) goto 10
++         enddo
++ 10      xn(i)=(1d0-t)/2d0
++         xn(nn+1-i)=(1d0+t)/2d0
++         wn(i)=1d0/((1d0-t*t)*pp*pp)
++         wn(nn+1-i)=wn(i)
++      enddo
++      asotpi=als(1,1)/(2d0*3.141592653589793d0)
++      do bm=1,2
++         qsf=sqrt(mufsq(bm,1))
++         call pdfproton(xi(bm),qsf,fx)
++         do i=-5,5
++            f0(i,bm)=fx(i)
++         enddo
++      enddo
++      do jx=1,4
++         bm=app(jx)
++         qsf=sqrt(mufsq(bm,1))
++         call pdfproton(xi(bm),qsf,fx)
++         do i=-5,5
++            S(i,jx)=0d0
++         enddo
++         do n=1,nn
++            rn=xn(n)
++            x1=(1d0-xi(bm))*rn**2+xi(bm)
++            x1=xi(bm)/x1
++            Jac=(1d0-xi(bm))*2d0*rn
++            call pdfproton(x1,qsf,f1)
++            call fincollinear(Aq,Bq,Cq,Dq,xi,rn,p,ipp(jx),app(jx))
++            sumq=0d0
++            do i=1,5
++               sumq=sumq+f1(i)+f1(-i)
++            enddo
++            S(0,jx)=S(0,jx)+wn(n)*asotpi*Jac*
++     $           ((f1(0)-fx(0))*Bq(3)+f1(0)*Cq(3)+sumq*Aq(1))
++            do i=-5,5
++               if (i.ne.0) S(i,jx)=S(i,jx)+wn(n)*asotpi*Jac*
++     $           ((f1(i)-fx(i))*Bq(typ(jx))+f1(i)*Cq(typ(jx))+f1(0)*Aq(2))
++            enddo
++         enddo
++         call fincollinear(Aq,Bq,Cq,Dq,xi,0.5d0,p,ipp(jx),app(jx))
++         do i=-5,5
++            if (i.ne.0) S(i,jx)=S(i,jx)+asotpi*fx(i)*Dq(typ(jx))
++         enddo
++         S(0,jx)=S(0,jx)+asotpi*fx(0)*Dq(3)
++      enddo
++      end
