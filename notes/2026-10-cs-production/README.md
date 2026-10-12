@@ -1015,3 +1015,19 @@ Script: `proVBFH-cs/production/h3j-crosscheck/pieces/vbfnlo_rd_tails.py` (output
 - Outcomes: real-dip near -24.35 -> offset was a sampling artefact of the earlier cs production; near -23.4 and
   cutoff-dependent -> cutoff handling in cs; near -23.4, cutoff-independent -> compare real-dip per ptj3/yj3 bin.
 - If that is inconclusive, stop: record the 0.8% (~3-5 sigma depending on the cs error estimate) as an open discrepancy.
+
+## 12 Oct evening: per-piece production result and bin-by-bin comparison (closes the H+3j offset study)
+- cs per-piece production (cs_smallx 0.3, plain means over jobs, scatter/sqrt(N); /ptmp/mpp/akarlber/pieces/prod):
+  LO 119.349 +- 0.147 (20 jobs), V+I+K+P 30.183 +- 0.072 (20), real-dip -23.713 +- 0.146 fb (330);
+  VBFNLO LO 119.34, V+I+K+P 30.21, real-dip -24.35 +- 0.15. Real-dip differs by +0.64 +- 0.21 fb (3.0 sigma).
+- Total 125.82 +- 0.22 fb vs VBFNLO 125.22: +0.60 +- 0.30 (2 sigma); the histogram total gives +0.48%, 2.4 sigma.
+  The earlier 126.185 +- 0.163 (749 small-x jobs) is 1.3 sigma above this production.
+- Per-job scatter / quoted error now 1.0-1.2 (was 1.7 before the small-x channel): errors are honest.
+- cs_cutoff: paired differences to 1d-5: 1d-4 +0.38 +- 0.47, 1d-6 -0.21 +- 0.58 fb: no dependence at the ~1 fb level
+  (the pairing did not reduce the errors; changing the cut-off decorrelates the sampling).
+- Bin by bin (pieces/bins_vs_vbfnlo.py, details bins_vs_vbfnlo.txt; cs lo+v+rd vs VBFNLO p1506_nlo.top):
+  ptj3 chi2 12.1/15 bins, yj3 14.6/18, y*j3 37.3/24, min rap(j,j3) 61.8/46; signs evenly split in y*j3 and min-rap,
+  mostly positive in ptj3/yj3 (+0.5%); no region carries the difference.
+- Conclusion (stopping rule agreed with AK): every piece agrees pointwise and LO, V+I+K+P agree integrated; the
+  remaining +0.5% (0.6 fb, 2-3 sigma) sits in the integrated real-minus-dipoles, spread uniformly over the 3-jet
+  observables. Recorded as an open discrepancy; study closed.
