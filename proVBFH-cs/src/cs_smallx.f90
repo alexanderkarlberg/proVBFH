@@ -1,6 +1,6 @@
 !----------------------------------------------------------------------
 ! Small-x channel for the Born phase space of the exclusive part
-! (cs_smallx, 11 Oct 2026; docs in notes/2026-10-cs-production/README.md).
+! (cs_smallx, 11 Oct 2026; see notes/2026-10-cs-summary/README.md).
 !
 ! Why: the VEGAS grids of the Born variables r2 (tau = x1 x2), r3 (y) and
 ! r6 (the dijet angle) fall to 1/25 of uniform below the Born threshold of

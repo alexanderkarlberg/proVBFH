@@ -565,7 +565,7 @@ c kl = 1..4). With the original kl = k+4*ftype(7)-4 the graphs in which the Z
 c couples to the pair (the incoming quark emits a t-channel gluon that fuses
 c with the Z into the pair) got the Z couplings of the other quark type; their
 c initial-state collinear limit then does not factorise onto the
-c gluon-initiated Born (notes/2026-09-29-cs-p2b-stage2).
+c gluon-initiated Born (logbooks in the git tag cs-study-2026-10).
          kl = k+4*(2-ftype(7))
 
 !         if (.not.new_vbfnlo)

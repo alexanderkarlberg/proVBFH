@@ -2,7 +2,7 @@
 
 A third reference next to the study's trimmed files (`../nnlo-*.top`) and
 the plain merge (`../plain/`). Made on 3 Oct 2026 from the same raw
-per-seed files with `notes/2026-09-30-hxswg-comparison/tools/merge_plain.py`.
+per-seed files with `merge_plain.py` (in the git tag `cs-study-2026-10`, notes/2026-09-30-hxswg-comparison/tools).
 
 Method, per bin and per scale: sort the seeds, drop the lowest and highest
 0.5% (49 of ~9950 on each side), average the rest. The error is the

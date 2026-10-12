@@ -4,7 +4,7 @@ For estimating the bias of the study's trimming (`combine_runs.f`, which
 drops seeds outside median ± 5 × (84%−16% range) per bin). Made on 3 Oct
 2026 from the study's raw per-seed files
 (`LHCHXSWG/vbf-higgs-wg/proVBFH/13.6TeV_NNLO/{HH,11,22}.tgz`) with
-`notes/2026-09-30-hxswg-comparison/tools/merge_plain.py`:
+`merge_plain.py` (in the git tag `cs-study-2026-10`, notes/2026-09-30-hxswg-comparison/tools):
 
 - `nnlo-{HH,11,22}-plain.top`: per scale (μ0/2, μ0, 2μ0) the plain mean
   over all seeds (9973, 9940, 9965; one empty HH file skipped), error =

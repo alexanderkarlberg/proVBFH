@@ -806,7 +806,7 @@ c proVBFH-cs (2026-09-29): nf was fixed to 4 here, while the explicit log
 c terms of qqHqqj_vonly_channel (gammag) use st_nlight = 5; the nf-dependent
 c finite part then does not cancel and leaves (alpha_s/2 pi) B (1/6)
 c [ln(mu^2/|t|) + ln(mu^2/|u|)] per missing flavour (checked against NNLOJET,
-c notes/2026-09-29-cs-p2b-stage2).
+c logbooks in the git tag cs-study-2026-10).
       include 'pwhg_st.h'
 
       real*8 ratu,ratt,rats
