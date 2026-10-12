@@ -1,0 +1,3 @@
+#!/bin/bash
+# run the per-piece proVBFH-cs build (cs_piece patch) in the current directory
+exec ${CS_PIECES_BIN:-/ptmp/mpp/akarlber/pieces/proVBFH-cs/proVBFH-cs-p1506}

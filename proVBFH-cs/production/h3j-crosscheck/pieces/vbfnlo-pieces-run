@@ -1,0 +1,10 @@
+#!/bin/bash
+# run VBFNLO (p1506hist-patched install) in the current directory; ./piece.env may set
+# VBFNLO_M2MIN (GeV; cut on 2 p_i.p_j of all parton pairs, default 0.1), applied through the
+# LD_PRELOAD library built from ps_vnj.F (vbfnlo-ps/), preloaded for the vbfnlo binary only
+[ -f piece.env ] && { set -a; . ./piece.env; set +a; }
+V=/ptmp/mpp/akarlber/h3j/vbfnlo
+export LD_LIBRARY_PATH=$HOME/.local/lib:$V/install/lib:$V/install/lib/VBFNLO:$LD_LIBRARY_PATH
+export LHAPDF_DATA_PATH=$HOME/.local/share/LHAPDF
+[ -n "$VBFNLO_M2MIN" ] && PRE=/ptmp/mpp/akarlber/pieces/vbfnlo-ps/libps_m2min.so
+exec env ${PRE:+LD_PRELOAD=$PRE} $V/install/bin/vbfnlo --input=.

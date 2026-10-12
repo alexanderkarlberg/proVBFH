@@ -975,3 +975,23 @@ given point; probably the colour-suppressed inter-line terms of the real that th
 Bound on its effect: <= 7e-4 of the singular soft real (R alone ~400 +- 100 fb with cuts), i.e. O(0.1-0.3 fb) before log
 enhancement; it cannot account for the ~1 fb (0.8 %) difference with proVBFH-cs by itself.  Note the ISR "a1 || s3" limit is
 singular only when p3 points to the same beam as incoming 1 (create_ikj has dipoles (a,3,.) but no (b,3,.)).
+
+## 12 Oct: per-piece integration, sizing
+
+Tools in `proVBFH-cs/production/h3j-crosscheck/pieces/` (README.txt has the details and the submit commands).
+- Split. VBFNLO prints LO, Born+V+I+K+P ("NLO virtual") and real-minus-dipoles separately (the p1506hist patch
+  gives the same three for the >=3j estimator). proVBFH-cs: patch `cs_piece` (bitmask) in a scratch build
+  (`/ptmp/mpp/akarlber/pieces/proVBFH-cs`): LO = w (cs_order 1), V+I+K+P = wv + e12 virtual-type (mask 6),
+  real-dip = wr + wd + e12 dipole-type + e3 (mask 120), all = 127.
+- Technical cuts. VBFNLO has no dipole alpha and no generator pT cut; the only cut is m2min = (0.1 GeV)^2 on
+  2 p_i.p_j (ps_vnj.F); variation through an LD_PRELOAD library, VBFNLO_M2MIN = 1.0, 0.01 GeV. proVBFH-cs:
+  cs_cutoff 1d-5 (drops ~2% of four-parton points); variation 1d-4, 1d-6, paired seeds.
+- Pilots (2.6 core-h): cs LO 118.5+-2.1, V+I+K+P 30.3+-0.8, real-dip -21.9+-5.7 (1.1M points, 0.5 core-h);
+  VBFNLO V+I+K+P - LO = 30.2 (800 jobs); the pieces agree where measurable.
+- Finding from the existing 800 VBFNLO jobs: the real-dip mean is -24.33+-0.12 fb in the p1506hist estimator
+  (iteration 5, total 125.22) but -23.31+-0.06 in VBFNLO's own weighted combination of the 5 iterations (total
+  126.24+-0.06); Born+V+I+K+P is identical (149.552). Per-iteration means -25.0, -22.2, -23.9, -24.9, -24.3: the
+  own combination is biased by the inverse-variance weighting, so 125.22 stands and the 0.96 fb offset to cs
+  is not explained by it.
+- Sizing for <= 0.15 fb per piece: cs LO 8, V 32, real-dip ~2100 core-h (+500 for two paired cutoff variations);
+  VBFNLO none for the pieces (800 jobs exist), 292 core-h for two paired m2min variations. Not submitted.

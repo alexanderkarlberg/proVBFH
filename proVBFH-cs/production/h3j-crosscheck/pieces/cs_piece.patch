@@ -1,0 +1,53 @@
+--- /u/akarlber/work/proVBFH/proVBFH-cs/src/cs_exclusive.f90	2026-10-11 13:08:17.681667988 +0200
++++ src/cs_exclusive.f90	2026-10-12 09:02:28.922545000 +0200
+@@ -43,7 +43,12 @@
+   implicit none
+   private
+   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
+-  public :: excl_hardfrac
++  public :: excl_hardfrac, cs_piece_setup
++  ! per-piece switches (cs_piece bitmask in powheg.input, default all):
++  ! 1: w (3-parton tree), 2: wv (one-loop+I+K+P on the radiating line), 4: e12 virtual-type
++  ! (other line's (V+I)f+(K+P)xf at Born), 8: e12 dipole-type (minus other line's dipoles),
++  ! 16: wr (4-parton real, one line), 32: wd (its 6 dipoles), 64: e3 ((1,1) 4-parton)
++  real(dp), save :: pm(7) = 1
+   public :: excl_order, excl_only2, excl_no20, excl_dump2, dump2_min, cs_excl_replay, cs_excl_testborn2, cs_excl_testlines, cs_excl_testlines11, cs_excl_setup2, cs_excl_testlimits, cs_excl_testvirt
+ 
+   ! 1: (1,0) + (0,1) (NLO); 2: also (2,0) + (0,2)
+@@ -768,6 +773,7 @@
+        wv = 0; wr = 0; wd = 0
+     endif
+     if (excl_only2) w = 0
++    w = w*pm(1); wv = wv*pm(2); wr = wr*pm(5); wd = wd*pm(6); e3 = e3*pm(7)
+     sw(:,ks) = w; swv(:,ks) = wv; swr(:,ks) = wr; swd(:,:,ks) = wd; se12(:,ks) = e12; se3(ks) = e3
+     enddo
+     vi_direct = .false.
+@@ -1328,9 +1334,17 @@
+           wd = wd - (kg/(2*mdot(pa, pt))*me(jq) + kg/(2*mdot(pa, pk))*me(jqb))*pdfl*gcls(ig)%n*fEo(0)*wrado
+        enddo
+     enddo
+-    w = (wb + wd)*common*wradl*hoppetAlphaS(mur(l))*hoppetAlphaS(mur(o))
++    w = (pm(3)*wb + pm(4)*wd)*common*wradl*hoppetAlphaS(mur(l))*hoppetAlphaS(mur(o))
+   end function nlo11_e12
+ 
++  subroutine cs_piece_setup(mask)
++    integer, intent(in) :: mask
++    integer :: i
++    do i = 1, 7
++       pm(i) = merge(1.0_dp, 0.0_dp, btest(mask, i-1))
++    enddo
++  end subroutine cs_piece_setup
++
+   ! stage 3, event E3: both lines radiated (the class-12 H+4j at the
+   ! two three-parton points); p7: proVBFH order (1, 2 incoming, 3 Higgs,
+   ! 4, 5 outgoing quarks of lines 1, 2, 6, 7 the extra partons of lines
+--- /u/akarlber/work/proVBFH/proVBFH-cs/src/cs_main.f90	2026-10-11 13:08:17.684779000 +0200
++++ src/cs_main.f90	2026-10-12 09:02:28.927043000 +0200
+@@ -86,6 +86,7 @@
+   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
+   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.
+   if (powheginput('#cs_order') > 0) excl_order = nint(powheginput('#cs_order'))
++  if (powheginput('#cs_piece') > 0) call cs_piece_setup(nint(powheginput('#cs_piece')))
+   if (powheginput('#cs_only2') == 1) excl_only2 = .true.
+   if (powheginput('#cs_no20') == 1) excl_no20 = .true.
+   if (powheginput('#cs_dump2') == 1) then
