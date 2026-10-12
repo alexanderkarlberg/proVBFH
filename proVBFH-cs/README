@@ -1,0 +1,76 @@
+proVBFH-cs: VBF Higgs production at (N)NLO, fully differential, with a line-by-line
+Catani-Seymour projection to Born. The inclusive part (structure functions),
+the analysis and the VBFNLO matrix elements are those of ../proVBFH; this
+package has no POWHEG-BOX machinery. Design: docs/DESIGN.md. Summary of the
+study that led to this code: ../notes/2026-10-cs-summary/README.md (the full
+logbooks and study tools are in the git tag cs-study-2026-10).
+
+BUILD
+  Build ../proVBFH first (./configure, make): proVBFH-cs takes the tool paths
+  from ../proVBFH/Makefile.inc (hoppet >= 2.0.0, LHAPDF, FastJet) and its
+  inclusive-part sources from ../proVBFH/src.
+    make                      builds proVBFH-cs (analysis of proVBFH)
+    make ANALYSIS=p1506       builds proVBFH-cs-p1506 (analysis/p1506_analysis.f,
+                              the 1506.02660 histograms, incl. 3- and 4-jet rates)
+    make ANALYSIS=hxswg136    builds proVBFH-cs-hxswg136 (HXSWG 13.6 TeV analysis)
+    make check                builds and runs tests/test_kinematics, test_smallx
+                              and test_four; fails if one of them fails
+    make clean
+
+HOW TO RUN
+  Run in a directory that has powheg.input and vbfnlo.input (as proVBFH).
+  example/ has the cards of the 1506.02660 set-up (13 TeV, PDF 261000, VBF cuts,
+  dynamic scale, runningscales 1) with every cs_ flag written out at its
+  default. For example, from a copy of example/:
+    cp -r example /my/run && cd /my/run && /path/to/proVBFH-cs-p1506
+  One run does the inclusive part and then the exclusive part, and adds the
+  histograms. For production runs (many seeds on a Slurm cluster) see
+  production/slurm: make_jobs.sh (one directory per seed from a card of
+  production/<setup>), run_array.sh (Slurm array task), combine_and_plot.sh
+  (combine the seeds, plot against the old proVBFH).
+
+  ncall1, itmx1: VEGAS grid pass; ncall2, itmx2: main pass. They are used as given
+  for the exclusive part. The inclusive part (7 dimensions) uses the mapped
+  numbers: n <= 1e4 -> n, 1e4 < n <= 1e7 -> n/10, n > 1e7 -> n/100.
+  iseed sets the seed; the random numbers of the exclusive part restart from it.
+  readingrid 1 reads the grids of a previous run with the same seed instead
+  of the grid pass (grids<seed>.dat for the inclusive and grids-excl<seed>.dat
+  for the exclusive part; both are written by a normal run).
+
+FLAGS (powheg.input; absent = default)
+  cs_order 3        QCD order: 1 LO (inclusive part only), 2 NLO, 3 NNLO
+                    (qcd_order is not used)
+  cs_scales 3       scale points computed on the fly: 1 central only; 3 adds
+                    (1/2,1/2) and (2,2) (W2, W3); 7 adds (1/2,1), (1,1/2),
+                    (2,1), (1,2). Needs runningscales 1 unless cs_scales 1
+  cs_npow 0         sampling power of 1-xp and z (0: logarithmic)
+  cs_cutoff 1d-5    invariant cutoff on 1-xp, z, 1-z of the line radiations
+  cs_hardfrac 0.3   fraction of first line radiations in the hard channel (small
+                    xp, z ~ 1/2), for the high-pT tails
+  cs_hardfrac2 0.7  the same for the second emission of the four-parton generator
+  cs_hard2mode 1    1: the second-emission hard channel only behind the hard
+                    first step; 0: after every first step
+  cs_smallx 0.3     fraction of Born phase-space points in the small-x channels
+                    (0: off)
+  cs_smallx_x0 0.03 x limit of the small-x channels
+
+OUTPUTS (in the run directory)
+  pwg-W<k>.top      all histograms, total (inclusive + exclusive), scale point k
+                    (W1 central; with the analysis weights of cs_scales)
+  pwg-LO-W<k>.top   inclusive part alone;  pwg-EXCL-W<k>.top  exclusive part alone
+  xsct-<lo|nlo|nnlo>.dat   cross section with the cuts of the analysis, per scale point
+  grids.dat, grids-excl.dat (plus .top) VEGAS grids; run.log is the standard output
+  At cs_order 1 only the inclusive part is run (pwg-LO-W<k>.top and pwg-W<k>.top).
+
+VALIDATION (validation/)
+  v1_regression.sh  the combined run reproduces the earlier two-job set-up
+                    (inclusive and exclusive part run separately), bin by bin
+                    (needs that older binary, see the script)
+  v2_submit.sh, v2_check.py, v2_sizing.txt
+                    physics check of the default card at NLO and NNLO against
+                    production/results/final-2026-10-07 (Slurm array)
+  v3_cleanup.sh     the clean-up changed nothing: default example card (and the
+                    p1506 binary), cs_order 1, 2, 3, against binaries built
+                    before the clean-up, every histogram bin and the xsct file to
+                    1e-12 relative (v3_compare.py)
+  make check        unit tests (tests/)

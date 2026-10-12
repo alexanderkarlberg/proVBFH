@@ -1,7 +1,70 @@
 # proVBFH-cs: VBF (H, HH) at NNLO with line-by-line projection-to-Born
 
-Status: design, stage 1 (NLO). Plan agreed with AK on 2026-09-29
-(plan page: https://claude.ai/artifact/RyqC8MbpLzvqYpZ4jHusu9).
+Status: production code (October 2026). Sections "Why" to "On-the-fly scale
+variations" are the design of the method, written in stages (stage 1 NLO,
+stage 2 the (2,0)/(0,2) terms, stage 3 the (1,1) term) and kept as such; the
+section "Run model" below describes what one run does now. The studies
+that led here (sampling, cross-checks against VBFNLO, the old proVBFH and
+the HXSWG numbers) are summarised in `notes/2026-10-cs-summary/README.md`;
+the full logbooks and the study tools are in the git tag `cs-study-2026-10`.
+
+## Run model
+
+One run of `proVBFH-cs` gives the complete cross section and histograms at
+the order `cs_order` (1 = LO, 2 = NLO, 3 = NNLO; default 3), from the cards
+`powheg.input` and `vbfnlo.input` of the working directory. It performs two
+VEGAS integrations in sequence, each with its own grid pass (`ncall1`,
+`itmx1`) and main pass (`ncall2`, `itmx2`):
+
+1. Inclusive part (`../proVBFH/src/inclusive`, structure functions, Born-level
+   events, 7 dimensions) at `qcd_order = cs_order`. Its number of calls per
+   iteration is mapped from the card's: n for n <= 1e4, n/10 for 1e4 < n <=
+   1e7, n/100 above (the inclusive integrand is cheap and low-dimensional).
+   `cs_main.f90` calls `run_inclusive`, then stores its histograms
+   (`cs_hist_save`, `cs_hist.f`) and writes `pwg-LO-W<k>.top`.
+2. Exclusive part (this package), for `cs_order` >= 2, with `ncall1`,
+   `ncall2` as in the card: `cs_order 2` is the (1,0) + (0,1) events of stage 1
+   with their Born counterevents (`excl_order 1`), `cs_order 3` adds the
+   (2,0) + (0,2) and (1,1) terms of stages 2 and 3 (`excl_order 3`). The
+   random-number stream is reset to the job seed before it. It writes
+   `pwg-EXCL-W<k>.top`. The exclusive part does not contribute to
+   histograms without cuts (the Higgs momentum is unchanged by the
+   projection), so points where neither the events nor the Born pass the
+   VBF cuts are skipped.
+
+Each part is normalised by its own VEGAS, then the histograms are added bin
+by bin (errors in quadrature): `pwg-W<k>.top` for the scale points k, with the
+total cross sections with the cuts of the analysis in `xsct-<lo|nlo|nnlo>.dat`.
+At `cs_order 1` only the inclusive part runs.
+
+The scale points are computed on the fly in both parts (`cs_scales`: 1, 3 or
+7 points; default 3: (1,1), (1/2,1/2), (2,2) times the central scale), see
+the last section. The central scale of the production cards is the dynamic
+scale of 1506.02660 (`runningscales 1`).
+
+Grids. Each part has its own grid files: `grids<seed>.dat` (inclusive, 7
+dimensions) and `grids-excl<seed>.dat` (exclusive, 13 or 20 dimensions, plus 5
+for the small-x channel). With `readingrid 1` the grid passes are skipped and
+each main pass starts from the file of its part, exactly as in two separate
+runs of the old two-part set-up (checked bin by bin). As in proVBFH, VEGAS
+then runs without stratification, so the result is not the same as that of the
+run that wrote the grids, only statistically compatible with it.
+
+Sampling parameters (production defaults, see the README for the list):
+- `cs_hardfrac`, `cs_hardfrac2`, `cs_hard2mode`: the second, "hard" channel
+  of the line radiation (described in step 2 of the event cycle);
+- `cs_smallx`, `cs_smallx_x0`: the small-x channel of the Born phase space,
+  a fraction of the Born points generated with a dedicated map for x < x0,
+  combined with the VEGAS map into one density (`cs_smallx.f90`; the five
+  extra dimensions are not adapted);
+- `cs_cutoff`, `cs_npow`: cutoff on the invariants of the line radiation and
+  sampling power.
+
+Validation, `make check` and `validation/`: unit tests of the kinematics,
+the small-x channel and the four-parton generator (`make check`); V1 (the
+combined run reproduces the old two-part run bin by bin), V2 (physics check
+of the default card against the final p1506 production), V3 (the clean-up
+changed nothing); see the README.
 
 ## Why
 
@@ -56,9 +119,9 @@ computed and histogrammed at the VBF Born kinematics as in proVBFH.
    logarithmic map hardly samples and which dominate the high-p_T tails;
    the weight uses the combined density. The same channel is used in the
    first step of the four-parton generator (`gen_four`, `four_weight`);
-   its second emission has its own fraction (`cs_hardfrac2`, default 0:
-   at NNLO a hard channel there costs more in the double-unresolved
-   corners than it gains in the tails). With `cs_hard2mode 1`
+   its second emission has its own fraction (`cs_hardfrac2`; a hard channel
+   there costs more in the double-unresolved corners than it gains in the
+   tails unless it is restricted by `cs_hard2mode 1`, see below). With `cs_hard2mode 1`
    (2026-10-08) the second emission's hard channel (fraction h2 =
    `cs_hardfrac2`) is used only when the first step took its hard
    channel, so the density per path is
@@ -66,7 +129,7 @@ computed and histogrammed at the VBF Born kinematics as in proVBFH.
    hard double emissions from one line at small x_p get the flat
    second-step density, while after the logarithmic first step the
    logarithmic second step keeps its full weight (the double-unresolved
-   corners). Default `cs_hard2mode 0`: h2 after every first step.
+   corners). `cs_hard2mode 0`: h2 after every first step.
 3. Weights:
    - w_i = |M_{H+3j}|² for emission from line i × PDFs(ξ_i, x_j) × flux ×
      phase space;
@@ -179,8 +242,8 @@ Validation, before the (1,1) runs:
 
 ## On-the-fly scale variations (2026-10-02)
 
-`cs_scales 3` or `cs_scales 7` in powheg.input (exclusive and inclusive
-part; default 1, off): every event carries one weight per scale point,
+`cs_scales 3` (default) or `cs_scales 7` in powheg.input (exclusive and inclusive
+part; `cs_scales 1`: off): every event carries one weight per scale point,
 written as `-W1.top` ... `-Wn.top` (the analyses use POWHEG's
 `weights_num`/`weights_val`). Points (μ_R/μ_R0, μ_F/μ_F0): 3 = (1,1),
 (½,½), (2,2); 7 = these, then (½,1), (1,½), (2,1), (1,2). Needs
@@ -197,16 +260,17 @@ scales as arguments.
   points) of the CPU of a run without variations.
 - Inclusive part: the structure functions at each scale point
   (`eval_matrix_element(..., xr, xf)`).
-- Without `cs_scales` both parts are bitwise unchanged.
+- With `cs_scales 1` both parts are bitwise those of a run without variations.
 - Validation (1506.02660 NNLO set-up, stored grid, one iteration, so that
   all runs see the same points): every on-the-fly weight against a run at
   that fixed (renscfact, facscfact). Inclusive: bitwise, except 5e-9 at
   μ_F = 2μ0 (the fixed-scale run tabulates the PDFs over a larger Q range).
   Exclusive, points that vary only μ_F: exact (1e-7 at μ_F = 2μ0, same
-  reason). Points that vary μ_R: within statistics. `cs_scalecheck 2`
-  accumulates shift − direct per point with its own error: rms 1.00 of
+  reason). Points that vary μ_R: within statistics. A check option
+  (removed after the study; it is in the tag `cs-study-2026-10`)
+  accumulated shift − direct per point with its own error: rms 1.00 of
   that error over 309 bins (400k points), σ(2 jets) −1.1σ and +1.2σ.
-  `cs_scalecheck 1` compares the shifted V + I with a direct evaluation at
+  Another compared the shifted V + I with a direct evaluation at
   every point: exact slope β0/(4π) for quark- and gluon-initiated lines;
   for incoming antiquarks VBFNLO's virtual deviates at the 1e-3 level of
   the slope (flavour dependent, no gauge-check fallbacks involved), and

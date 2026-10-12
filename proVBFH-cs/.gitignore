@@ -5,3 +5,6 @@ test-nlo/
 runs/
 __pycache__/
 tests/test_smallx
+proVBFH-cs-p1506
+proVBFH-cs-hxswg136
+tests/test_four
