@@ -16,6 +16,9 @@ module incl_parameters
   ! incl_nscale points, mu_R and mu_F multiplied by incl_scr(k), incl_scf(k);
   ! 1 (default): off, the run is unchanged
   integer,  public :: incl_nscale = 1
+  ! > 0: the QCD order of the inclusive part (instead of qcd_order of the
+  ! input card); set by proVBFH-cs (cs_order) before inclusive_init
+  integer,  public :: incl_order_override = 0
   real(dp), public :: incl_scr(7) = 1.0_dp, incl_scf(7) = 1.0_dp
   real(dp), public :: mh, mh_sq, hwidth
   real(dp), public :: sin_thw, mw, mz, w_width, z_width
@@ -58,6 +61,7 @@ contains
     order_min= powheginput('#order_min')
     if(order_min.lt.1.) order_min = 1
     order_max=powheginput('#qcd_order')
+    if(incl_order_override.gt.0) order_max = incl_order_override
     if(order_min.gt.order_max) stop 'order_min > order_max'
     ebeam1=powheginput('#ebeam1')
     ebeam2=powheginput("#ebeam2")

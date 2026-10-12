@@ -1,28 +1,35 @@
 !----------------------------------------------------------------------
 ! proVBFH-cs: VBF H with a line-by-line projection-to-Born
-! (docs/DESIGN.md). Stage 1 (NLO): run with the same powheg.input and
-! vbfnlo.input as proVBFH, plus
-!   cs_part   1: inclusive part (structure functions, Born-level events),
-!             2: exclusive part, (1,0) + (0,1) with counterevents
-!                (default)
+! (docs/DESIGN.md). One run gives the inclusive part (structure
+! functions, Born-level events; 7 dimensions) and the exclusive part
+! (O(alpha_s) and O(alpha_s^2) real and virtual corrections with
+! counterevents), each with its own VEGAS integration, and adds their
+! histograms: pwg-W<k>.top for the k scale points (the parts are also
+! written, pwg-LO-W<k>.top and pwg-EXCL-W<k>.top), and the cross section
+! with the cuts of the analysis in xsct-<lo|nlo|nnlo><seed>.dat.
+! Same powheg.input and vbfnlo.input as proVBFH, plus
+!   cs_order  1: LO (inclusive part only), 2: NLO, 3: NNLO (default); sets
+!             qcd_order of the inclusive part, qcd_order is not used
+!   cs_scales number of on-the-fly scale points: 1, 3 (default; (1,1),
+!             (1/2,1/2), (2,2)) or 7 (needs runningscales 1 for > 1)
+!   ncall1, ncall2, itmx1, itmx2  VEGAS set-up (grid and main pass) of the
+!             exclusive part; the inclusive part uses ncall mapped by
+!             incl_ncall (n <= 1e4: n; <= 1e7: n/10; else n/100)
 !   cs_npow   sampling power for 1-xp and z; 0 (default): logarithmic
 !   cs_hardfrac  fraction of the line radiations in the hard channel (small
 !             xp, z ~ 1/2; for the high-pT tails), also the first step of
-!             the four-parton generator; default 0
+!             the four-parton generator; default 0.3
 !   cs_hardfrac2  the same for the second emission of the four-parton
-!             generator; default 0
-!   cs_hard2mode  0 (default): cs_hardfrac2 after every first step;
-!             1: only after the first step's hard channel (targeted at
-!             hard double emissions from one line, small xp)
+!             generator; default 0.7
+!   cs_hard2mode  0: cs_hardfrac2 after every first step;
+!             1 (default): only after the first step's hard channel
+!             (targeted at hard double emissions from one line, small xp)
 !   cs_smallx  fraction h of the Born phase-space points in the small-x
-!             channels (cs_smallx.f90; default 0 = off), cs_smallx_x0 their
-!             x limit (default 0.03)
-!   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-6)
-!   cs_order  1: the O(alpha_s) exclusive part (NLO, default);
-!             2: also the O(alpha_s^2) (2,0) + (0,2) (stage 2)
+!             channels (cs_smallx.f90; default 0.3, 0 = off), cs_smallx_x0
+!             their x limit (default 0.03)
+!   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-5)
 !   cs_testlimits 1, cs_testvirt 1: stage-2 unit tests (real against
 !             dipoles in the singular limits; scale dependence of V + I)
-! The two parts write separate histogram files, to be added.
 !----------------------------------------------------------------------
 program provbfh_cs
   use types, only: dp
@@ -50,32 +57,60 @@ program provbfh_cs
   integer :: lprefix
   common/cpwgprefix/pwgprefix,lprefix
   character(len=60) :: histname
+  logical :: readin_job
+  integer :: idum_job, corder, ncall1_ex, ncall2_ex
+  integer :: idum
+  common/ranno/idum
+  real(dp) :: sig_i, err_i, sig_k, err_k
+  character(len=40) :: xsname
 
   call cpu_time(t0)
-  part = 2
-  if (powheginput('#cs_part') > 0) part = nint(powheginput('#cs_part'))
+  if (powheginput('#cs_part') > 0) stop 'cs_part is no longer used: one run gives both parts, cs_order sets the order'
+  corder = 3
+  if (powheginput('#cs_order') > 0) corder = nint(powheginput('#cs_order'))
+  if (corder < 1 .or. corder > 3) stop 'cs_order must be 1 (LO), 2 (NLO) or 3 (NNLO)'
+  nscales = 3
+  if (powheginput('#cs_scales') > 0) nscales = nint(powheginput('#cs_scales'))
+  if (nscales /= 1 .and. nscales /= 3 .and. nscales /= 7) stop 'cs_scales must be 1, 3 or 7'
 
-  if (part == 1) then
-     if (powheginput('#incl_only11') == 1) incl_only11 = .true.
-     ! on-the-fly scale variations (the same points as the exclusive part)
-     nscales = 3
-     if (powheginput('#cs_scales') > 0) nscales = nint(powheginput('#cs_scales'))
-     if (nscales > 1) then
-        incl_nscale = nscales
-        if (incl_nscale /= 3 .and. incl_nscale /= 7) stop 'cs_scales must be 1, 3 or 7'
-        incl_scr(1:incl_nscale) = sc_r(1:incl_nscale)
-        incl_scf(1:incl_nscale) = sc_f(1:incl_nscale)
-        write(6,'(a,i2,a)') ' proVBFH-cs inclusive part: ', incl_nscale, ' scale points, weights W1, W2, ...:'
-        write(6,'(7(a,f4.2,a,f4.2,a))') (' (', sc_r(i), ',', sc_f(i), ')', i = 1, incl_nscale)
-     endif
-     call run_inclusive()
-     call cpu_time(t1)
-     write(6,'(a,f12.1,a)') ' proVBFH-cs inclusive part: CPU ', t1 - t0, ' s'
+  ! inclusive part, at the order cs_order (instead of qcd_order)
+  incl_order_override = corder
+  call inclusive_init()          ! parameters, PDFs, alpha_s, scales
+  idum_job = idum                ! -iseed, for the exclusive part
+  ! on-the-fly scale variations (the same points as the exclusive part)
+  if (nscales > 1) then
+     incl_nscale = nscales
+     incl_scr(1:incl_nscale) = sc_r(1:incl_nscale)
+     incl_scf(1:incl_nscale) = sc_f(1:incl_nscale)
+  endif
+  write(6,'(a,i2,a,i2,a)') ' proVBFH-cs: cs_order ', corder, ', ', nscales, ' scale points (mu_R/mu_R0, mu_F/mu_F0), weights W1, W2, ...:'
+  write(6,'(7(a,f4.2,a,f4.2,a))') (' (', sc_r(i), ',', sc_f(i), ')', i = 1, nscales)
+  ncall1_ex = ncall1
+  ncall2_ex = ncall2
+  ncall1 = incl_ncall(ncall1_ex)
+  ncall2 = incl_ncall(ncall2_ex)
+  write(6,'(a,2i12)') ' proVBFH-cs inclusive part: ncall1, ncall2 = ', ncall1, ncall2
+  ! the grid file of the inclusive part (grids<seed>.dat; readingrid) is
+  ! its own, the exclusive part has grids-excl<seed>.dat
+  readin_job = readin
+  call run_inclusive(.true., sig_i, err_i)
+  readin = readin_job
+  ncall1 = ncall1_ex
+  ncall2 = ncall2_ex
+  call cpu_time(t1)
+  write(6,'(a,es13.5,a,es10.3,a)') ' proVBFH-cs inclusive part: total (no cuts) ', sig_i, ' +- ', err_i, ' pb'
+  write(6,'(a,f12.1,a)') ' proVBFH-cs inclusive part: CPU ', t1 - t0, ' s'
+  call pwhgsetout
+  call cs_hist_save()
+  if (corder == 1) then
+     call write_total()
      stop
   endif
 
-  ! exclusive part
-  call inclusive_init()          ! parameters, PDFs, alpha_s, scales
+  ! exclusive part: cs_order 2 is the (1,0) + (0,1) of excl_order 1, cs_order 3
+  ! also the (2,0) + (0,2) and (1,1)
+  if (corder == 2) excl_order = 1
+  if (corder == 3) excl_order = 3
   call cs_init_vbfnlo()          ! VBFNLO couplings from vbfnlo.input
   call cs_excl_setup()
   call set_beams(sqrts)
@@ -87,8 +122,6 @@ program provbfh_cs
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.
-  excl_order = 3
-  if (powheginput('#cs_order') > 0) excl_order = nint(powheginput('#cs_order'))
   if (powheginput('#cs_only2') == 1) excl_only2 = .true.
   if (powheginput('#cs_no20') == 1) excl_no20 = .true.
   if (powheginput('#cs_dump2') == 1) then
@@ -115,8 +148,6 @@ program provbfh_cs
   ! cs_estimate 7 (Born-type weights only): no four-parton matrix elements
   if (excl_estimate == 7) nlo2_emul_kappa = huge(1.0_dp)
   ! on-the-fly scale variations: cs_scales 3 (symmetric) or 7 points
-  nscales = 3
-  if (powheginput('#cs_scales') > 0) nscales = nint(powheginput('#cs_scales'))
   if (nscales > 0) then
      call cs_scales_setup(nscales)
      if (powheginput('#cs_scalecheck') == 1) excl_scalecheck = .true.
@@ -191,6 +222,7 @@ program provbfh_cs
      ndim = ndim + 5
      write(6,'(a,f6.3,a,f7.4,a,i3)') ' proVBFH-cs: small-x channel, fraction ', sx_h, ', x0 ', sx_x0, ', dimensions ', ndim
   endif
+  idum = idum_job   ! random numbers as in a run of the exclusive part alone
   region(1:ndim) = 0
   region(ndim+1:2*ndim) = 1
   ilast = 0
@@ -210,6 +242,8 @@ program provbfh_cs
      call pwhgsetout
      histname = pwgprefix(1:lprefix)//'-EXCL'//trim(seedstr)
      call pwhgtopout(histname)
+     call cs_hist_add()
+     call write_total()
   endif
   call cpu_time(t1)
   write(6,'(a,es13.5,a,es10.3,a)') ' proVBFH-cs exclusive part: sum |w1|+|w2| = ', integ, ' +- ', err, ' pb'
@@ -220,4 +254,40 @@ program provbfh_cs
   if (excl_scalecheck) write(6,'(a,i12,a,2es10.2)') ' scale check: ', scalecheck_n, &
        & ' shifted V+I against direct, max deviation relative to |V+I|, to |born|:', scalecheck_dev
   write(6,'(a,f12.1,a)') ' proVBFH-cs exclusive part: CPU ', t1 - t0, ' s'
+
+contains
+
+  ! ncall of the inclusive part (7 dimensions) from the exclusive one
+  integer function incl_ncall(n)
+    integer, intent(in) :: n
+    if (n <= 10000) then
+       incl_ncall = n
+    else if (n <= 10000000) then
+       incl_ncall = n/10
+    else
+       incl_ncall = n/100
+    endif
+  end function incl_ncall
+
+  ! total histograms pwg-W<k>.top and the cross section with the cuts of the
+  ! analysis (histogram 1) for every scale point, xsct-<order><seed>.dat
+  subroutine write_total()
+    character(len=40) :: xsname
+    character(len=60) :: hname
+    character(len=4), parameter :: oname(3) = ['LO  ', 'NLO ', 'NNLO']
+    character(len=5), parameter :: fname(3) = ['lo   ', 'nlo  ', 'nnlo ']
+    integer :: k
+    hname = pwgprefix(1:lprefix)//trim(seedstr)
+    call pwhgtopout(hname)
+    xsname = 'xsct-'//trim(fname(corder))//trim(seedstr)//'.dat'
+    open(unit=11, file=trim(xsname), action='write')
+    write(11,'(a)') '# proVBFH-cs: total '//trim(oname(corder))//' cross section with the cuts of the analysis'
+    write(11,'(a)') '# (inclusive + exclusive part), one line per scale point (mu_R/mu_R0, mu_F/mu_F0)'
+    do k = 1, nscales
+       call cs_hist_total(k, sig_k, err_k)
+       write(11,'(es13.6,a,es13.6,a,2f5.2)') sig_k, ' +/- ', err_k, ' (pb)  # W', sc_r(k), sc_f(k)
+       write(6,'(a,i2,a,es13.6,a,es13.6,a)') ' proVBFH-cs total, W', k, ': ', sig_k, ' +- ', err_k, ' pb'
+    enddo
+    close(11)
+  end subroutine write_total
 end program provbfh_cs

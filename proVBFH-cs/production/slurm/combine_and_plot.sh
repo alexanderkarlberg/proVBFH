@@ -4,9 +4,10 @@
 #
 #   combine_and_plot.sh <setup> <order> <out dir> [run root]
 #
-# <order>: nnlo (prod-nnlo/<setup>/{excl,incl}), nlo (prod-lonlo/<setup>/
-# {nlo-excl,nlo-incl}) or lo (prod-lonlo/<setup>/lo-incl). Writes
-# <out dir>/<setup>/<order>-W{1,2,3}.top (exclusive + inclusive, error of the
+# <order>: nnlo (prod-nnlo/<setup>/run), nlo (prod-lonlo/<setup>/nlo) or lo
+# (prod-lonlo/<setup>/lo); one directory of job-* per order (each job is the
+# inclusive + exclusive run). Writes
+# <out dir>/<setup>/<order>-W{1,2,3}.top (error of the
 # mean from the seed scatter, no trimming) and, where an old reference
 # exists (1506: NNLO; HXSWG: LO, NLO, NNLO), plots-<order>/ and
 # summary-<order>.json. Only jobs with a "done" marker are used.
@@ -20,22 +21,17 @@ setup=$1; order=$2; out=$3/$setup; root=${4:-/ptmp/mpp/akarlber/cs-production}
 here=${PROD_DIR:-/u/akarlber/work/proVBFH/proVBFH-cs/production}
 tools=$here/../tools
 case $order in
-    nnlo) excl=$root/prod-nnlo/$setup/excl; incl=$root/prod-nnlo/$setup/incl ;;
-    nlo)  excl=$root/prod-lonlo/$setup/nlo-excl; incl=$root/prod-lonlo/$setup/nlo-incl ;;
-    lo)   excl=; incl=$root/prod-lonlo/$setup/lo-incl ;;
+    nnlo) run=$root/prod-nnlo/$setup/run ;;
+    nlo)  run=$root/prod-lonlo/$setup/nlo ;;
+    lo)   run=$root/prod-lonlo/$setup/lo ;;
     *) echo "order must be nnlo, nlo or lo"; exit 1 ;;
 esac
 mkdir -p "$out"
-# finished jobs, as links in one directory per part (combine_parts takes globs)
-parts=()
-for p in excl incl; do
-    src=${!p}; [ -n "$src" ] || continue
-    l=$out/.done-$order-$p; rm -rf "$l"; mkdir "$l"
-    for d in "$src"/job-*; do [ -f "$d/done" ] && ln -s "$d" "$l/$(basename "$d")"; done
-    echo "$order $p: $(ls "$l" | wc -l) finished jobs"
-    prefix=EXCL; [ $p = incl ] && prefix=LO
-    parts+=("$l/job-*/pwg-$prefix-WEIGHT.top")
-done
+# finished jobs, as links in one directory (combine_parts takes globs)
+l=$out/.done-$order; rm -rf "$l"; mkdir "$l"
+for d in "$run"/job-*; do [ -f "$d/done" ] && ln -s "$d" "$l/$(basename "$d")"; done
+echo "$order: $(ls "$l" | wc -l) finished jobs"
+parts=("$l/job-*/pwg-WEIGHT.top")
 for w in W1 W2 W3; do
     args=(); for g in "${parts[@]}"; do args+=(--part "${g/WEIGHT/$w}"); done
     python3 "$tools/combine_parts.py" --error scatter "${args[@]}" --out "$out/$order-$w.top" | { grep -v "^part" || true; }

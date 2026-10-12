@@ -65,7 +65,7 @@ EXE= proVBFH-cs
 endif
 
 # this package
-CS= cs_glue.o cs_glue2.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o cs_smallx.o cs_nlo2.o cs_exclusive.o cs_main.o
+CS= cs_glue.o cs_glue2.o cs_hist.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o cs_smallx.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 

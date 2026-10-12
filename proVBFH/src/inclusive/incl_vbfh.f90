@@ -56,8 +56,13 @@ contains
     
   end subroutine inclusive_init
   
-  subroutine run_inclusive()
+  ! embedded (proVBFH-cs): the caller has called inclusive_init, and gets the
+  ! total cross section (sigma, error sigma_err) instead of the xsct file
+  subroutine run_inclusive(embedded, sigma, sigma_err)
     use sub_defs_io
+    logical,  intent(in),  optional :: embedded
+    real(dp), intent(out), optional :: sigma, sigma_err
+    logical :: embed
     integer, parameter :: ndim = 7 ! dimension for vegas integration
     real(dp) :: integ, error_int, proba
     real(dp) :: sigma_tot, error_tot, region(1:14)
@@ -71,7 +76,9 @@ contains
     integer lprefix
     common/cpwgprefix/pwgprefix,lprefix
 
-    call inclusive_init()
+    embed = .false.
+    if (present(embedded)) embed = embedded
+    if (.not. embed) call inclusive_init()
     
     ! set beams for phase space generation
     call set_beams(sqrts)
@@ -116,6 +123,12 @@ contains
        call pwhgsetout
        histname=pwgprefix(1:lprefix)//'-LO'//trim(seedstr)
        call pwhgtopout(histname)
+    endif
+
+    if (embed) then
+       if (present(sigma)) sigma = sigma_tot
+       if (present(sigma_err)) sigma_err = sqrt(error_tot)
+       return
     endif
 
     ! print total cross section and error into file  

@@ -1,5 +1,4 @@
 !!!!!!!!!!!!!!! USER PARAMETERS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-qcd_order 2
 inclusive_only 0
                   ! differentially in the Higgs momentum. 0: Computes the cross
                   ! section fully differentially in the jets.
@@ -19,7 +18,7 @@ higgsmasswindow  30 ! How many widths we integrate around the Breit Wigner peak.
 runningscales 1
                    ! 2: Q1 on upper and Q2 on lower line (slow)
 
-ncall1 200000
+ncall1 200000      ! exclusive part; the inclusive part uses n/10 (n <= 1e7), see example/powheg.input
 ncall2 600000
 itmx2 3
 
@@ -97,11 +96,13 @@ manyseeds 0
                    ! sequence for the generation of the event.
 
 alphas_from_lhapdf 1 ! Use LHAPDF to get alphas 
-cs_part 2
-cs_npow 0
-cs_cutoff 1d-5
-cs_order 3
-cs_scales 3       ! on-the-fly scale points W1 (1,1), W2 (1/2,1/2), W3 (2,2)
-cs_hardfrac 0.3   ! hard-emission sampling channel (recommended)
-cs_hard2mode 1    ! second emission: flat channel only behind the hard first step (8 Oct pilots)
-cs_hardfrac2 0.7  ! its fraction; about 1.7x (3 jets) and 4.8x (4 jets) less CPU, see the notes
+!!!!!!!!!!!!!!! proVBFH-cs: every flag at its default (absent = default) !!!!!!!!
+cs_order 3         ! QCD order of the run: 1 LO (inclusive part only), 2 NLO, 3 NNLO (qcd_order is not used)
+cs_scales 3        ! on-the-fly scale points W1 (1,1), W2 (1/2,1/2), W3 (2,2); 1: central only, 7: adds (1/2,1), (1,1/2), (2,1), (1,2)
+cs_npow 0          ! sampling power of 1-xp and z (0: logarithmic)
+cs_cutoff 1d-5     ! invariant cutoff on 1-xp, z, 1-z of the line radiations
+cs_hardfrac 0.3    ! fraction of first line radiations in the hard channel (small xp, z ~ 1/2), for the high-pT tails
+cs_hardfrac2 0.7   ! the same for the second emission
+cs_hard2mode 1     ! 1: second-emission hard channel only behind the hard first step; 0: after every first step
+cs_smallx 0.3      ! fraction of Born phase-space points in the small-x channels (0: off)
+cs_smallx_x0 0.03  ! x limit of the small-x channels

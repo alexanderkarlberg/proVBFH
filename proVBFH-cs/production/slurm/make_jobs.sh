@@ -1,17 +1,17 @@
 #!/bin/bash
 # Create one directory per job for a Slurm array (see CLUSTER-INSTRUCTIONS.md).
 #
-#   make_jobs.sh <setup> <excl|incl> <first seed> <njobs> <run dir> [key=value ...]
+#   make_jobs.sh <setup> <first seed> <njobs> <run dir> [key=value ...]
 #
 # Writes <run dir>/job-<seed>/{powheg.input,vbfnlo.input} from the card
-# production/<setup>/powheg-<part>.input with "iseed <seed>", and appends the
+# production/<setup>/powheg.input with "iseed <seed>", and appends the
 # job directories to <run dir>/jobs.list (line i = array task i). Extra
 # key=value arguments replace that key in the card (e.g. ncall2=3200000).
 # Refuses to overwrite an existing job directory, so seeds are never reused.
 set -e
-setup=$1; part=$2; first=$3; n=$4; run=$5; shift 5
+setup=$1; first=$2; n=$3; run=$4; shift 4
 here=$(cd "$(dirname "$0")/.." && pwd)
-card=$here/$setup/powheg-$part.input
+card=$here/$setup/powheg.input
 [ -f "$card" ] || { echo "no card $card"; exit 1; }
 mkdir -p "$run"
 run=$(cd "$run" && pwd)
