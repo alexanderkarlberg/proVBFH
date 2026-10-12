@@ -131,9 +131,10 @@ module cs_exclusive
   logical, save :: excl_fill = .false.
   integer, save :: excl_npow = 0     ! 0: logarithmic sampling
   ! fraction of the line radiations sampled in the hard channel (small
-  ! xp, z ~ 1/2; line_radiation), for the high-pT tails; 0: off
-  real(dp), save :: excl_hardfrac = 0
-  real(dp), save :: excl_cutoff = 1d-6
+  ! xp, z ~ 1/2; line_radiation), for the high-pT tails; 0: off;
+  ! default 0.3 (production)
+  real(dp), save :: excl_hardfrac = 0.3_dp
+  real(dp), save :: excl_cutoff = 1d-5
   ! counters: points, line radiations rejected by the cutoff, NaN, points
   ! where neither event nor Born passes the cuts
   integer(8), save :: excl_stats(4) = 0

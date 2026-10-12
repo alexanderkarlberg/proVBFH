@@ -33,9 +33,9 @@ module cs_smallx
   public :: sx_h, sx_x0, sx_dim0, sx_choose, sx_gen, sx_rho
 
   integer, parameter :: dp = kind(1d0)
-  ! fraction of the points in channels B (0: off), x0, and the number of
+  ! fraction of the points in channels B (default 0.3; 0: off), x0, and the number of
   ! the VEGAS dimensions before the extra ones (selector and four numbers)
-  real(dp), save :: sx_h = 0, sx_x0 = 0.03_dp
+  real(dp), save :: sx_h = 0.3_dp, sx_x0 = 0.03_dp
   integer, save :: sx_dim0 = 20
 
 contains

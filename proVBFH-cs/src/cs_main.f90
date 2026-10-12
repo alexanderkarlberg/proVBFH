@@ -44,7 +44,7 @@ program provbfh_cs
   real(dp) :: region(2*maxdim), integ, err, chi2, t0, t1
   real(dp) :: powheginput
   external powheginput
-  integer :: part, ilast, i
+  integer :: part, ilast, i, nscales
   common/last_integ/ilast
   character(len=20) :: pwgprefix
   integer :: lprefix
@@ -58,8 +58,10 @@ program provbfh_cs
   if (part == 1) then
      if (powheginput('#incl_only11') == 1) incl_only11 = .true.
      ! on-the-fly scale variations (the same points as the exclusive part)
-     if (powheginput('#cs_scales') > 1) then
-        incl_nscale = nint(powheginput('#cs_scales'))
+     nscales = 3
+     if (powheginput('#cs_scales') > 0) nscales = nint(powheginput('#cs_scales'))
+     if (nscales > 1) then
+        incl_nscale = nscales
         if (incl_nscale /= 3 .and. incl_nscale /= 7) stop 'cs_scales must be 1, 3 or 7'
         incl_scr(1:incl_nscale) = sc_r(1:incl_nscale)
         incl_scf(1:incl_nscale) = sc_f(1:incl_nscale)
@@ -78,13 +80,14 @@ program provbfh_cs
   call cs_excl_setup()
   call set_beams(sqrts)
   if (powheginput('#cs_npow') >= 0) excl_npow = nint(powheginput('#cs_npow'))
-  if (powheginput('#cs_hardfrac') > 0) excl_hardfrac = powheginput('#cs_hardfrac')
+  if (powheginput('#cs_hardfrac') >= 0) excl_hardfrac = powheginput('#cs_hardfrac')
   four_hard = excl_hardfrac
-  if (powheginput('#cs_hardfrac2') > 0) four_hard2 = powheginput('#cs_hardfrac2')
-  if (powheginput('#cs_hard2mode') > 0) four_hard2mode = nint(powheginput('#cs_hard2mode'))
+  if (powheginput('#cs_hardfrac2') >= 0) four_hard2 = powheginput('#cs_hardfrac2')
+  if (powheginput('#cs_hard2mode') >= 0) four_hard2mode = nint(powheginput('#cs_hard2mode'))
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
   if (powheginput('#cs_flavcheck') > 0) excl_flavcheck = 200
   if (powheginput('#cs_phspcuts') == 0) excl_phspcuts = .false.
+  excl_order = 3
   if (powheginput('#cs_order') > 0) excl_order = nint(powheginput('#cs_order'))
   if (powheginput('#cs_only2') == 1) excl_only2 = .true.
   if (powheginput('#cs_no20') == 1) excl_no20 = .true.
@@ -112,8 +115,10 @@ program provbfh_cs
   ! cs_estimate 7 (Born-type weights only): no four-parton matrix elements
   if (excl_estimate == 7) nlo2_emul_kappa = huge(1.0_dp)
   ! on-the-fly scale variations: cs_scales 3 (symmetric) or 7 points
-  if (powheginput('#cs_scales') > 0) then
-     call cs_scales_setup(nint(powheginput('#cs_scales')))
+  nscales = 3
+  if (powheginput('#cs_scales') > 0) nscales = nint(powheginput('#cs_scales'))
+  if (nscales > 0) then
+     call cs_scales_setup(nscales)
      if (powheginput('#cs_scalecheck') == 1) excl_scalecheck = .true.
      if (powheginput('#cs_scalecheck') == 2) then
         if (excl_nscale /= 7) stop 'cs_scalecheck 2 needs cs_scales 7'
@@ -178,9 +183,9 @@ program provbfh_cs
   endif
   ! small-x channel for the Born phase space (cs_smallx, cs_smallx_x0): five
   ! extra, non-adapted dimensions (selector, four numbers)
-  if (powheginput('#cs_smallx') > 0) then
+  if (powheginput('#cs_smallx') >= 0) sx_h = powheginput('#cs_smallx')
+  if (sx_h > 0) then
      if (excl_order == 10 .or. excl_order == 11 .or. excl_order == 13) stop 'cs_smallx: not for the validation orders'
-     sx_h = powheginput('#cs_smallx')
      if (powheginput('#cs_smallx_x0') > 0) sx_x0 = powheginput('#cs_smallx_x0')
      sx_dim0 = ndim
      ndim = ndim + 5

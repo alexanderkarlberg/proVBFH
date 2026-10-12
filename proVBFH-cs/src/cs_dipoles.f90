@@ -63,14 +63,14 @@ module cs_dipoles
   ! or ln x uniform in [ln xi3, 0] (FI), and z uniform, instead of
   ! logarithmic y (1-x) and z (at NNLO the second step's hard channel costs
   ! more in the double-unresolved corners than it gains, 2026-09-30)
-  real(dp), public, save :: four_hard = 0, four_hard2 = 0
-  ! four_hard2mode (cs_hard2mode), how four_hard2 is used: 0 (default), in
-  ! every path; 1, only after the first step's hard channel (targeted, for
+  real(dp), public, save :: four_hard = 0.3_dp, four_hard2 = 0.7_dp
+  ! four_hard2mode (cs_hard2mode), how four_hard2 is used: 0, in
+  ! every path; 1 (default), only after the first step's hard channel (targeted, for
   ! hard double emissions at small xp; 2026-10-08): the density per path is
   !   (1-h1) g_log1 g_log2 + h1 g_hard1 ((1-h2) g_log2 + h2 g_hard2),
   ! so the logarithmic second step keeps its full weight after the
   ! logarithmic first step
-  integer, public, save :: four_hard2mode = 0
+  integer, public, save :: four_hard2mode = 1
   ! diagnostic: azimuthally averaged spin correlations (not for physics runs)
   logical, public, save :: spin_avg = .false.
 
