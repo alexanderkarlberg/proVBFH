@@ -1,0 +1,9 @@
+V2 pilot, 12 Oct 2026 (alma, ct37/gt07), default p1506 card, ncall1 200000, ncall2 1600000, itmx1 2, itmx2 3
+(inclusive part: ncall/10, 15 s), 2 jobs per order, max RSS 0.2 GB:
+  NLO : 0.18 h/job; per-job error 0.3% on sig incl cuts, 0.5% on 3 jets
+  NNLO: 1.8 h/job (CPU 6400-6570 s); per-job VEGAS error 0.26% on the total, scatter of 2 jobs 1.1% (2 j), 1.9% (3 j)
+Proposal: NLO 100 jobs (18 core-h) + NNLO 100 jobs (180 core-h) = ~200 core-h, TIME=5:00:00 for NNLO:
+  NJOBS=100 validation/v2_submit.sh nlo  9200
+  NJOBS=100 TIME=5:00:00 validation/v2_submit.sh nnlo 9400
+  validation/v2_check.py <order> '<run dir>/job-*/pwg-W%d.top'
+Expected precision: total 0.03%, 3 jets 0.2% (NNLO) / 0.05% (NLO); the final production has 0.13% on 3 jets.
