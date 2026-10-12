@@ -16,6 +16,7 @@ if [ "$mode" = cs ]; then
     sed -e "s/^iseed .*/iseed $s/" -e "s/^ncall2 .*/ncall2 $7/" -e "s/^cs_order .*/cs_order $5/" \
         ${8:+-e "s/^ncall1 .*/ncall1 $8/"} ${9:+-e "s/^cs_cutoff .*/cs_cutoff $9/"} $src/powheg.input > "$d/powheg.input"
     echo "cs_piece $6" >> "$d/powheg.input"
+    echo "cs_smallx 0.3" >> "$d/powheg.input"   # as the 749-job small-x production (126.185 fb)
     echo "$d" >> "$base/jobs.list"
   done
 elif [ "$mode" = vbfnlo ]; then
