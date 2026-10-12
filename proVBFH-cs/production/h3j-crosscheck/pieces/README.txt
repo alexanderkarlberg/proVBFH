@@ -70,3 +70,7 @@ COMMANDS (not submitted). P=/u/akarlber/work/proVBFH/proVBFH-cs/production/h3j-c
  $P/mkjobs.sh vbfnlo $B/vb-m1 2001 100 23 1.0;    $P/submit.sh $B/vb-m1/jobs.list 1-100 3:00:00 vbfnlo
  $P/mkjobs.sh vbfnlo $B/vb-m001 2001 100 23 0.01; $P/submit.sh $B/vb-m001/jobs.list 1-100 3:00:00 vbfnlo
  (summarise with: summ.py <jobs.list>)
+
+12 Oct: vbfnlo_rd_tails.py (login node, reads the 800 VBFNLO jobs' run.log, real-dip = second MONACO run, ndim=15,
+ 5 iterations/job): per-job tail statistics, jackknife/bootstrap, halves, pulls, inverse-variance vs plain vs
+ equal-weight iteration combinations. Prints a summary; full output in rd_tails_detail.txt (run in this directory).

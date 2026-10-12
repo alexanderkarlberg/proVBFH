@@ -995,3 +995,13 @@ Tools in `proVBFH-cs/production/h3j-crosscheck/pieces/` (README.txt has the deta
   is not explained by it.
 - Sizing for <= 0.15 fb per piece: cs LO 8, V 32, real-dip ~2100 core-h (+500 for two paired cutoff variations);
   VBFNLO none for the pieces (800 jobs exist), 292 core-h for two paired m2min variations. Not submitted.
+
+## 12 Oct: VBFNLO real-dip tails
+
+Script: `proVBFH-cs/production/h3j-crosscheck/pieces/vbfnlo_rd_tails.py` (output `rd_tails_detail.txt`). 800 VBFNLO jobs, real-dip per iteration (5 iterations, ncall 0.5,1,2,4,8M).
+
+- Last iteration: mean -24.33, jackknife 0.12, bootstrap 0.12, median -24.08, skewness -0.4; top 1%/5% jobs (by |dev| from median) contribute -0.32/-1.38 fb to the mean; halves by seed -24.56+-0.18 / -24.10+-0.15 (1.9 sigma, acceptable); pull std 1.00 w.r.t. the plain mean (quoted per-job error median 1.9, consistent with the MAD scatter 2.05; the std 3.4 is from the tail). Plain mean and error are reliable.
+- Iterations 3 and 4 are heavy-tailed (skewness -2.4, -13.9; single jobs at -184 and -110 with quoted errors of the same size), but their plain means (-23.93+-0.40, -24.86+-0.30) are consistent with the last one.
+- Value and quoted error are anticorrelated per job (it3 -0.55, it4 -0.88, it5 -0.21): big negative spikes come with big errors, so inverse-variance weights discard exactly the negative spikes and bias the combination upward (less negative): ivw 1-5: -23.31+-0.06, ivw 3-5: -23.79+-0.06 (jackknife-equal to quoted, i.e. the error is meaningless relative to the bias).
+- Equal-weight per job, it3-5: -24.38+-0.17 (median -23.75, skew -3.7); Ncall-weighted it3-5: -24.43+-0.13; it4-5: -24.60+-0.16.
+- Verdict: real-dip = -24.35 +- 0.15 fb (last-iteration plain mean and equal-weight 3-5 agree). A residual undersampled negative tail would only push it more negative. VBFNLO sigma(>=3j) = 125.2 +- ~0.2 fb, the offset 0.96 fb to proVBFH-cs is about 4.8 sigma with quoted errors, about 3 sigma if the proVBFH-cs error is inflated by 1.7.

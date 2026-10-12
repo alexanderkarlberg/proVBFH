@@ -1,0 +1,24 @@
+iter 3 mean -23.93+-0.40 jk 0.40 boot 0.39 median -22.64 skew -2.35  mean-median -1.29
+   top1% |dev| jobs contribute -0.59 fb to mean, top5% -2.37; largest devs: [-109.6  -90.3   73.   -60.1   53.   -48.6] quoted err [104.9  90.5  70.6  73.1  49.8  58.6]
+   halves: -23.99+-0.57 vs -23.88+-0.54
+   pull wrt plain mean: std 1.07, frac|pull|>3 0.010; median quoted err 5.38 vs scatter(MAD*1.48) 6.41 vs std 11.17; corr(x,err) -0.55 spearman-ish -0.34
+iter 4 mean -24.86+-0.30 jk 0.30 boot 0.30 median -23.97 skew -13.90  mean-median -0.89
+   top1% |dev| jobs contribute -0.74 fb to mean, top5% -2.04; largest devs: [-184.1  -40.3  -40.2  -30.8  -29.1  -26.4] quoted err [183.1  41.2  44.4  26.7  23.4  31.1]
+   halves: -24.42+-0.22 vs -25.30+-0.55
+   pull wrt plain mean: std 1.08, frac|pull|>3 0.011; median quoted err 3.07 vs scatter(MAD*1.48) 3.68 vs std 8.36; corr(x,err) -0.88 spearman-ish -0.34
+iter 5 mean -24.33+-0.12 jk 0.12 boot 0.12 median -24.08 skew -0.41  mean-median -0.25
+   top1% |dev| jobs contribute -0.32 fb to mean, top5% -1.38; largest devs: [ 29.4  28.  -27.1 -26.5 -19.9 -19.5] quoted err [24.2 26.6 23.4 23.5 14.  21.2]
+   halves: -24.56+-0.18 vs -24.10+-0.15
+   pull wrt plain mean: std 1.00, frac|pull|>3 0.003; median quoted err 1.88 vs scatter(MAD*1.48) 2.05 vs std 3.38; corr(x,err) -0.21 spearman-ish -0.28
+ivw1-5 mean -23.31+-0.06 jk 0.06 corr(v,err) -0.12
+   job-weighted by combined err: -23.23
+ivw3-5 mean -23.79+-0.06 jk 0.06 corr(v,err) -0.30
+   job-weighted by combined err: -23.59
+equal-weight it3-5 per job: mean -24.38+-0.17 jk 0.17 boot 0.17 median -23.75 skew -3.71
+Ncall-weighted it3-5: mean -24.43+-0.13
+equal it4-5: -24.60+-0.16
+last-it value quartile [-51.5,-25.6]: median quoted err 2.35
+last-it value quartile [-25.6,-24.1]: median quoted err 1.88
+last-it value quartile [-24.1,-22.8]: median quoted err 1.68
+last-it value quartile [-22.8,5.1]: median quoted err 1.81
+sum ivw-weight shift: weight share of lowest-err 10%% jobs in ivw3-5: 
