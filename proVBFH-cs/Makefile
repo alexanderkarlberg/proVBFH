@@ -6,7 +6,8 @@
 # utilities (the input-file reader, newunit, spinor routines) are needed by
 # them.
 #
-# "make" builds proVBFH-cs; "make clean" removes object files.
+# "make" builds proVBFH-cs; "make check" builds and runs the unit tests;
+# "make clean" removes object files.
 # "make ANALYSIS=hxswg136" builds proVBFH-cs-hxswg136 with the analysis
 # analysis/hxswg136_analysis.f instead of proVBFH's user_analysis.f.
 #############################################################################
@@ -65,7 +66,7 @@ EXE= proVBFH-cs
 endif
 
 # this package
-CS= cs_glue.o cs_glue2.o cs_hist.o cs_born2.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o cs_smallx.o cs_nlo2.o cs_exclusive.o cs_main.o
+CS= cs_glue.o cs_glue2.o cs_hist.o cs_kinematics.o cs_dipoles.o cs_memo.o cs_smallx.o cs_nlo2.o cs_exclusive.o cs_main.o
 
 OBJS= $(INCL) $(VBFNLO) $(PWGUTIL) $(ANAL) $(CS)
 
@@ -79,9 +80,10 @@ tests/test_smallx: cs_smallx.o tests/test_smallx.f90
 tests/test_four: cs_kinematics.o cs_dipoles.o tests/test_four.f90
 	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_four.f90 $(OBJ)/cs_kinematics.o $(OBJ)/cs_dipoles.o -o $@
 
-# development tool: proVBFH's real flavour list and tags
-tests/list_reals: $(OBJ) $(filter-out cs_main.o,$(OBJS)) tests/list_reals.f
-	$(FC) $(FFLAGS) $(INCLUDE) tests/list_reals.f $(patsubst %,$(OBJ)/%,$(filter-out cs_main.o,$(OBJS))) $(LIBS) $(CXXLIBS) -o $@
+# make check: build and run the unit tests (each exits non-zero on failure)
+TESTS= tests/test_kinematics tests/test_smallx tests/test_four
+check: $(TESTS)
+	@for t in $(TESTS); do echo "== $$t"; ./$$t || { echo "FAILED: $$t"; exit 1; }; done; echo "make check: all tests passed"
 
 $(OBJ):
 	mkdir -p $(OBJ)
@@ -106,13 +108,12 @@ nonfact.o: helper.o constants.o incl_parameters.o nonfact_expressions.o
 constants.o: helper.o
 phase_space.o: matrix_element.o incl_parameters.o
 cs_kinematics.o: incl_parameters.o
-cs_chan.o: incl_parameters.o
 cs_dipoles.o: cs_kinematics.o
-cs_nlo2.o: cs_kinematics.o cs_dipoles.o cs_memo.o cs_chan.o
-cs_exclusive.o: cs_kinematics.o cs_nlo2.o cs_memo.o cs_chan.o cs_smallx.o integration.o incl_parameters.o phase_space.o matrix_element.o
-cs_main.o: cs_smallx.o cs_exclusive.o cs_nlo2.o cs_chan.o incl_vbfh.o incl_parameters.o phase_space.o integration.o cs_memo.o
+cs_nlo2.o: cs_kinematics.o cs_dipoles.o cs_memo.o
+cs_exclusive.o: cs_kinematics.o cs_nlo2.o cs_memo.o cs_smallx.o integration.o incl_parameters.o phase_space.o matrix_element.o
+cs_main.o: cs_smallx.o cs_exclusive.o cs_nlo2.o incl_vbfh.o incl_parameters.o phase_space.o integration.o cs_memo.o
 
 clean:
 	rm -rf $(OBJ)
 
-.PHONY: all clean
+.PHONY: all clean check

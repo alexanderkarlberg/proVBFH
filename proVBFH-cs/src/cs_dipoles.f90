@@ -55,8 +55,6 @@ module cs_dipoles
   real(dp), parameter :: pi = 3.141592653589793238462643383279502884197_dp
   real(dp), parameter :: CF = 4.0_dp/3.0_dp, CA = 3.0_dp, TR = 0.5_dp
 
-  ! diagnostic output of four_weight (per path)
-  logical, public, save :: fw_verbose = .false.
   ! fraction of each step in its hard channel; 0: logarithmic only.
   ! four_hard (cs_hardfrac), first step (Born -> three partons):
   ! line_radiation. four_hard2 (cs_hardfrac2), second step: y uniform (FF)
@@ -71,8 +69,6 @@ module cs_dipoles
   ! so the logarithmic second step keeps its full weight after the
   ! logarithmic first step
   integer, public, save :: four_hard2mode = 1
-  ! diagnostic: azimuthally averaged spin correlations (not for physics runs)
-  logical, public, save :: spin_avg = .false.
 
 contains
 
@@ -329,8 +325,6 @@ contains
           endif
           ! 2 orders of (i,j) x 2 slots of the split parton, each 1/24
           dens = dens + 4/(24*wr*ws)
-          if (fw_verbose) write(6,'(a,i2,a,i2,a,es10.3,a,es10.3,a,es10.3,a,2es10.2)') '     path pair', ip, ' typ', ityp, &
-               & '  1/density =', 24*wr*ws/4, '  wr =', wr, '  ws =', ws, '  seed 1-xp3, z3 =', 1 - xp3, z3
        enddo
     enddo
     w = 0
@@ -370,14 +364,10 @@ contains
          & + sc(zi, zj, pi_, pj, b, bmn))
   end function h_ff_gg
 
-  ! contract(zi pi - zj pj, B)/(pi.pj), or its azimuthal average zi zj B
+  ! contract(zi pi - zj pj, B)/(pi.pj)
   real(dp) function sc(zi, zj, pi_, pj, b, bmn)
     real(dp), intent(in) :: zi, zj, pi_(0:3), pj(0:3), b, bmn(0:3,0:3)
-    if (spin_avg) then
-       sc = zi*zj*b
-    else
-       sc = contract(zi*pi_ - zj*pj, bmn)/mdot(pi_, pj)
-    endif
+    sc = contract(zi*pi_ - zj*pj, bmn)/mdot(pi_, pj)
   end function sc
 
   real(dp) function h_fi_gg(pi_, pj, zi, zj, x, b, bmn) result(h)

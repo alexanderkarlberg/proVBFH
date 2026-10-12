@@ -145,16 +145,6 @@ c number of real entries (after cs_init_reals)
       cs_nreal = flst_nreal
       end
 c---------------------------------------------------------------------
-c cs_estimate 5: switch the original (buggy) NC gg pair type of
-c real_vbfnlo.f on or off
-      subroutine cs_set_ggbug(flag)
-      implicit none
-      logical flag
-      logical cs_ggbug
-      common/csggbug/cs_ggbug
-      cs_ggbug = flag
-      end
-c---------------------------------------------------------------------
 c event weights for the analysis (on-the-fly scale variations):
 c weights_num = n, weights_val(1:n) = w; the analyses then fill n
 c weight sets (files -W1.top ... -Wn.top)
@@ -176,18 +166,4 @@ c of the virtual in the scale variations
       implicit none
       include 'pwhg_st.h'
       cs_nlight = dble(st_nlight)
-      end
-c---------------------------------------------------------------------
-c debug (cs_scalecheck): the Born of the last virtual call, lines 21, 43
-      subroutine cs_get_vborn(b,nfall,ntot)
-      implicit none
-      double precision b(2)
-      integer nfall(2),ntot(2)
-      double precision csdbg_born(2)
-      integer csdbg_nfall(2), csdbg_ntot(2)
-      common/csvdbg/csdbg_born, csdbg_nfall, csdbg_ntot
-      b(1) = csdbg_born(1)
-      b(2) = csdbg_born(2)
-      nfall = csdbg_nfall
-      ntot = csdbg_ntot
       end

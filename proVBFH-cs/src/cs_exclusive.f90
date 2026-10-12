@@ -14,13 +14,15 @@
 ! the error estimate. The function returns |w1| + |w2| for VEGAS's
 ! adaptation; the signed total of a point is zero.
 !
-! Stage 2 (excl_order = 2, docs/DESIGN.md): in addition the (2,0) and
-! (0,2) contributions (cs_nlo2), i.e. the NLO correction of the line
-! that radiated. Per line, at the same three-parton event, the one-loop
-! H+3j (the loop on the radiating line) with the I operator and the K + P
-! terms; and a four-parton event (seven more random numbers, 14:20, not
-! adapted by VEGAS) with its six dipole counterevents. All have their
-! counterevent at the VBF Born point, which receives minus the sum.
+! Stage 2 (excl_order >= 2): in addition the (2,0) and (0,2)
+! contributions (cs_nlo2), i.e. the NLO correction of the line that
+! radiated: per line, at the same three-parton event, the one-loop H+3j
+! with the I operator and the K + P terms, and a four-parton event (seven
+! more random numbers, 14:20, not adapted by VEGAS) with its six dipole
+! counterevents. Stage 3 (excl_order = 3): the (1,1) contribution, i.e.
+! each line's O(alpha_s) pieces times the other line's, and the H+4j event
+! with one extra parton on each line. All have their counterevent at the
+! VBF Born point, which receives minus the sum.
 !
 ! Flavours: the matrix element depends only on the class of each line
 ! (NC: u- or d-type quark or antiquark; CC: W+ or W- emitting quark or
@@ -35,25 +37,17 @@ module cs_exclusive
   use incl_parameters
   use phase_space, only: gen_phsp, set_phsp, x1, x2, vq1, vq2, Q1_sq, Q2_sq
   use cs_kinematics
-  use cs_nlo2, dbg_mvar => mvar, dbg_mz => mz, dbg_w4 => cur_w4
+  use cs_nlo2
   use cs_memo
-  use cs_chan
   use cs_smallx
   use integration, only: vegas_gdens
   implicit none
   private
-  public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats, excl_flavcheck
-  public :: excl_hardfrac
-  public :: excl_order, excl_only2, excl_no20, excl_dump2, dump2_min, cs_excl_replay, cs_excl_testborn2, cs_excl_testlines, cs_excl_testlines11, cs_excl_setup2, cs_excl_testlimits, cs_excl_testvirt
+  public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats
+  public :: excl_hardfrac, excl_order, cs_excl_setup2
 
-  ! 1: (1,0) + (0,1) (NLO); 2: also (2,0) + (0,2)
+  ! 1: (1,0) + (0,1) (NLO); 2: also (2,0) + (0,2); 3: also (1,1) (NNLO)
   integer, save :: excl_order = 1
-  ! with excl_order = 2: keep only the (2,0) + (0,2) weights (tests of the
-  ! O(alpha_s^2) part alone: cutoff independence, variance)
-  logical, save :: excl_only2 = .false.
-  ! with excl_order = 3: leave out the (2,0) + (0,2) weights (tests of the
-  ! (1,1) part alone)
-  logical, save :: excl_no20 = .false.
   ! stage 3: for each pair of line states (1..8: q -> q g of class cls(s);
   ! 9..12: g -> q qbar of gcls(s-8)) the class-12 real entry, the leg of
   ! line 1's extra parton in it (6 or 7), and a normalisation factor
@@ -62,69 +56,15 @@ module cs_exclusive
   ! g -> q qbar on a line with the antiquark in the outgoing slot (4 or 5)
   ! and the quark as the extra parton (the NC gg entries have this on line 1)
   logical, save :: e3_swap(2,12,12) = .false.
-  ! with excl_order = 2: write points whose signed contribution to the
-  ! first histogram (sigma with the inclusive cuts) exceeds dump2_min pb
-  ! to unit 79 (file cs_dump2.dat)
-  logical, save :: excl_dump2 = .false.
-  ! replay (cs_replay): print the stage-2 real and dipoles of each point
-  logical, public, save :: excl_verbose = .false.
-  real(dp), save :: dump2_min = 1d-3
-  ! with excl_order = 2: points whose integrand times VEGAS weight exceeds
-  ! spike_min (default 10 pb, about 1e4 times a typical point) are written
-  ! to unit 80 (cs_spikes.dat) with their random numbers, for cs_replay
-  real(dp), public, save :: spike_min = 10
-  ! estimate (debug, notes/2026-09-29-cs-p2b-stage2): weight the (1,0) and
-  ! (0,1) events by alpha_s/(2 pi) Delta, Delta = F(mu_e) - F(Q) -
-  ! b0 ln(mu_e^2/Q^2), the change of the one-loop H+3j when VBFNLO's F
-  ! function (ffunc) is evaluated at mu_e instead of the line's Q;
-  ! excl_estimu 1: mu_e = mu0(pt,H), 2: mu_e = M_H.
-  ! excl_estimate 2: the coefficient of ln(1/cutoff) of the NC graphs in
-  ! which an incoming quark emits a gluon that fuses with the Z into a
-  ! pair, if their initial-state collinear singularity is not subtracted
-  ! (no FKS region in proVBFH's POWHEG part) and with the pair type swapped
-  ! (compreal_hqqqq_new.f): the NC gluon-initiated (1,0) events with the
-  ! gluon density replaced by alpha_s/(2 pi) [P_gq (x) sum_q f_q] and the
-  ! Born of the other pair type; excl_estimate 3: the same with the
-  ! correct pair type.
-  ! excl_estimate 4: the effect of nf = 4 in VBFNLO's ffunc (nf = 5 elsewhere)
-  ! on the one-loop H+3j: alpha_s/(2 pi) B (1/6) [ln(mu^2/|t|) + ln(mu^2/|u|)],
-  ! t, u the gluon's invariants with the two quarks of its line, at mu_e
-  ! excl_estimate 5: the size of the NC gg pair-type bug of real_vbfnlo.f
-  ! (fixed in the marked copy): E3 with the original line minus E3 fixed,
-  ! as an event with its Born counterevent, nothing else; unsubtracted, so
-  ! it depends on the cutoff like the old code's unmatched real
-  ! excl_estimate 6: emulation of the old proVBFH's treatment of the NC pair
-  ! graphs (no FKS region for their initial-state q -> q || beam singularity):
-  ! old - proVBFH-cs = int_{kT > kappa} D - (K + P)_qg - int_{kT < kappa} (R - D),
-  ! with D the IF q -> q dipoles of structure 5 (dip(3:4,5)), k_T that of the
-  ! line quark of the incoming flavour, (K + P)_qg the quark part of the K + P
-  ! of the NC gluon-initiated Borns (gcls(1:2)); the last term, a power
-  ! correction in kappa, is left out. Only these weights are produced.
-  ! excl_estimate 7: the other half of the emulation, the quark part of the
-  ! old code's (FKS) collinear remnant of the same gluon Borns, which the old
-  ! code has (btildecoll adds it for every gluon Born): old - proVBFH-cs =
-  ! [estimate 6] + [estimate 7]. Only these weights are produced.
-  integer, public, save :: excl_estimate = 0, excl_estimu = 1
   ! on-the-fly scale variations (cs_scales 3 or 7; 1: off): the event
   ! weights at mu_R = sc_r(k) mu_R0, mu_F = sc_f(k) mu_F0, k = 1..excl_nscale,
   ! written as weights 1..n (files -W1.top ... -Wn.top); 3: symmetric
   ! (1,1), (1/2,1/2), (2,2); 7: the same, then (1/2,1), (1,1/2), (2,1), (1,2)
-  integer, parameter :: max_scales = 9   ! 7 scale points; 9 channel weights (cs_chan)
+  integer, parameter :: max_scales = 7
   integer, public, save :: excl_nscale = 1
-  real(dp), public, save :: sc_r(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp, 1.0_dp, 1.0_dp]
-  real(dp), public, save :: sc_f(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp, 1.0_dp]
+  real(dp), public, save :: sc_r(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 0.5_dp, 1.0_dp, 2.0_dp, 1.0_dp]
+  real(dp), public, save :: sc_f(max_scales) = [1.0_dp, 0.5_dp, 2.0_dp, 1.0_dp, 0.5_dp, 1.0_dp, 2.0_dp]
   public :: cs_scales_setup
-  ! cs_scalecheck 1: also evaluate the virtual directly at every shifted mu_R
-  ! and record the largest deviation of the beta0 shift (memo_vi)
-  logical, public, save :: excl_scalecheck = .false.
-  ! cs_scalecheck 2: weights (1,1), (1/2,1/2), (2,2) with the beta0 shift,
-  ! (1/2,1/2), (2,2) with the virtual evaluated directly, and the two
-  ! differences shift - direct (accumulated point by point, so that their
-  ! errors are those of the differences)
-  logical, public, save :: excl_scalecheck2 = .false.
-  logical, save :: vi_direct = .false.
-  real(dp), public, save :: scalecheck_dev(2) = 0
-  integer(8), public, save :: scalecheck_n = 0
   real(dp), save :: tb_pb(0:3,5,2), tb_xb(2,2)
   integer, save :: tb_n = 0
 
@@ -138,20 +78,11 @@ module cs_exclusive
   ! counters: points, line radiations rejected by the cutoff, NaN, points
   ! where neither event nor Born passes the cuts
   integer(8), save :: excl_stats(4) = 0
-  ! skip points where neither the events nor the Born pass the VBF cuts
-  ! (as proVBFH's phspcuts; exact for all VBF-cut histograms, and the
-  ! exclusive part does not contribute to histograms without cuts: the
+  ! Points where neither the events nor the Born pass the VBF cuts are
+  ! skipped (as proVBFH's phspcuts; exact for all VBF-cut histograms, and
+  ! the exclusive part does not contribute to histograms without cuts: the
   ! Higgs momentum is unchanged by the projection); loose cuts (tagging
-  ! jet pt and mjj only) while building the grid
-  logical, public, save :: excl_phspcuts = .true.
-  ! debug: write per-point contributions to the VBF-cut cross section
-  ! (unit 77, file cs_dump.dat) when excl_dump is set
-  logical, public, save :: excl_dump = .false.
-  real(dp), save :: dxp(2), dz(2)
-  integer, save :: ndbg = 0
-  ! debug: compare the class sums with an explicit flavour loop on the
-  ! first excl_flavcheck points
-  integer, save :: excl_flavcheck = 0
+  ! jet pt and mjj only) while building the grid.
 
   ! classes of a line transition a -> b: representative flavours and
   ! the member list (up to 3)
@@ -197,8 +128,6 @@ contains
   logical function compatible(w1, w2)
     integer, intent(in) :: w1, w2
     compatible = (w1 == 0 .and. w2 == 0) .or. (w1 /= 0 .and. w1 == -w2)
-    ! cs_chan: the selected boson only
-    if (compatible) compatible = chan_w_ok(w1)
   end function compatible
 
   real(dp) function pdfsum(f, c)
@@ -220,215 +149,6 @@ contains
     if (excl_fill) call pwhgaccumup
   end function cs_excl_dsigma
 
-  ! stage 3 check: the analytic VBF H + 2 parton Born (cs_born2) against
-  ! VBFNLO's H + 3 parton Born in the soft-gluon limit, m_line/(eik B2)
-  ! -> 1, for every compatible class pair, both lines, at the stage-2 test
-  ! Born points
-  subroutine cs_excl_testborn2()
-    use cs_dipoles, only: split_fi
-    real(dp) :: pb(0:3,5), p6(0:3,6), pi_(0:3), pj(0:3), pa(0:3), b2, m1, m2, eik, del, r(3), worst
-    real(dp), external :: cs_born2
-    integer :: it, i1, i2, line, id, bflav(6), b5(5)
-    real(dp), parameter :: CF = 4.0_dp/3.0_dp
-    worst = 0
-    do it = 1, tb_n
-       pb = tb_pb(:,:,it)
-       do i1 = 1, ncls
-          do i2 = 1, ncls
-             if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
-             b5 = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b]
-             bflav = [b5, 0]
-             b2 = cs_born2(pb, b5)
-             do line = 1, 2
-                do id = 1, 3
-                   del = 10.0_dp**(-1 - 2*id)
-                   call split_fi(pb(:,3+line), pb(:,line), 1 - del, 1 - del, 1.3_dp, pi_, pj, pa)
-                   p6(:,1:5) = pb
-                   p6(:,line) = pa; p6(:,3+line) = pi_; p6(:,6) = pj
-                   call cs_hjjj_lines(p6, bflav, m1, m2)
-                   eik = 32*atan(1.0_dp)*CF*mdot(pa, pi_)/(mdot(pa, pj)*mdot(pi_, pj))
-                   r(id) = merge(m1, m2, line == 1)/(eik*b2)
-                enddo
-                worst = max(worst, abs(r(3) - 1))
-                write(6,'(a,i2,a,5i4,a,i2,a,es12.4,a,3f12.7)') ' testborn2 pt', it, ' flav', b5, ' line', line, &
-                     & '  B2 =', b2, '  ratio (delta 1e-3, 1e-5, 1e-7):', r
-             enddo
-          enddo
-       enddo
-    enddo
-    write(6,'(a,es10.2)') ' testborn2: worst |ratio - 1| at delta 1e-7:', worst
-  end subroutine cs_excl_testborn2
-
-  ! stage 3 check: the line-level DIS dipoles against the H+3j tree in the
-  ! line's singular limits (x -> 1 at u = 0.3; u -> 0 at x = 0.6; for
-  ! g -> q qbar also u -> 1), ratio R/(sum of dipoles) -> 1, for every
-  ! class pair, both lines, at the stage-2 test Born points
-  subroutine cs_excl_testlines()
-    use cs_dipoles, only: split_if, h_if_qg, h_fi_qg
-    real(dp) :: pb(0:3,5), p6(0:3,6), pt(0:3), pk(0:3), pa(0:3), m1, m2, me, d, x, u, lam, r(3), worst(3)
-    real(dp) :: xs, us, kq, kg, twopi
-    real(dp), external :: cs_born2
-    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
-    integer :: it, i1, i2, line, id, ilim, bflav(6), b5(5), ig
-    character(len=12) :: lname(3) = ['x -> 1      ', 'u -> 0      ', 'u -> 1      ']
-    twopi = 8*atan(1.0_dp)
-    worst = 0
-    do it = 1, tb_n
-       pb = tb_pb(:,:,it)
-       do line = 1, 2
-          ! quark-initiated classes
-          do i1 = 1, ncls
-             do i2 = 1, ncls
-                if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
-                bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
-                do ilim = 1, 2
-                   do id = 1, 3
-                      lam = 10.0_dp**(-1 - 2*id)
-                      xs = merge(1 - lam, 0.6_dp, ilim == 1); us = merge(0.3_dp, lam, ilim == 1)
-                      call split_if(pb(:,3+line), pb(:,line), xs, us, 0.7_dp, pt, pk, pa)
-                      p6(:,1:5) = pb; p6(:,line) = pa; p6(:,3+line) = pk; p6(:,6) = pt
-                      call cs_hjjj_lines(p6, bflav, m1, m2)
-                      me = merge(m1, m2, line == 1)
-                      x = 1 - mdot(pt, pk)/mdot(pa, pt + pk); u = mdot(pa, pt)/mdot(pa, pt + pk)
-                      kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
-                      d = kq*cs_born2(pb, bflav(1:5))
-                      r(id) = me/d
-                   enddo
-                   worst(ilim) = max(worst(ilim), abs(r(3) - 1))
-                   if (it == 1 .and. (i1 <= 2 .or. i1 >= 5)) write(6,'(a,i2,a,5i4,a,a,a,3f12.7)') ' testlines line', line, &
-                        & ' q flav', bflav(1:5), '  ', lname(ilim), ' R/D (lam 1e-3, 1e-5, 1e-7):', r
-                enddo
-             enddo
-          enddo
-          ! gluon-initiated classes: g -> q (pk) qbar (pt)
-          do ig = 1, ngcls
-             do i2 = 1, ncls
-                if (.not. compatible(gcls(ig)%w, cls(i2)%w)) cycle
-                if (line == 1) then
-                   bflav = [0, cls(i2)%a, 25, gcls(ig)%q, cls(i2)%b, gcls(ig)%qb]
-                else
-                   bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(ig)%q, gcls(ig)%qb]
-                endif
-                do ilim = 2, 3
-                   do id = 1, 3
-                      lam = 10.0_dp**(-1 - 2*id)
-                      us = merge(lam, 1 - lam, ilim == 2)
-                      call split_if(pb(:,3+line), pb(:,line), 0.6_dp, us, 0.7_dp, pt, pk, pa)
-                      p6(:,1:5) = pb; p6(:,line) = pa; p6(:,3+line) = pk; p6(:,6) = pt
-                      call cs_hjjj_lines(p6, bflav, m1, m2)
-                      me = merge(m1, m2, line == 1)
-                      x = 1 - mdot(pt, pk)/mdot(pa, pt + pk)
-                      kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
-                      b5 = [cls(i2)%a, cls(i2)%a, 25, cls(i2)%b, cls(i2)%b]
-                      b5(line) = -gcls(ig)%qb; b5(3+line) = gcls(ig)%q
-                      d = kg/(2*mdot(pa, pt))*cs_born2(pb, b5)
-                      b5(line) = -gcls(ig)%q; b5(3+line) = gcls(ig)%qb
-                      d = d + kg/(2*mdot(pa, pk))*cs_born2(pb, b5)
-                      r(id) = me/d
-                   enddo
-                   worst(ilim) = max(worst(ilim), abs(r(3) - 1))
-                   if (it == 1) write(6,'(a,i2,a,6i4,a,a,a,3f12.7)') ' testlines line', line, &
-                        & ' g flav', bflav, '  ', lname(ilim), ' R/D (lam 1e-3, 1e-5, 1e-7):', r
-                enddo
-             enddo
-          enddo
-       enddo
-    enddo
-    write(6,'(a,3es10.2)') ' testlines: worst |R/D - 1| at lam 1e-7 (x -> 1, u -> 0, u -> 1):', worst
-  end subroutine cs_excl_testlines
-
-  ! stage 3 check: the class-12 H+4j (both lines radiated) against the H+3j
-  ! (line lm radiated at a moderate point) times the other line's dipoles,
-  ! with the other line in its singular limits; ratio -> 1 for every pair
-  ! of line states with an entry (fixes e3_fac)
-  subroutine cs_excl_testlines11()
-    use cs_dipoles, only: split_if, h_if_qg, h_fi_qg
-    real(dp) :: pb(0:3,5), p6(0:3,6,2), pe(0:3,7), pt(0:3), pk(0:3), pa(0:3), me, m1, m2, d, x, u, lam, r(3)
-    real(dp) :: us, xs, kq, kg, twopi, me3(8), worst, p7t(0:3,7)
-    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
-    integer :: lm, lt, s1, s2, sm, st, id, ilim, j, l1, ib, jq, jqb, ig
-    character(len=8) :: lname(3) = ['x -> 1  ', 'u -> 0  ', 'u -> 1  ']
-    twopi = 8*atan(1.0_dp)
-    worst = 0
-    pb = tb_pb(:,:,1)
-    do lm = 1, 2              ! the line at a moderate point
-       lt = 3 - lm            ! the line in its singular limits
-       call split_if(pb(:,3+lm), pb(:,lm), 0.7_dp, 0.4_dp, 0.9_dp, pt, pk, pa)
-       p6(:,1:5,lm) = pb; p6(:,lm,lm) = pa; p6(:,3+lm,lm) = pk; p6(:,6,lm) = pt
-       do s1 = 1, ncls + ngcls
-          do s2 = 1, ncls + ngcls
-             j = e3_entry(s1,s2)
-             if (j == 0) cycle
-             sm = merge(s1, s2, lm == 1); st = merge(s2, s1, lm == 1)
-             ! the H+3j with line lm radiated (state sm) and line lt at Born level (class ib)
-             me3 = 0
-             do ib = 1, ncls
-                if (.not. compatible(state_w(sm), cls(ib)%w)) cycle
-                call cs_hjjj_lines(p6(:,:,lm), h3_flav(lm, sm, ib), m1, m2)
-                me3(ib) = merge(m1, m2, lm == 1)
-             enddo
-             do ilim = 1, 3
-                if (st <= ncls .and. ilim == 3) cycle
-                if (st > ncls .and. ilim == 1) cycle
-                do id = 1, 3
-                   lam = 10.0_dp**(-1 - 2*id)
-                   xs = merge(1 - lam, 0.6_dp, ilim == 1)
-                   us = 0.3_dp
-                   if (ilim == 2) us = lam
-                   if (ilim == 3) us = 1 - lam
-                   call split_if(pb(:,3+lt), pb(:,lt), xs, us, 0.7_dp, pt, pk, pa)
-                   p6(:,1:5,lt) = pb; p6(:,lt,lt) = pa; p6(:,3+lt,lt) = pk; p6(:,6,lt) = pt
-                   ! the H+4j in the entry's leg order
-                   p7t(:,1) = p6(:,1,1); p7t(:,2) = p6(:,2,2); p7t(:,3) = pb(:,3)
-                   p7t(:,4) = p6(:,4,1); p7t(:,5) = p6(:,5,2); p7t(:,6) = p6(:,6,1); p7t(:,7) = p6(:,6,2)
-                   call e3_momenta(s1, s2, p7t, pe)
-                   call memo_real_me(j, pe, me)
-                   me = me*e3_fac(s1,s2)
-                   x = 1 - mdot(pt, pk)/mdot(pa, pt + pk); u = mdot(pa, pt)/mdot(pa, pt + pk)
-                   if (st <= ncls) then
-                      kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
-                      d = kq*me3(st)
-                   else
-                      ig = st - ncls
-                      kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
-                      jq = 0; jqb = 0
-                      do ib = 1, ncls
-                         if (cls(ib)%a == -gcls(ig)%qb .and. cls(ib)%b == gcls(ig)%q) jq = ib
-                         if (cls(ib)%a == -gcls(ig)%q .and. cls(ib)%b == gcls(ig)%qb) jqb = ib
-                      enddo
-                      d = kg/(2*mdot(pa, pt))*me3(jq) + kg/(2*mdot(pa, pk))*me3(jqb)
-                   endif
-                   r(id) = me/d
-                enddo
-                worst = max(worst, abs(r(3) - 1))
-                write(6,'(a,i2,a,2i3,a,i5,a,a,a,3f12.7)') ' testlines11 limit line', lt, ' states', s1, s2, &
-                     & ' entry', j, '  ', lname(ilim), ' R4/(R3 D) (lam 1e-3,1e-5,1e-7):', r
-             enddo
-          enddo
-       enddo
-    enddo
-    write(6,'(a,es10.2)') ' testlines11: worst |ratio - 1| at lam 1e-7:', worst
-  end subroutine cs_excl_testlines11
-
-  ! replay: the points listed in cs_replay.dat (20 random numbers each)
-  subroutine cs_excl_replay()
-    real(dp) :: xr(20), r
-    integer :: ios, n
-    open(81, file='cs_replay.dat', status='old')
-    excl_verbose = .true.
-    n = 0
-    do
-       read(81, *, iostat=ios) xr
-       if (ios /= 0) exit
-       n = n + 1
-       write(6,'(a,i4)') ' ===== replay point', n
-       r = excl_point(xr, 1.0_dp)
-       write(6,'(a,es12.4)') '   integrand (vegas weight 1):', r
-    enddo
-    close(81)
-    excl_verbose = .false.
-  end subroutine cs_excl_replay
-
   double precision function excl_point(xrand, vegas_weight_in) result(cs_excl_dsigma)
     real(dp), intent(in) :: xrand(*), vegas_weight_in
     real(dp) :: vegas_weight
@@ -439,18 +159,17 @@ contains
     real(dp) :: Q1, Q2, mur(2), muf(2), as(2), fB(-6:6,2), fE(-6:6,2)
     real(dp) :: pin(0:3), a(0:3), b(0:3), xp, z, wrad(2), p6(0:3,6,2), w(2)
     real(dp) :: m1, m2, me
-    real(dp) :: xi3(2), wv(2), wr(2), wd(6,2), pr(0:3,7,2), pd(0:3,6,6,2), wg(2), mue, dlq, dlg, fsing
-    integer :: ib
+    real(dp) :: xi3(2), wv(2), wr(2), wd(6,2), pr(0:3,7,2), pd(0:3,6,6,2)
     logical :: ok(2), need(2), pass(2), passB
     logical :: okr(2), dok(6,2), needr(2), passr(2), passd(6,2)
-    real(dp) :: prt(0:3,7), pdt(0:3,6,6), csig, dmv(6,2), dmz(6,2), dw4(2)
+    real(dp) :: prt(0:3,7), pdt(0:3,6,6)
     real(dp) :: p7(0:3,7), e12(2), e3
     logical :: ok3, need3, pass3
     logical :: dokt(6), okt
     integer :: m
     logical, external :: cs_passes
     integer :: line, i1, i2, bflav(6)
-    real(dp), external :: hoppetAlphaS, cs_born2
+    real(dp), external :: hoppetAlphaS
     integer vegas_ncall
     common/vegas_ncall/vegas_ncall
     ! weights per scale point (cs_scales; point 1 is the central scale)
@@ -462,7 +181,6 @@ contains
     vegas_weight = vegas_weight_in
     sx_fac = 1
     sx_xr = xrand(1:7)
-    if (chan_multi) call chan_set(1)
     excl_stats(1) = excl_stats(1) + 1
     if (sx_h > 0) then
        ! the Higgs mass, hence taumin, does not depend on b = (r2..r6)
@@ -501,7 +219,6 @@ contains
     call hoppetEval(x1, muf(1), fB(:,1))
     call hoppetEval(x2, muf(2), fB(:,2))
     fB = fB/spread([x1, x2], 1, 13)       ! hoppet returns x f(x)
-    call chan_pdf(1, fB(:,1), x1); call chan_pdf(2, fB(:,2), x2)
 
     ! radiation on each line
     do line = 1, 2
@@ -516,7 +233,6 @@ contains
           excl_stats(2) = excl_stats(2) + 1
           cycle
        endif
-       dxp(line) = xp; dz(line) = z
        ! H+3j momenta in proVBFH's order: 1, 2 incoming, 3 H, 4, 5 outgoing
        ! quarks of lines 1, 2, 6 the extra parton (on this line)
        p6(:,1:5,line) = pb(:,1:5)
@@ -531,38 +247,11 @@ contains
        xi3(line) = merge(x1, x2, line == 1)/xp
        call hoppetEval(xi3(line), muf(line), fE(:,line))
        fE(:,line) = fE(:,line)/xi3(line)
-       call chan_pdf(line, fE(:,line), xi3(line))
     enddo
-
-    ! normalisation check (cs_order 10): the LO cross section from cs_born2
-    if (excl_order == 10) then
-       cs_excl_dsigma = 0
-       do i1 = 1, ncls
-          do i2 = 1, ncls
-             if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
-             cs_excl_dsigma = cs_excl_dsigma + cs_born2(pb, [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b]) &
-                  & *pdfsum(fB(:,1), cls(i1))*pdfsum(fB(:,2), cls(i2))
-          enddo
-       enddo
-       cs_excl_dsigma = cs_excl_dsigma*common
-       return
-    endif
-    ! stage-3 validation (cs_order 11): the O(alpha_s) correction of each
-    ! line from its Catani-Seymour pieces, signed, no events
-    if (excl_order == 11) then
-       cs_excl_dsigma = line_nlo_point(pb, [x1, x2], fB, p6, ok, wrad, fE, mur, muf, [Q1, Q2], as, common)
-       return
-    endif
-    ! stage-3 validation (cs_order 13): the complete (1,1) term, signed, no
-    ! events, against the product of the lines' O(alpha_s) structure functions
-    if (excl_order == 13) then
-       cs_excl_dsigma = nlo11_valid_point(pb, [x1, x2], fB, p6, ok, wrad, fE, mur, muf, [Q1, Q2], common)
-       return
-    endif
 
     ! four-parton events and their dipole counterevents
     okr = .false.; dok = .false.
-    if (excl_order >= 2 .and. .not. excl_no20) then
+    if (excl_order >= 2) then
        do line = 1, 2
           call nlo2_real_kin(line, pb, [x1, x2], xrand(14:20), excl_cutoff, pr(:,:,line), &
                & pd(:,:,:,line), dok(:,line), okr(line))
@@ -584,28 +273,26 @@ contains
     needr = okr
     need3 = ok3
     pass3 = .false.
-    if (excl_phspcuts) then
-       passB = cs_passes(5, pb, .not. excl_fill)
-       if (ok3) then
-          pass3 = cs_passes(7, p7, .not. excl_fill)
-          need3 = pass3 .or. passB
+    passB = cs_passes(5, pb, .not. excl_fill)
+    if (ok3) then
+       pass3 = cs_passes(7, p7, .not. excl_fill)
+       need3 = pass3 .or. passB
+    endif
+    do line = 1, 2
+       if (ok(line)) pass(line) = cs_passes(6, p6(:,:,line), .not. excl_fill)
+       need(line) = ok(line) .and. (pass(line) .or. passB)
+       if (okr(line)) then
+          passr(line) = cs_passes(7, pr(:,:,line), .not. excl_fill)
+          do m = 1, 6
+             passd(m,line) = .false.
+             if (dok(m,line)) passd(m,line) = cs_passes(6, pd(:,:,m,line), .not. excl_fill)
+          enddo
+          needr(line) = passr(line) .or. any(passd(:,line)) .or. passB
        endif
-       do line = 1, 2
-          if (ok(line)) pass(line) = cs_passes(6, p6(:,:,line), .not. excl_fill)
-          need(line) = ok(line) .and. (pass(line) .or. passB)
-          if (okr(line)) then
-             passr(line) = cs_passes(7, pr(:,:,line), .not. excl_fill)
-             do m = 1, 6
-                passd(m,line) = .false.
-                if (dok(m,line)) passd(m,line) = cs_passes(6, pd(:,:,m,line), .not. excl_fill)
-             enddo
-             needr(line) = passr(line) .or. any(passd(:,line)) .or. passB
-          endif
-       enddo
-       if (.not. any(need) .and. .not. any(needr) .and. .not. need3) then
-          excl_stats(4) = excl_stats(4) + 1
-          return
-       endif
+    enddo
+    if (.not. any(need) .and. .not. any(needr) .and. .not. need3) then
+       excl_stats(4) = excl_stats(4) + 1
+       return
     endif
 
     ! the event weights at each scale point; the matrix elements are
@@ -615,29 +302,25 @@ contains
        call memo_new_point()
        fB0 = fB; fE0 = fE; as0 = as
     endif
-    do ks = 1, merge(5, ns, excl_scalecheck2)
-    vi_direct = excl_scalecheck2 .and. ks >= 4
-    if (chan_multi) call chan_set(ks)
+    do ks = 1, ns
     if (ks > 1) then
        mur = [cs_mu(xmur*sc_r(ks), 1, Q1, Q2, ptH, .true.), cs_mu(xmur*sc_r(ks), 2, Q1, Q2, ptH, .true.)]
        muf = [cs_mu(xmuf*sc_f(ks), 1, Q1, Q2, ptH, .false.), cs_mu(xmuf*sc_f(ks), 2, Q1, Q2, ptH, .false.)]
        call hoppetEval(x1, muf(1), fB(:,1))
        call hoppetEval(x2, muf(2), fB(:,2))
        fB = fB/spread([x1, x2], 1, 13)
-       call chan_pdf(1, fB(:,1), x1); call chan_pdf(2, fB(:,2), x2)
        do line = 1, 2
           if (.not. ok(line)) cycle
           as(line) = hoppetAlphaS(mur(line))
           call hoppetEval(xi3(line), muf(line), fE(:,line))
           fE(:,line) = fE(:,line)/xi3(line)
-          call chan_pdf(line, fE(:,line), xi3(line))
        enddo
     endif
-    w = 0; wg = 0
+    w = 0
     do line = 1, 2
        if (.not. need(line)) cycle
        ! quark-initiated on the radiating line
-       do i1 = 1, merge(0, ncls, excl_estimate == 2 .or. excl_estimate == 3)
+       do i1 = 1, ncls
           do i2 = 1, ncls
              if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
              bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
@@ -651,30 +334,6 @@ contains
           enddo
        enddo
        ! gluon-initiated on the radiating line: g -> q (at 4 or 5) + qbar (at 6)
-       if (excl_estimate == 2 .or. excl_estimate == 3) then
-          ! only the NC gluon-initiated classes, with the collinear density
-          w(line) = 0
-          fsing = pgq_conv(xi3(line), muf(line))*as(line)/(8*atan(1.0_dp))
-          do i1 = 1, 2
-             do i2 = 1, ncls
-                if (.not. compatible(gcls(i1)%w, cls(i2)%w)) cycle
-                ! the Born of the pair type the swapped index selects
-                ib = i1
-                if (excl_estimate == 2) ib = 3 - i1
-                if (line == 1) then
-                   bflav = [0, cls(i2)%a, 25, gcls(ib)%q, cls(i2)%b, gcls(ib)%qb]
-                   call memo_lines(p6(:,:,line), bflav, m1, m2)
-                   w(1) = w(1) + m1*gcls(i1)%n*fsing*pdfsum(fB(:,2), cls(i2))
-                else
-                   bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(ib)%q, gcls(ib)%qb]
-                   call memo_lines(p6(:,:,line), bflav, m1, m2)
-                   w(2) = w(2) + m2*gcls(i1)%n*pdfsum(fB(:,1), cls(i2))*fsing
-                endif
-             enddo
-          enddo
-          w(line) = w(line)*common*wrad(line)*as(line)
-          cycle
-       endif
        do i1 = 1, ngcls
           do i2 = 1, ncls
              if (.not. compatible(gcls(i1)%w, cls(i2)%w)) cycle
@@ -682,46 +341,19 @@ contains
                 bflav = [0, cls(i2)%a, 25, gcls(i1)%q, cls(i2)%b, gcls(i1)%qb]
                 call memo_lines(p6(:,:,line), bflav, m1, m2)
                 w(1) = w(1) + m1*gcls(i1)%n*fE(0,1)*pdfsum(fB(:,2), cls(i2))
-                wg(1) = wg(1) + m1*gcls(i1)%n*fE(0,1)*pdfsum(fB(:,2), cls(i2))
              else
                 bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
                 call memo_lines(p6(:,:,line), bflav, m1, m2)
                 w(2) = w(2) + m2*gcls(i1)%n*pdfsum(fB(:,1), cls(i2))*fE(0,2)
-                wg(2) = wg(2) + m2*gcls(i1)%n*pdfsum(fB(:,1), cls(i2))*fE(0,2)
              endif
           enddo
        enddo
        w(line) = w(line)*common*wrad(line)*as(line)
-       wg(line) = wg(line)*common*wrad(line)*as(line)
-       if (excl_estimate == 1 .or. excl_estimate == 4) then
-          ! the line's partons: in p6(:,line), out p6(:,3+line), extra p6(:,6);
-          ! quark-initiated: s = in.out, t, u = gluon with in, out;
-          ! gluon-initiated: s = the two outgoing quarks, t, u = with the gluon
-          if (excl_estimu == 1) then
-             mue = cs_mu(1.0_dp, line, Q1, Q2, ptH, .true.)
-          else
-             mue = mh
-          endif
-          if (excl_estimate == 1) then
-             dlq = ffunc4(2*mdot(p6(:,line,line), p6(:,3+line,line)), 2*mdot(p6(:,line,line), p6(:,6,line)), &
-                  & 2*mdot(p6(:,3+line,line), p6(:,6,line)), mue, merge(Q1, Q2, line == 1))
-             dlg = ffunc4(2*mdot(p6(:,3+line,line), p6(:,6,line)), 2*mdot(p6(:,line,line), p6(:,6,line)), &
-                  & 2*mdot(p6(:,line,line), p6(:,3+line,line)), mue, merge(Q1, Q2, line == 1))
-          else
-             ! quark-initiated: gluon at 6 with in (line) and out (3+line);
-             ! gluon-initiated: gluon incoming (line) with Q (3+line), Qbar (6)
-             dlq = (log(mue**2/abs(2*mdot(p6(:,line,line), p6(:,6,line)))) &
-                  & + log(mue**2/abs(2*mdot(p6(:,3+line,line), p6(:,6,line)))))/6
-             dlg = (log(mue**2/abs(2*mdot(p6(:,line,line), p6(:,3+line,line)))) &
-                  & + log(mue**2/abs(2*mdot(p6(:,line,line), p6(:,6,line)))))/6
-          endif
-          w(line) = (w(line) - wg(line))*dlq*as(line)/(8*atan(1.0_dp)) + wg(line)*dlg*as(line)/(8*atan(1.0_dp))
-       endif
     enddo
 
     ! (2,0) and (0,2)
-    wv = 0; wr = 0; wd = 0; dmv = 0; dmz = 0; dw4 = 0
-    if (excl_order >= 2 .and. .not. excl_no20) then
+    wv = 0; wr = 0; wd = 0
+    if (excl_order >= 2) then
        do line = 1, 2
           if (need(line)) wv(line) = virt_point(line, p6(:,:,line), fB, fE(:,line), xi3(line), &
                & mur(line), muf(line), merge(Q2, Q1, line == 1))*common*wrad(line)*as(line)**2
@@ -730,13 +362,7 @@ contains
              ! (line 2 after the loop above): set up this line's point again
              call nlo2_real_kin(line, pb, [x1, x2], xrand(14:20), excl_cutoff, prt, pdt, dokt, okt)
              if (.not. okt .or. any(dokt .neqv. dok(:,line))) stop 'cs_exclusive: nlo2_real_kin not reproducible'
-             dmv(:,line) = dbg_mvar; dmz(:,line) = dbg_mz; dw4(line) = dbg_w4
              call nlo2_real_me(muf(line), fB(:,3-line), wr(line), wd(:,line))
-             ! emulation: add the dipoles back (nlo2_real_me subtracts them)
-             if (excl_estimate == 6) then
-                wr(line) = 0; wd(:,line) = -wd(:,line)
-             endif
-             if (excl_verbose) call nlo2_debug_point(muf(line), fB(:,3-line), 6)
              wr(line) = wr(line)*common*as(line)**2
              wd(:,line) = wd(:,line)*common*as(line)**2
           endif
@@ -751,33 +377,8 @@ contains
             & p6(:,:,1), fE(:,1), wrad(1), mur, muf, [Q1, Q2], common)
        if (need3) e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7)
     endif
-    if (excl_estimate == 6) then
-       w = 0; e12 = 0; e3 = 0
-    endif
-    if (excl_estimate == 7) then
-       w = 0; wr = 0; wd = 0; e12 = 0; e3 = 0
-    endif
-    if (excl_estimate == 5) then
-       w = 0; wv = 0; wr = 0; wd = 0; e12 = 0
-       if (need3) then
-          call cs_set_ggbug(.true.)
-          e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7) - e3
-          call cs_set_ggbug(.false.)
-       endif
-    endif
-    if (excl_no20) then
-       wv = 0; wr = 0; wd = 0
-    endif
-    if (excl_only2) w = 0
     sw(:,ks) = w; swv(:,ks) = wv; swr(:,ks) = wr; swd(:,:,ks) = wd; se12(:,ks) = e12; se3(ks) = e3
     enddo
-    vi_direct = .false.
-    if (chan_multi) call chan_set(1)
-    if (excl_scalecheck2) then
-       sw(:,6:7) = sw(:,2:3) - sw(:,4:5); swv(:,6:7) = swv(:,2:3) - swv(:,4:5)
-       swr(:,6:7) = swr(:,2:3) - swr(:,4:5); swd(:,:,6:7) = swd(:,:,2:3) - swd(:,:,4:5)
-       se12(:,6:7) = se12(:,2:3) - se12(:,4:5); se3(6:7) = se3(2:3) - se3(4:5)
-    endif
     ! the central-scale weights for everything below except the analysis
     if (ns > 1) then
        mur = [cs_mu(xmur, 1, Q1, Q2, ptH, .true.), cs_mu(xmur, 2, Q1, Q2, ptH, .true.)]
@@ -785,51 +386,12 @@ contains
        w = sw(:,1); wv = swv(:,1); wr = swr(:,1); wd = swd(:,:,1); e12 = se12(:,1); e3 = se3(1)
        fB = fB0; fE = fE0; as = as0
     endif
-    if (excl_flavcheck > 0) then
-       excl_flavcheck = excl_flavcheck - 1
-       call flavour_check(p6, need, fB, fE, common*wrad*as, w)
-    endif
     if (any(sw(:,1:ns) /= sw(:,1:ns)) .or. any(swv(:,1:ns) /= swv(:,1:ns)) .or. any(swr(:,1:ns) /= swr(:,1:ns)) &
          & .or. any(swd(:,:,1:ns) /= swd(:,:,1:ns)) .or. any(se12(:,1:ns) /= se12(:,1:ns)) .or. any(se3(1:ns) /= se3(1:ns))) then
        excl_stats(3) = excl_stats(3) + 1
        return
     endif
 
-    if (excl_dump .and. excl_phspcuts) then
-       do line = 1, 2
-          if (ok(line) .and. (pass(line) .neqv. passB) .and. 1 - dxp(line) < 1d-3 .and. ndbg < 5) then
-             ndbg = ndbg + 1
-             write(6,'(a,i2,a,2es12.4,a,2l2)') ' DBG line', line, ' 1-xp, z = ', 1-dxp(line), dz(line), &
-                  & '  pass evt, Born:', pass(line), passB
-             call cs_debug_jets(5, pb)
-             call cs_debug_jets(6, p6(:,:,line))
-          endif
-       enddo
-    endif
-    if (excl_dump .and. excl_phspcuts) then
-       write(77,'(2l2,l3,4es14.6,2es14.6,2es12.4)') merge(pass, [.false.,.false.], ok), passB, &
-            & w, w(1)*(merge(1,0,pass(1).and.ok(1)) - merge(1,0,passB)), &
-            & w(2)*(merge(1,0,pass(2).and.ok(2)) - merge(1,0,passB)), dxp, dz, Q1, Q2
-    endif
-    if (excl_dump2 .and. excl_phspcuts .and. excl_fill) then
-       csig = 0
-       if (passB) csig = -(sum(w) + sum(wv) + sum(wr) + sum(wd) + sum(e12) + e3)
-       if (need3 .and. pass3) csig = csig + e3
-       do line = 1, 2
-          if (need(line) .and. pass(line)) csig = csig + w(line) + wv(line) + e12(line)
-          if (needr(line)) then
-             if (passr(line)) csig = csig + wr(line)
-             do m = 1, 6
-                if (dok(m,line) .and. passd(m,line)) csig = csig + wd(m,line)
-             enddo
-          endif
-       enddo
-       csig = csig*vegas_weight
-       if (abs(csig) > dump2_min) write(79,'(es12.4,l3,2l2,2l2,4es11.3,2(2x,6l1),6es11.3,2(2x,12es10.2),2es10.2,2x,20es24.16)') &
-            & csig, passB, merge(pass, [.false.,.false.], need), merge(passr, [.false.,.false.], needr), &
-            & 1-dxp, dz, dok, (w + wv)*vegas_weight, wr*vegas_weight, sum(wd,1)*vegas_weight, &
-            & (dmv(:,line), dmz(:,line), line=1,2), dw4*vegas_weight, xrand(1:20)
-    endif
     if (excl_fill .and. ns == 1) then
        do line = 1, 2
           if (need(line)) call cs_analysis(6, p6(:,:,line), (w(line) + wv(line) + e12(line))*vegas_ncall*vegas_weight)
@@ -859,157 +421,8 @@ contains
     endif
     cs_excl_dsigma = abs(w(1) + wv(1) + e12(1)) + abs(w(2) + wv(2) + e12(2)) + abs(e3) + abs(wr(1) + sum(wd(:,1))) &
          & + abs(wr(2) + sum(wd(:,2)))
-    if (excl_order >= 2 .and. cs_excl_dsigma*vegas_weight > spike_min .and. .not. excl_verbose) then
-       write(80,'(es12.4,6es11.3,2x,20es24.16)') cs_excl_dsigma*vegas_weight, (w + wv)*vegas_weight, &
-            & wr*vegas_weight, sum(wd,1)*vegas_weight, xrand(1:20)
-       flush(80)
-    endif
     cs_excl_dsigma = cs_excl_dsigma*sx_fac
   end function excl_point
-
-  ! stage 3 validation: the complete (1,1) term at a point,
-  !   sum_{c1,c2} B2 (A1 - J1 D1)(A2 - J2 D2) + E1 + E2 + E3,
-  ! A_i: line i's Born-level O(alpha_s) factor [(V + I) f + (K + P) (x) f]
-  ! per class, D_i: its dipoles per Born class at its three-parton point
-  ! (J_i its radiation weight); the first sum holds the Born-kinematics
-  ! terms that the projection removes from the exclusive part
-  real(dp) function nlo11_valid_point(pb, xb, fB, p6, ok, wrad, fE, mur, muf, Qs, common) result(tot)
-    use cs_dipoles, only: h_if_qg, h_fi_qg
-    real(dp), intent(in) :: pb(0:3,5), xb(2), fB(-6:6,2), p6(0:3,6,2), wrad(2), fE(-6:6,2)
-    real(dp), intent(in) :: mur(2), muf(2), Qs(2), common
-    logical, intent(in) :: ok(2)
-    real(dp), external :: cs_born2, hoppetAlphaS
-    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
-    real(dp) :: twopi, lo, vi, fq(-6:6), xa(8,2), x, u, pa(0:3), pk(0:3), pt(0:3), kq, kg, b2, e3, p7(0:3,7)
-    integer :: l, c, c1, c2, ig, jq, jqb, ib
-    twopi = 8*atan(1.0_dp)
-    xa = 0
-    do l = 1, 2
-       lo = log(mur(l)**2/Qs(l)**2)
-       vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,l), pb(:,3+l), mur(l)**2)/twopi
-       kp_beam = l
-       call nlo2_kp_dis(xb(l), pb(:,l), pb(:,3+l), muf(l), fq)
-       do c = 1, ncls
-          xa(c,l) = vi*pdfsum(fB(:,l), cls(c)) + pdfsum(fq, cls(c))/twopi
-       enddo
-       if (.not. ok(l)) cycle
-       pa = p6(:,l,l); pk = p6(:,3+l,l); pt = p6(:,6,l)
-       x = 1 - mdot(pt, pk)/mdot(pa, pt + pk)
-       u = mdot(pa, pt)/mdot(pa, pt + pk)
-       kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
-       kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
-       do c = 1, ncls
-          xa(c,l) = xa(c,l) - wrad(l)*kq*pdfsum(fE(:,l), cls(c))
-       enddo
-       do ig = 1, ngcls
-          jq = 0; jqb = 0
-          do ib = 1, ncls
-             if (cls(ib)%a == -gcls(ig)%qb .and. cls(ib)%b == gcls(ig)%q) jq = ib
-             if (cls(ib)%a == -gcls(ig)%q .and. cls(ib)%b == gcls(ig)%qb) jqb = ib
-          enddo
-          xa(jq,l) = xa(jq,l) - wrad(l)*kg/(2*mdot(pa, pt))*gcls(ig)%n*fE(0,l)
-          xa(jqb,l) = xa(jqb,l) - wrad(l)*kg/(2*mdot(pa, pk))*gcls(ig)%n*fE(0,l)
-       enddo
-    enddo
-    tot = 0
-    do c1 = 1, ncls
-       do c2 = 1, ncls
-          if (.not. compatible(cls(c1)%w, cls(c2)%w)) cycle
-          b2 = cs_born2(pb, [cls(c1)%a, cls(c2)%a, 25, cls(c1)%b, cls(c2)%b])
-          tot = tot + b2*xa(c1,1)*xa(c2,2)
-       enddo
-    enddo
-    tot = tot*common*hoppetAlphaS(mur(1))*hoppetAlphaS(mur(2))
-    if (ok(1)) tot = tot + nlo11_e12(1, pb, xb, fB, p6(:,:,1), fE(:,1), wrad(1), ok(2), &
-         & p6(:,:,2), fE(:,2), wrad(2), mur, muf, Qs, common)
-    if (ok(2)) tot = tot + nlo11_e12(2, pb, xb, fB, p6(:,:,2), fE(:,2), wrad(2), ok(1), &
-         & p6(:,:,1), fE(:,1), wrad(1), mur, muf, Qs, common)
-    if (ok(1) .and. ok(2)) then
-       e3 = nlo11_e3(pb, p6, fE, wrad, mur, common, p7)
-       tot = tot + e3
-    endif
-  end function nlo11_valid_point
-
-  ! stage 3: the O(alpha_s) correction of each line (the other at Born
-  ! level) from the line's Catani-Seymour pieces, for the validation
-  ! against the structure functions (cs_order 11):
-  !   [(V + I) B f + B (K + P) (x) f] at the VBF Born
-  !   + [R f(xi) - D f(xi)] at the line's three-parton point,
-  ! with V the vertex correction CF (-8 - L^2 - 3 L), L = ln(mur^2/Q^2),
-  ! I and K + P of the DIS line, and D its IF and FI dipoles, whose map is
-  ! the projection to the VBF Born (so the dipoles' Born is at pb).
-  real(dp) function line_nlo_point(pb, xb, fB, p6, ok, wrad, fE, mur, muf, Qs, as, common) result(tot)
-    use cs_dipoles, only: h_if_qg, h_fi_qg
-    real(dp), intent(in) :: pb(0:3,5), xb(2), fB(-6:6,2), p6(0:3,6,2), wrad(2), fE(-6:6,2)
-    real(dp), intent(in) :: mur(2), muf(2), Qs(2), as(2), common
-    logical, intent(in) :: ok(2)
-    real(dp), external :: cs_born2, hoppetAlphaS
-    real(dp), parameter :: CF = 4.0_dp/3.0_dp, TR = 0.5_dp
-    real(dp) :: twopi, fq(-6:6), vi, lo, b2, m1, m2, me, wb, wr, x, u, pa(0:3), pk(0:3), pt(0:3), kq, kg, asl
-    integer :: line, o, i1, i2, il, io, b5(5), bflav(6)
-    twopi = 8*atan(1.0_dp)
-    tot = 0
-    do line = 1, 2
-       o = 3 - line
-       asl = hoppetAlphaS(mur(line))   ! as(line) is set only for lines that radiated
-       ! Born level: V + I and K + P
-       lo = log(mur(line)**2/Qs(line)**2)
-       vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,line), pb(:,3+line), mur(line)**2)/twopi
-       kp_beam = line
-       call nlo2_kp_dis(xb(line), pb(:,line), pb(:,3+line), muf(line), fq)
-       wb = 0
-       do i1 = 1, ncls
-          do i2 = 1, ncls
-             if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
-             il = merge(i1, i2, line == 1); io = merge(i2, i1, line == 1)
-             b2 = cs_born2(pb, [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b])
-             wb = wb + b2*(vi*pdfsum(fB(:,line), cls(il)) + pdfsum(fq, cls(il))/twopi)*pdfsum(fB(:,o), cls(io))
-          enddo
-       enddo
-       tot = tot + wb*common*asl
-       if (.not. ok(line)) cycle
-       ! real minus dipoles at the line's three-parton point: in pa, the
-       ! line's outgoing quark pk (or the quark of g -> q qbar), extra pt
-       pa = p6(:,line,line); pk = p6(:,3+line,line); pt = p6(:,6,line)
-       x = 1 - mdot(pt, pk)/mdot(pa, pt + pk)
-       u = mdot(pa, pt)/mdot(pa, pt + pk)
-       kq = CF*4*twopi*(h_if_qg(x, u, 1.0_dp)/(2*mdot(pa, pt)*x) + h_fi_qg(1 - u, x, 1.0_dp)/(2*mdot(pk, pt)*x))
-       wr = 0
-       do i1 = 1, ncls
-          do i2 = 1, ncls
-             if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
-             il = merge(i1, i2, line == 1); io = merge(i2, i1, line == 1)
-             bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
-             call memo_lines(p6(:,:,line), bflav, m1, m2)
-             me = merge(m1, m2, line == 1)
-             b2 = cs_born2(pb, bflav(1:5))
-             wr = wr + (me - kq*b2)*pdfsum(fE(:,line), cls(il))*pdfsum(fB(:,o), cls(io))
-          enddo
-       enddo
-       ! gluon-initiated: g -> q (pk) + qbar (pt); IF dipoles with the
-       ! antiquark emitted (Born -qbar -> q) or the quark emitted (Born -q -> qbar)
-       kg = TR*(1 - 2*x*(1 - x))*4*twopi/x
-       do i1 = 1, ngcls
-          do i2 = 1, ncls
-             if (.not. compatible(gcls(i1)%w, cls(i2)%w)) cycle
-             if (line == 1) then
-                bflav = [0, cls(i2)%a, 25, gcls(i1)%q, cls(i2)%b, gcls(i1)%qb]
-             else
-                bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
-             endif
-             call memo_lines(p6(:,:,line), bflav, m1, m2)
-             me = merge(m1, m2, line == 1)
-             b5 = [cls(i2)%a, cls(i2)%a, 25, cls(i2)%b, cls(i2)%b]
-             b5(line) = -gcls(i1)%qb; b5(3+line) = gcls(i1)%q
-             b2 = kg/(2*mdot(pa, pt))*cs_born2(pb, b5)
-             b5(line) = -gcls(i1)%q; b5(3+line) = gcls(i1)%qb
-             b2 = b2 + kg/(2*mdot(pa, pk))*cs_born2(pb, b5)
-             wr = wr + (me - b2)*gcls(i1)%n*fE(0,line)*pdfsum(fB(:,o), cls(i2))
-          enddo
-       enddo
-       tot = tot + wr*common*wrad(line)*asl
-    enddo
-  end function line_nlo_point
 
   ! (2,0) (line 1) or (0,2) (line 2) at the three-parton event p6 of the
   ! line: one-loop H+3j with the loop on the line, plus the I operator,
@@ -1021,34 +434,11 @@ contains
   real(dp) function virt_point(line, p6, fB, fE, xi3, mur, muf, Qo) result(v)
     integer, intent(in) :: line
     real(dp), intent(in) :: p6(0:3,6), fB(-6:6,2), fE(-6:6), xi3, mur, muf, Qo
-    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq, rem, vi
+    real(dp) :: fq(-6:6), fg, iq, ig, lo, born, bmn(0:3,0:3), virt, v20, c11, fgq, vi
     integer :: i1, i2, bflav(6), o, il, io
     real(dp), parameter :: CF = 4.0_dp/3.0_dp, twopi = 6.283185307179586476925286766559005768394_dp
     o = 3 - line
-    kp_beam = line
     call nlo2_kp(xi3, p6(:,line), p6(:,3+line), p6(:,6), muf, fq, fg, fgq)
-    if (excl_estimate == 6 .or. excl_estimate == 7) then
-       ! emulation: minus the quark part of K + P of the NC gluon-initiated
-       ! Borns (6), or plus the old code's FKS remnant in its place (7)
-       if (excl_estimate == 7) then
-          rem = nlo2_rem_fks_qg(xi3, 2*mdot(p6(:,1), p6(:,2)), muf)
-          fgq = -rem
-       endif
-       v = 0
-       do i1 = 1, 2
-          do i2 = 1, ncls
-             if (.not. compatible(gcls(i1)%w, cls(i2)%w)) cycle
-             if (line == 1) then
-                bflav = [0, cls(i2)%a, 25, gcls(i1)%q, cls(i2)%b, gcls(i1)%qb]
-             else
-                bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1)%q, gcls(i1)%qb]
-             endif
-             call memo_born_line(p6, bflav, line, born, bmn)
-             v = v - gcls(i1)%n*born/twopi*fgq*pdfsum(fB(:,o), cls(i2))
-          enddo
-       enddo
-       return
-    endif
     iq = nlo2_ifin(1, p6(:,line), p6(:,3+line), p6(:,6), mur**2)
     ig = nlo2_ifin(2, p6(:,line), p6(:,3+line), p6(:,6), mur**2)
     lo = log(mur**2/Qo**2)
@@ -1093,61 +483,6 @@ contains
        enddo
     enddo
   end function virt_point
-
-  ! [P_gq (x) sum_q f_q](xi) = int_xi^1 dz/z CF (1 + (1-z)^2)/z sum_q f_q(xi/z),
-  ! number densities, 5 flavours of quarks and antiquarks (Gauss-Legendre in
-  ! ln z)
-  real(dp) function pgq_conv(xi, muf) result(c)
-    real(dp), intent(in) :: xi, muf
-    integer, parameter :: n = 48
-    real(dp), save :: gx(n), gw(n)
-    logical, save :: ini = .true.
-    real(dp) :: z, f(-6:6), wz
-    integer :: i, j, it
-    real(dp) :: t, t1, p1, p2, p3, pp
-    if (ini) then
-       do i = 1, (n + 1)/2
-          t = cos(4*atan(1.0_dp)*(i - 0.25_dp)/(n + 0.5_dp))
-          do it = 1, 100
-             p1 = 1; p2 = 0
-             do j = 1, n
-                p3 = p2; p2 = p1
-                p1 = ((2*j - 1)*t*p2 - (j - 1)*p3)/j
-             enddo
-             pp = n*(t*p1 - p2)/(t*t - 1)
-             t1 = t; t = t1 - p1/pp
-             if (abs(t - t1) < 1d-15) exit
-          enddo
-          gx(i) = (1 - t)/2; gx(n+1-i) = (1 + t)/2
-          gw(i) = 1/((1 - t*t)*pp*pp); gw(n+1-i) = gw(i)
-       enddo
-       ini = .false.
-    endif
-    c = 0
-    do i = 1, n
-       z = xi**gx(i)                  ! ln z uniform in [ln xi, 0]
-       wz = gw(i)*z*log(1/xi)
-       call hoppetEval(xi/z, muf, f)
-       f = f/(xi/z)                   ! number densities at xi/z
-       c = c + wz/z*4.0_dp/3*(1 + (1 - z)**2)/z*(sum(f(-5:-1)) + sum(f(1:5)))
-    enddo
-  end function pgq_conv
-
-  ! F(mu_e) - F(Q) - b0 ln(mu_e^2/Q^2) with VBFNLO's ffunc (qqhqqj-virt.f,
-  ! nf = 4 there) and b0 = 11/6 CA - 2/3 TR nf with nf = 5 (as its log terms)
-  real(dp) function ffunc4(s, t, u, mue, Q) result(d)
-    real(dp), intent(in) :: s, t, u, mue, Q
-    real(dp), parameter :: ca = 3, cf = 4.0_dp/3, tr = 0.5_dp, b0 = 11.0_dp/6*3 - 2.0_dp/3*0.5_dp*5
-    d = f(mue**2) - f(Q**2) - b0*log(mue**2/Q**2)
-  contains
-    real(dp) function f(mu2)
-      real(dp), intent(in) :: mu2
-      real(dp) :: ls, lt, lu
-      ls = log(abs(s/mu2)); lt = log(abs(t/mu2)); lu = log(abs(u/mu2))
-      f = 0.5_dp*ca*(lu**2 + lt**2) - 0.5_dp*(ca - 2*cf)*ls**2 + 1.5_dp*(ca - 2*cf)*ls &
-           & + (tr*4/3.0_dp - 5*ca/3.0_dp)*(lu + lt)
-    end function f
-  end function ffunc4
 
   ! stage-2 set-up: two VBF Born test points (for the grouping of the
   ! real flavour list) and cs_nlo2
@@ -1200,8 +535,8 @@ contains
     enddo
     ! normalisation: the tagged entries give the full matrix element for
     ! the two lines' extra partons (no symmetry factor for two gluons on
-    ! different lines; checked by cs_testlines11, which gave 2 with a
-    ! factor 2 -- my first guess of a 1/2 in setreal was wrong)
+    ! different lines; checked against the H+3j times the other line's
+    ! dipoles in its singular limits)
     e3_fac = 1
     nf = 0; nmiss = 0
     do s1 = 1, ncls + ngcls
@@ -1294,7 +629,6 @@ contains
     o = 3 - l
     lo = log(mur(o)**2/Qs(o)**2)
     vi = CF*(-8 - lo**2 - 3*lo)/twopi + nlo2_ifin_dis(pb(:,o), pb(:,3+o), mur(o)**2)/twopi
-    kp_beam = o
     call nlo2_kp_dis(xb(o), pb(:,o), pb(:,3+o), muf(o), fq)
     if (oko) then
        pa = p6o(:,o); pk = p6o(:,3+o); pt = p6o(:,6)
@@ -1351,7 +685,6 @@ contains
        do s2 = 1, ncls + ngcls
           j = e3_entry(s1,s2)
           if (j == 0) cycle
-          if (.not. chan_w_ok(state_w(s1))) cycle
           p2 = state_pdf(s2, fE(:,2))
           if (p2 == 0) cycle
           call e3_momenta(s1, s2, p7, pe)
@@ -1382,211 +715,6 @@ contains
        pe(:,5) = p7(:,5); pe(:,13-l1) = p7(:,7)
     endif
   end subroutine e3_momenta
-
-  ! limit tests of the real matrix elements against their dipoles
-  subroutine cs_excl_testlimits(mode)
-    integer, intent(in) :: mode
-    if (mode == 3) then
-       call debug_is3()
-       call nlo2_debug_is4(tb_pb(:,:,1), tb_xb(:,1), 1)
-       call nlo2_debug_is4(tb_pb(:,:,1), tb_xb(:,1), 9)
-       call nlo2_debug_is4(tb_pb(:,:,1), tb_xb(:,1), 13)
-       call nlo2_debug_isg(tb_pb(:,:,1), tb_xb(:,1), 37)
-       call nlo2_debug_isg(tb_pb(:,:,1), tb_xb(:,1), 38)
-       call nlo2_debug_isg(tb_pb(:,:,1), tb_xb(:,1), 41)
-       call nlo2_debug_isg(tb_pb(:,:,1), tb_xb(:,1), 42)
-       call nlo2_debug_isg(tb_pb(:,:,1), tb_xb(:,1), 45)
-       call nlo2_debug_isg(tb_pb(:,:,1), tb_xb(:,1), 57)
-       return
-    endif
-    if (mode == 2) then
-       ! debug: initial-state collinear limits of groups 1 (S2) and 3 (S1)
-       call nlo2_debug_is(tb_pb(:,:,1), tb_xb(:,1), 1, 2)
-       call nlo2_debug_is(tb_pb(:,:,1), tb_xb(:,1), 3, 3)
-       call nlo2_debug_is(tb_pb(:,:,1), tb_xb(:,1), 3, 1)
-       return
-    endif
-    call nlo2_test_limits(tb_pb(:,:,1), tb_xb(:,1))
-  end subroutine cs_excl_testlimits
-
-  ! debug: initial-state collinear limit of the H+3j matrix element
-  ! (u d -> d u g H, W fusion, gluon from the incoming u) against the VBF
-  ! Born for W fusion, |M|^2 ~ (pa.pb)(p1.p2)/((q1^2-MW^2)^2 (q2^2-MW^2)^2):
-  ! R3 (2 pa.pg x)/(P_qq(x) B2) must not depend on x
-  subroutine debug_is3()
-    use cs_dipoles, only: split_fi
-    real(dp) :: pb(0:3,5), p6(0:3,6), pa(0:3), pg(0:3), pj(0:3), x, m1, m2, b2, q1s, q2s, r(5)
-    real(dp) :: xs(5)
-    integer :: ix, iphi
-    xs = [0.2_dp, 0.4_dp, 0.6_dp, 0.8_dp, 0.95_dp]
-    pb = tb_pb(:,:,1)
-    q1s = mdot(pb(:,4) - pb(:,1), pb(:,4) - pb(:,1))
-    q2s = mdot(pb(:,5) - pb(:,2), pb(:,5) - pb(:,2))
-    b2 = mdot(pb(:,1), pb(:,2))*mdot(pb(:,4), pb(:,5))/((q1s - 80.398_dp**2)**2*(q2s - 80.398_dp**2)**2)
-    do iphi = 1, 2
-       do ix = 1, 5
-          x = xs(ix)
-          call split_fi(pb(:,4), pb(:,1), x, 1d-7, 1.0_dp*iphi, pg, pj, pa)
-          p6(:,1:5) = pb
-          p6(:,1) = pa; p6(:,4) = pj; p6(:,6) = pg
-          call cs_hjjj_lines(p6, [2, 1, 25, 1, 2, 0], m1, m2)
-          r(ix) = m1*2*mdot(pa, pg)*x/((1 + x**2)/(1 - x)*b2)
-       enddo
-       write(6,'(a,i2,a,5es13.5)') ' debug_is3 phi', iphi, '  R3 (2 pa.pg x)/(P(x) B2) at x = .2,.4,.6,.8,.95:', r
-    enddo
-  end subroutine debug_is3
-
-  ! renormalisation-scale dependence of V + I at three-parton points:
-  ! d(V + I)/d ln mu^2 = (11/6 CA - 2/3 TR nf) B alpha_s/(2 pi) for a Born
-  ! with one power of alpha_s
-  subroutine cs_excl_testvirt()
-    real(dp) :: pb(0:3,5), pin(0:3), a(0:3), b(0:3), xp, z, wrad, p6(0:3,6), r(3)
-    real(dp) :: mu(3), vi(3), born, bmn(0:3,0:3), virt, lo, Qo, pred, worst, iop
-    real(dp), parameter :: CF = 4.0_dp/3.0_dp, twopi = 6.283185307179586476925286766559005768394_dp
-    real(dp), parameter :: b0 = 11.0_dp/6.0_dp*3 - 2.0_dp/3.0_dp*0.5_dp*5
-    integer :: line, it, i1, i2, im, bflav(6), btype, o
-    logical :: ok
-    worst = 0
-    do it = 1, 4
-       pb = tb_pb(:,:,1 + mod(it,2))
-       do line = 1, 2
-          o = 3 - line
-          r = [0.2_dp + 0.15_dp*it, 0.3_dp + 0.1_dp*it, 0.7_dp]
-          call line_radiation(pb(:,line), pb(:,3+line), tb_xb(line, 1 + mod(it,2)), r, 1, 1d-9, &
-               & pin, a, b, xp, z, wrad, ok)
-          p6(:,1:5) = pb
-          p6(:,line) = pin; p6(:,3+line) = a; p6(:,6) = b
-          Qo = sqrt(2*mdot(pb(:,o), pb(:,3+o)))
-          do i1 = 1, ncls + ngcls
-             i2 = 1 + mod(it, 4)
-             if (i1 <= ncls) then
-                if (.not. compatible(cls(i1)%w, cls(i2)%w)) cycle
-                if (line == 1) bflav = [cls(i1)%a, cls(i2)%a, 25, cls(i1)%b, cls(i2)%b, 0]
-                if (line == 2) bflav = [cls(i2)%a, cls(i1)%a, 25, cls(i2)%b, cls(i1)%b, 0]
-                btype = 1
-             else
-                if (.not. compatible(gcls(i1-ncls)%w, cls(i2)%w)) cycle
-                if (line == 1) bflav = [0, cls(i2)%a, 25, gcls(i1-ncls)%q, cls(i2)%b, gcls(i1-ncls)%qb]
-                if (line == 2) bflav = [cls(i2)%a, 0, 25, cls(i2)%b, gcls(i1-ncls)%q, gcls(i1-ncls)%qb]
-                btype = 2
-             endif
-             mu = [50.0_dp, 200.0_dp, 800.0_dp]
-             if (it == 1 .and. line == 1 .and. (i1 == 1 .or. i1 == ncls + 1)) then
-                do im = 1, 7
-                   call memo_born_line(p6, bflav, line, born, bmn)
-                   call cs_hjjj_virt_line(p6, bflav, line, (25.0_dp*2**(im-1))**2, virt)
-                   lo = log((25.0_dp*2**(im-1))**2/Qo**2)
-                   iop = nlo2_ifin(btype, p6(:,line), p6(:,3+line), p6(:,6), (25.0_dp*2**(im-1))**2)
-                   write(6,'(a,i2,a,f8.1,a,4es14.6)') ' pieces btype', btype, ' mu', 25.0_dp*2**(im-1), &
-                        & '  virt/B, c11, I/(2pi), sum:', virt/born, CF*(-8 - lo**2 - 3*lo)/twopi, iop/twopi, &
-                        & (virt - born*CF*(-8 - lo**2 - 3*lo)/twopi + born*iop/twopi)/born
-                enddo
-             endif
-             do im = 1, 3
-                call memo_born_line(p6, bflav, line, born, bmn)
-                call cs_hjjj_virt_line(p6, bflav, line, mu(im)**2, virt)
-                lo = log(mu(im)**2/Qo**2)
-                iop = nlo2_ifin(btype, p6(:,line), p6(:,3+line), p6(:,6), mu(im)**2)
-                vi(im) = (virt - born*CF*(-8 - lo**2 - 3*lo)/twopi + born*iop/twopi)/born
-             enddo
-             pred = b0/twopi*log(mu(3)**2/mu(1)**2)
-             worst = max(worst, abs((vi(3) - vi(1))/pred - 1))
-             write(6,'(a,i2,a,i2,a,6i4,a,3es13.5,a,f10.6)') ' testvirt line', line, ' btype', btype, &
-                  & ' flav', bflav, '  (V+I)/B at mu = 50, 200, 800:', vi, &
-                  & '  [VI(800)-VI(50)]/(b0 ln/(2pi)):', (vi(3) - vi(1))/pred
-          enddo
-       enddo
-    enddo
-    write(6,'(a,es10.2)') ' testvirt: max deviation of the mu dependence from b0: ', worst
-  end subroutine cs_excl_testvirt
-
-  ! explicit loop over all flavour combinations (diagonal CKM, no top),
-  ! independent of the classes, compared with the class sums wcls
-  subroutine flavour_check(p6, ok, fB, fE, norm, wcls)
-    real(dp), intent(in) :: p6(0:3,6,2), fB(-6:6,2), fE(-6:6,2), norm(2), wcls(2)
-    logical, intent(in) :: ok(2)
-    real(dp) :: wb(2), m1, m2, f1, f2
-    integer :: line, a1, a2, b1, b2, w1, w2, bflav(6), c
-    wb = 0
-    do line = 1, 2
-       if (.not. ok(line)) cycle
-       do a1 = -5, 5
-          do a2 = -5, 5
-             if (a1 == 0 .or. a2 == 0) cycle
-             ! NC on both lines, or CC on both with opposite W charges
-             do c = 1, 2
-                if (c == 1) then
-                   b1 = a1; b2 = a2; w1 = 0; w2 = 0
-                else
-                   call cc_partner(a1, b1, w1); call cc_partner(a2, b2, w2)
-                   if (w1 == 0 .or. w2 == 0 .or. w1 /= -w2) cycle
-                endif
-                bflav = [a1, a2, 25, b1, b2, 0]
-                call memo_lines(p6(:,:,line), bflav, m1, m2)
-                if (line == 1) then
-                   wb(1) = wb(1) + m1*fE(a1,1)*fB(a2,2)
-                else
-                   wb(2) = wb(2) + m2*fB(a1,1)*fE(a2,2)
-                endif
-             enddo
-          enddo
-       enddo
-       ! incoming gluon on the radiating line: g -> q (b) qbar (-a) with
-       ! a -> b a quark transition (NC: b = a; CC: b = partner of a)
-       do a1 = 1, 5
-          do c = 1, 2
-             if (c == 1) then
-                b1 = a1; w1 = 0
-             else
-                call cc_partner(a1, b1, w1)
-                if (w1 == 0) cycle
-             endif
-             do a2 = -5, 5
-                if (a2 == 0) cycle
-                if (c == 1) then
-                   b2 = a2; w2 = 0
-                else
-                   call cc_partner(a2, b2, w2)
-                   if (w2 == 0 .or. w1 /= -w2) cycle
-                endif
-                if (line == 1) then
-                   bflav = [0, a2, 25, b1, b2, -a1]
-                   call memo_lines(p6(:,:,line), bflav, m1, m2)
-                   wb(1) = wb(1) + m1*fE(0,1)*fB(a2,2)
-                else
-                   bflav = [a2, 0, 25, b2, b1, -a1]
-                   call memo_lines(p6(:,:,line), bflav, m1, m2)
-                   wb(2) = wb(2) + m2*fB(a2,1)*fE(0,2)
-                endif
-             enddo
-          enddo
-       enddo
-    enddo
-    wb = wb*norm
-    write(6,'(a,2es16.8,a,2es10.2)') ' flavcheck: w1, w2 = ', wcls, '  explicit/classes - 1: ', &
-         & merge(wb/wcls - 1, 0.0_dp*wb, wcls /= 0)
-  end subroutine flavour_check
-
-  ! CC transition a -> b of a quark line and the charge w of the emitted W
-  ! (w = 0 if none: b quark, no top)
-  subroutine cc_partner(a, b, w)
-    integer, intent(in) :: a
-    integer, intent(out) :: b, w
-    integer :: aa
-    aa = abs(a); b = 0; w = 0
-    if (aa == 5) return
-    if (mod(aa,2) == 0) then
-       b = sign(aa-1, a)          ! u -> d, c -> s (ubar -> dbar)
-    else
-       b = sign(aa+1, a)          ! d -> u, s -> c
-    endif
-    ! charge of the line drops by w: u -> d emits W+, ubar -> dbar W-
-    if (a > 0) then
-       w = merge(+1, -1, mod(aa,2) == 0)
-    else
-       w = merge(-1, +1, mod(aa,2) == 0)
-    endif
-  end subroutine cc_partner
 
   ! the scales of the inclusive code (muR1, muR2, muF1, muF2 in
   ! ../proVBFH/src/inclusive/matrix_element.f90, private there; keep in step)
@@ -1620,7 +748,6 @@ contains
     if (n > 1) then
        if (scale_choice /= 2 .and. scale_choice /= 3) &
             & stop 'cs_scales: on-the-fly variations need scale_choice 2 or 3 (runningscales 1)'
-       if (excl_estimate /= 0) stop 'cs_scales: not with cs_estimate'
     endif
   end subroutine cs_scales_setup
 
@@ -1697,40 +824,11 @@ contains
     real(dp), parameter :: CA = 3, TR = 0.5_dp, twopi = 6.283185307179586476925286766559005768394_dp
     real(dp), external :: cs_nlight
     integer :: key(memo_nkey), slot
-    real(dp) :: val(2), virt, vid, b0_4pi, vb(2)
-    integer :: nfall(2), ntot(2)
+    real(dp) :: val(2), virt, b0_4pi
     key = 0; key(1) = 6; key(2:7) = bflav; key(8) = line
-    if (vi_direct) then
-       call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
-       vi = (virt - born*c11) + born*ii/twopi
-       return
-    endif
     if (memo_get(key, reshape(p6, [24]), 24, val, 2, slot)) then
        b0_4pi = (11.0_dp/3*CA - 4.0_dp/3*TR*cs_nlight())/(2*twopi)
        vi = val(1) + born*b0_4pi*log(mur2/val(2))
-       if (excl_scalecheck .and. mur2 /= val(2)) then
-          call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
-          vid = (virt - born*c11) + born*ii/twopi
-          scalecheck_n = scalecheck_n + 1
-          scalecheck_dev(1) = max(scalecheck_dev(1), abs(vi - vid)/max(abs(vid), tiny(1.0_dp)))
-          if (abs(vi - vid)/max(abs(born), tiny(1.0_dp)) > scalecheck_dev(2)) then
-             call cs_get_vborn(vb, nfall, ntot)
-             write(6,'(a,es10.2,a,6i4,a,i2,a,es11.3,a,2es12.4,a,2i4,a,2i4)') ' scalecheck new max dev/born', &
-                  & abs(vi - vid)/abs(born), ' fl', bflav, ' line', line, ' born', born, ' V+I shifted, direct', vi, vid, &
-                  & ' fallbacks at mu (21,43):', nfall, ' of', ntot
-             call cs_hjjj_virt_line(p6, bflav, line, val(2), virt)
-             call cs_get_vborn(vb, nfall, ntot)
-             write(6,'(a,2i4,a,2i4)') '      fallbacks at mu_ref (21,43):', nfall, ' of', ntot
-          endif
-          scalecheck_dev(2) = max(scalecheck_dev(2), abs(vi - vid)/max(abs(born), tiny(1.0_dp)))
-          if (scalecheck_n <= 40) then
-             call cs_get_vborn(vb, nfall, ntot)
-             write(6,'(a,i3,a,6i4,a,i2,a,es11.3,a,f12.6,a,2i4,a,2i4)') ' scalecheck', &
-               & int(scalecheck_n), ' fl', bflav, ' line', line, ' born', born, &
-               & ' slope (V+I)/born per ln mu2', (vid - val(1))/(born*log(mur2/val(2))), &
-               & '  gauge-check fallbacks (21, 43):', nfall, ' of', ntot
-          endif
-       endif
     else
        call cs_hjjj_virt_line(p6, bflav, line, mur2, virt)
        vi = (virt - born*c11) + born*ii/twopi

@@ -1,5 +1,4 @@
 c proVBFH-cs: marked copy of ../proVBFH/src/exclusive/real_vbfnlo.f with one fix (search "proVBFH-cs");
-c the switch cs_ggbug restores the original line, to size the bug
 c     BJ : start from original file real.f
 c     (public POWHEG-BOX-V2 version March 2018)
 c     and implement improved VBFNLO real-emission contributions
@@ -177,9 +176,6 @@ c
 c     identify as CC or NC type sub-process:
       logical cc_type,nc_type
       integer hww,hzz
-c proVBFH-cs: .true. restores the original NC gg pair type (cs_estimate 5)
-      logical cs_ggbug
-      common/csggbug/cs_ggbug
 c
       integer rtags(nlegreal)
       logical need_cross, found
@@ -1908,10 +1904,9 @@ c proVBFH-cs (2026-09-30): ftype(2) enters k as the type of the second
 c line, but here bflav(4) = -bflav(6), so leg 6 is the quark of the
 c first line (the original took bflav(6)): both pairs then got the first
 c line's Z couplings when their types differ. The second line is legs 5
-c and 7 (found by the limit test cs_testlines11).
+c and 7 (found by a limit test against the dipoles).
 c                    ftype(2) = 2-mod(abs(bflav(6)),2)      
                      ftype(2) = 2-mod(abs(bflav(5)),2)      
-                     if (cs_ggbug) ftype(2) = 2-mod(abs(bflav(6)),2)
                      ftype(4) = 2-mod(abs(bflav(7)),2)   
                      ftype(5) = 2-mod(abs(bflav(5)),2)
 

@@ -40,22 +40,13 @@ module cs_nlo2
   use cs_kinematics, only: mdot, line_radiation
   use cs_dipoles
   use cs_memo, only: memo_on, memo_get, memo_put, memo_nkey
-  use cs_chan, only: chan_pdf, chan_w_ok, chan_trivial, kp_beam
   implicit none
   private
-  public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp, nlo2_test_limits
-  public :: nlo2_kp_dis, nlo2_ifin_dis, nlo2_rem_fks_qg
-  public :: nlo2_ngroups, nlo2_ncount, nlo2_debug_is, nlo2_debug_is4, nlo2_debug_isg, nlo2_debug_point
-  ! read by cs_exclusive's diagnostic dump only
-  public :: mvar, mz, cur_w4
+  public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp
+  public :: nlo2_kp_dis, nlo2_ifin_dis
+  public :: nlo2_ngroups, nlo2_ncount
   ! four-parton points dropped by the technical cut
   integer, public, save :: nlo2_ncut = 0
-  ! emulation of the old proVBFH's treatment of the NC pair graphs (cs_estimate
-  ! 6): if >= 0, group_me returns only the initial-state q -> q dipoles of
-  ! structure 5 (dip(3:4,5)) for k_T of role 1 above this value [GeV], and no
-  ! real matrix element
-  real(dp), public, save :: nlo2_emul_kappa = -1
-  logical, save :: kin_verbose = .false.
 
   real(dp), parameter :: pi = 3.141592653589793238462643383279502884197_dp
   real(dp), parameter :: CF = 4.0_dp/3.0_dp, CA = 3.0_dp, TR = 0.5_dp
@@ -75,7 +66,7 @@ module cs_nlo2
      integer :: fl(7) = 0          ! flavours of the representative, same order
      integer :: fa(maxmem) = 0, fo(maxmem) = 0   ! members: incoming flavours
      real(dp) :: fp(8) = 0         ! fingerprint (matrix elements at test points)
-     logical :: nc = .true.        ! (cs_chan) NC: the Born-level line keeps its flavour
+     logical :: nc = .true.        ! NC: the Born-level line keeps its flavour
   end type real_group
   type(real_group), allocatable, save :: grp(:)
   integer, save :: ngrp = 0
@@ -148,7 +139,6 @@ contains
           if (.not. line_entry(flav, tags, line, s, leg, fl)) cycle
           ntot(line) = ntot(line) + 1
           call fingerprint(j, line, s, leg, fl, pbtest, xbtest, cutoff, fp)
-          if (verbose) write(78,'(i5,i2,i2,7i4,8es14.6)') j, line, s, fl, fp
           found = .false.
           do ig = 1, ngrp
              if (grp(ig)%line /= line .or. grp(ig)%s /= s) cycle
@@ -376,7 +366,6 @@ contains
        if (min(mz(m), 1 - mz(m)) < cutoff) ok = .false.
     enddo
     if (.not. ok) then
-       if (kin_verbose) write(6,'(a,6es10.2,a,6es10.2)') ' nlo2_real_kin cut: var', mvar, '  z', mz
        dok = .false.
        nlo2_ncut = nlo2_ncut + 1
     endif
@@ -397,10 +386,8 @@ contains
     xi4 = cur_xb(cur_line)*cur_pa(0)/cur_pb(0,cur_line)
     call hoppetEval(xi4, muf, f4)
     f4 = f4/xi4
-    call chan_pdf(cur_line, f4, xi4)
     do ig = 1, ngrp
        if (grp(ig)%line /= cur_line) cycle
-       if (.not. chan_w_ok(merge(0, 1, grp(ig)%nc))) cycle
        pdf = 0
        do i = 1, grp(ig)%n
           pdf = pdf + f4(grp(ig)%fa(i))*fo(grp(ig)%fo(i))
@@ -435,57 +422,6 @@ contains
     endif
   end subroutine group_me_memo
 
-  ! diagnostic: nlo2_real_me for the current point, printed per flavour
-  ! group (real and the six mapped configurations' dipoles, weighted as in
-  ! nlo2_real_me) and per mapped configuration (its variables, the
-  ! three-parton variables 1 - xp3, z3 of the mapped configuration, and
-  ! whether it is above the three-parton cutoff); invariants of the line
-  ! normalised to Q^2 = 2 pB.pOB
-  subroutine nlo2_debug_point(muf, fo, unit)
-    real(dp), intent(in) :: muf, fo(-6:6)
-    integer, intent(in) :: unit
-    real(dp) :: xi4, f4(-6:6), pdf, me, d(6), sd(6), sr, xp3, z3, q2, fw
-    integer :: ig, i, m
-    ncache = 0
-    xi4 = cur_xb(cur_line)*cur_pa(0)/cur_pb(0,cur_line)
-    call hoppetEval(xi4, muf, f4)
-    f4 = f4/xi4
-    call chan_pdf(cur_line, f4, xi4)
-    q2 = 2*mdot(cur_pb(:,cur_line), cur_pb(:,3+cur_line))
-    write(unit,'(a,i2,a,es10.3,a,f9.5,a,es10.3)') ' line', cur_line, '  w4 =', cur_w4, '  xi4 =', xi4, '  Q^2 =', q2
-    write(unit,'(a,3es10.2,a,3es10.2)') '   s_ij/Q^2 (12, 13, 23):', 2*mdot(cur_k(:,1), cur_k(:,2))/q2, &
-         & 2*mdot(cur_k(:,1), cur_k(:,3))/q2, 2*mdot(cur_k(:,2), cur_k(:,3))/q2, '   s_ai/Q^2:', &
-         & (2*mdot(cur_pa, cur_k(:,i))/q2, i=1,3)
-    write(unit,'(a,3es10.2)') '   energies k1..k3 / pa(0):', (cur_k(0,i)/cur_pa(0), i=1,3)
-    fw_verbose = .true.
-    fw = four_weight(cur_pb(:,cur_line), cur_pb(:,3+cur_line), cur_xb(cur_line), cur_pa, cur_k, cur_cutoff)
-    fw_verbose = .false.
-    write(unit,'(a,es10.3)') '   four_weight again:', fw
-    do m = 1, 6
-       xp3 = 1 - mdot(mt(:,m), mk(:,m))/mdot(ma(:,m), mt(:,m) + mk(:,m))
-       z3 = mdot(ma(:,m), mt(:,m))/mdot(ma(:,m), mt(:,m) + mk(:,m))
-       write(unit,'(a,i2,a,a,a,es10.2,a,f8.5,a,es10.2,a,f8.5,a,l2)') '   map', m, ' ', merge('FF', 'FI', m <= 3), &
-            & '  y/(1-x) =', merge(mvar(m), 1 - mvar(m), m <= 3), '  z =', mz(m), '   mapped 1-xp3 =', 1 - xp3, &
-            & '  z3 =', z3, '  resolved', mok(m)
-    enddo
-    sr = 0; sd = 0
-    do ig = 1, ngrp
-       if (grp(ig)%line /= cur_line) cycle
-       if (.not. chan_w_ok(merge(0, 1, grp(ig)%nc))) cycle
-       pdf = 0
-       do i = 1, grp(ig)%n
-          pdf = pdf + f4(grp(ig)%fa(i))*fo(grp(ig)%fo(i))
-       enddo
-       if (pdf == 0) cycle
-       call group_me(ig, cur_pa, cur_k, me, d, .true.)
-       sr = sr + me*pdf*cur_w4
-       sd = sd - d*pdf*cur_w4
-       write(unit,'(a,i4,a,i2,a,7i4,a,es10.2,a,6es10.2)') '   group', ig, ' s', grp(ig)%s, ' fl', grp(ig)%fl, &
-            & '  R', me*pdf*cur_w4, '  -D(m)', -d*pdf*cur_w4
-    enddo
-    write(unit,'(a,es11.3,a,6es10.2,a,es11.3)') '   total R', sr, '  -D(m)', sd, '  R - sum D', sr + sum(sd)
-  end subroutine nlo2_debug_point
-
   ! real matrix element of group ig at the line configuration (pa, k) of
   ! the current Born point, and its dipoles summed per mapped
   ! configuration (only those with mok, if usemok)
@@ -508,18 +444,9 @@ contains
     p7(:,g%leg(4)) = k(:,1); p7(:,g%leg(5)) = k(:,2); p7(:,g%leg(6)) = k(:,3)
     p7(:,g%leg(7)) = cur_pb(:,3+o)
     d = 0
-    if (nlo2_emul_kappa >= 0) then
-       ! emulation (cs_estimate 6): only the IF q -> q dipoles of structure 5,
-       ! for k_T of role 1 (the line quark of the incoming flavour) above kappa
-       me = 0
-       if (s /= 5) return
-       if (sqrt(k(1,1)**2 + k(2,1)**2) <= nlo2_emul_kappa) return
-    else
-       call cs_real_me(g%rep, p7, me)
-       nlo2_ncount(1) = nlo2_ncount(1) + 1
-    endif
+    call cs_real_me(g%rep, p7, me)
+    nlo2_ncount(1) = nlo2_ncount(1) + 1
     do id = 1, ndip(s)
-       if (nlo2_emul_kappa >= 0 .and. id < 3) cycle
        dp_ = dip(id, s)
        m = map_index(dp_%i, dp_%j, dp_%typ)
        if (usemok .and. .not. mok(m)) cycle
@@ -735,15 +662,13 @@ contains
     real(dp), intent(out) :: fq(-6:6), fg
     real(dp), intent(out), optional :: fgq
     real(dp) :: lm, dl, zm, z, wz, l, f(-6:6), f1(-6:6), fsum
-    real(dp) :: qqp, qqr, gqr, qgr, ggp, ggr, qqd, ggd, sq
+    real(dp) :: qqp, qqr, gqr, qgr, ggp, ggr, qqd, ggd
     integer :: ip, iq, a
     ! the delta terms (with the integral of the plus distributions from 0 to xi)
     lm = log(1 - xi)
     dl = li2(1 - xi)
     call hoppetEval(xi, muf, f1)
     f1 = f1/xi
-    if (kp_beam == 0 .and. .not. chan_trivial()) stop 'cs_nlo2: kp_core without kp_beam'
-    if (kp_beam /= 0) call chan_pdf(kp_beam, f1, xi)
     qqd = -CF*(5 - pi**2 + kqf + pi**2/3 - lm**2 - 2*dl + kqf*lm + (2*lm + xi + xi**2/2)*lsc)
     ggd = -CA*(50.0_dp/9 - pi**2 + kgf + pi**2/3 - lm**2 - 2*dl + kgf*lm + 2*lm*lsg) &
          & + TR*nf*16.0_dp/9 - gam_g*lsg
@@ -763,7 +688,6 @@ contains
           endif
           call hoppetEval(xi/z, muf, f)
           f = f/xi               ! f_a(xi/z)/z
-          if (kp_beam /= 0) call chan_pdf(kp_beam, f, xi/z)
           l = log((1 - z)/z)
           qqp = CF*2/(1 - z)*(l - kqf/2) - CF*(1 + z**2)/(1 - z)*lsc
           ggp = CA*2/(1 - z)*(l - kgf/2) - CA*2/(1 - z)*lsg
@@ -783,42 +707,8 @@ contains
           if (present(fgq)) fgq = fgq + wz*qgr*fsum
        enddo
     enddo
-    sq = 0
     fq(0) = 0
-    kp_beam = 0
   end subroutine kp_core
-
-  ! the quark part of the collinear remnant of a gluon Born in the old
-  ! proVBFH (POWHEG-BOX btildecoll, 'qg remnant', FNO2007 2.102), which it
-  ! adds for every gluon Born whether or not the real has the initial-state
-  ! region; normalised as fgq of nlo2_kp:
-  !   sum_q int_xi^1 dz/z [P_qg(z) (ln(sb/(z muf^2)) + 2 ln(1-z)) + CF z] f_q(xi/z)
-  ! with P_qg(z) = CF (1 + (1-z)^2)/z and sb the Born's partonic s
-  real(dp) function nlo2_rem_fks_qg(xi, sb, muf) result(r)
-    real(dp), intent(in) :: xi, sb, muf
-    real(dp) :: zm, z, wz, f(-6:6), fsum
-    integer :: ip, iq, a
-    r = 0
-    zm = (1 + xi)/2
-    do ip = 1, 2
-       do iq = 1, nq
-          if (ip == 1) then
-             z = xi*(zm/xi)**gx(iq)
-             wz = gw(iq)*z*log(zm/xi)
-          else
-             z = 1 - (1 - zm)*gx(iq)**2
-             wz = gw(iq)*2*(1 - zm)*gx(iq)
-          endif
-          call hoppetEval(xi/z, muf, f)
-          f = f/xi               ! f_a(xi/z)/z
-          fsum = 0
-          do a = -nf, nf
-             if (a /= 0) fsum = fsum + f(a)
-          enddo
-          r = r + wz*(CF*(1 + (1 - z)**2)/z*(log(sb/(z*muf**2)) + 2*log(1 - z)) + CF*z)*fsum
-       enddo
-    enddo
-  end function nlo2_rem_fks_qg
 
   ! dilogarithm Li2(x), 0 <= x <= 1
   real(dp) function li2(x)
@@ -869,233 +759,5 @@ contains
        w(i) = 1/((1 - z*z)*pp*pp); w(n+1-i) = w(i)
     enddo
   end subroutine gauleg
-
-  !-------------------------------------------------------------------
-  ! limit test: real matrix element against the sum of its dipoles when
-  ! two partons become collinear or one soft, for every group of line 1
-  ! (and a summary for line 2), at the Born point pb, xb
-  subroutine nlo2_test_limits(pb, xb)
-    real(dp), intent(in) :: pb(0:3,5), xb(2)
-    real(dp) :: r(3), pin(0:3), a(0:3), b(0:3), xp, z3, wrad, lam(4), q(0:3,3), pa(0:3), k(0:3,3)
-    real(dp) :: me(4), d(6), dsum(4), worst(maxgrp), rat
-    integer :: ig, ilim, il, iperm, line, nsing, it
-    integer, parameter :: perm(3,6) = reshape([1,2,3, 1,3,2, 2,1,3, 2,3,1, 3,1,2, 3,2,1], [3,6])
-    character(len=12), parameter :: limname(5) = ['FF coll     ', 'FF soft     ', 'FI coll     ', &
-         & 'IS coll     ', 'IS soft-coll']
-    logical :: ok
-    lam = [1d-4, 1d-5, 1d-6, 1d-7]
-    worst = 0
-    cur_pb = pb; cur_xb = xb
-    do ig = 1, ngrp
-       line = grp(ig)%line
-       cur_line = line
-       nsing = 0
-       do it = 1, 3
-          r = [0.23_dp + 0.2_dp*it, 0.37_dp + 0.15_dp*it, 0.11_dp + 0.3_dp*it]
-          ! a three-parton point away from its own singular limits
-          ! (linear sampling)
-          call line_radiation(pb(:,line), pb(:,3+line), xb(line), r, 1, 1d-12, pin, a, b, xp, z3, wrad, ok)
-          if (.not. ok) stop 'test_limits: no three-parton point'
-          do ilim = 1, 5
-             do iperm = 1, 6
-                do il = 1, 4
-                   select case (ilim)
-                   case (1)     ! i || j (FF, y -> 0)
-                      call split_ff(a, b, lam(il), 0.35_dp, 1.1_dp, q(:,1), q(:,2), q(:,3)); pa = pin
-                   case (2)     ! j soft (FF, y -> 0, z -> 1)
-                      call split_ff(a, b, lam(il), 1 - lam(il), 1.1_dp, q(:,1), q(:,2), q(:,3)); pa = pin
-                   case (3)     ! i || j (FI, x -> 1)
-                      call split_fi(a, pin, 1 - lam(il), 0.35_dp, 2.1_dp, q(:,1), q(:,2), pa); q(:,3) = b
-                   case (4)     ! i || pa (FI, z -> 0 at fixed x)
-                      call split_fi(a, pin, 0.6_dp, lam(il), 2.1_dp, q(:,1), q(:,2), pa); q(:,3) = b
-                   case (5)     ! i soft and || pa (x -> 1, z -> 0)
-                      call split_fi(a, pin, 1 - sqrt(lam(il)), sqrt(lam(il)), 2.1_dp, q(:,1), q(:,2), pa)
-                      q(:,3) = b
-                   end select
-                   k(:,perm(1,iperm)) = q(:,1); k(:,perm(2,iperm)) = q(:,2); k(:,perm(3,iperm)) = q(:,3)
-                   if (cur_xb(line)*pa(0)/pb(0,line) > 1) cycle
-                   call set_maps(pa, k)
-                   ncache = 0
-                   call group_me(ig, pa, k, me(il), d, .true.)
-                   dsum(il) = sum(d)
-                enddo
-                ! a non-integrable limit: R times the phase-space measure of
-                ! the parametrisation (lambda, or lambda^2 for FF soft) does
-                ! not vanish
-                if (abs(me(3)) > merge(3000, 30, ilim == 2)*abs(me(1))) then
-                   nsing = nsing + 1
-                   rat = me(3)/dsum(3)
-                   worst(ig) = max(worst(ig), abs(rat - 1))
-                   if (ig <= 4 .or. abs(rat - 1) > 1d-2) &
-                        & write(6,'(a,i4,a,i2,1x,a,a,3i2,a,4es11.3,a,4es10.2)') '  group', ig, ' S', grp(ig)%s, &
-                        & limname(ilim), ' roles', perm(:,iperm), '  R/D: ', me/dsum, '  R*lambda', me*lam
-                endif
-             enddo
-          enddo
-       enddo
-       write(6,'(a,i4,a,i2,a,i2,a,7i4,a,i4,a,es10.2)') ' test_limits group', ig, ' line', line, &
-            & ' S', grp(ig)%s, ' flav', grp(ig)%fl, '  singular configurations', nsing, &
-            & '  max |R/D-1| at lambda = 1e-6: ', worst(ig)
-    enddo
-  contains
-    subroutine set_maps(pa, k)
-      real(dp), intent(in) :: pa(0:3), k(0:3,3)
-      integer :: m, i, j, l
-      real(dp) :: y, z, x, xp3, z3
-      cur_pa = pa; cur_k = k
-      do m = 1, 6
-         i = pairs(1, mod(m-1,3)+1); j = pairs(2, mod(m-1,3)+1); l = pairs(3, mod(m-1,3)+1)
-         if (m <= 3) then
-            call map_ff(k(:,i), k(:,j), k(:,l), mt(:,m), mk(:,m), y, z)
-            ma(:,m) = pa; mvar(m) = y; mz(m) = z
-         else
-            call map_fi(k(:,i), k(:,j), pa, mt(:,m), ma(:,m), x, z)
-            mk(:,m) = k(:,l); mvar(m) = x; mz(m) = z
-         endif
-         ! drop dipoles whose three-parton configuration is itself near a
-         ! singular limit, as in the integration (cutoff 1e-3 here)
-         xp3 = 1 - mdot(mt(:,m), mk(:,m))/mdot(ma(:,m), mt(:,m) + mk(:,m))
-         z3 = mdot(ma(:,m), mt(:,m))/mdot(ma(:,m), mt(:,m) + mk(:,m))
-         mok(m) = 1 - xp3 >= 1d-3 .and. min(z3, 1 - z3) >= 1d-3
-      enddo
-    end subroutine set_maps
-  end subroutine nlo2_test_limits
-
-  ! debug: R/D for a parton collinear to the incoming one as a function of
-  ! x and the azimuth (group ig, the collinear parton in role irole)
-  subroutine nlo2_debug_is(pb, xb, ig, irole)
-    real(dp), intent(in) :: pb(0:3,5), xb(2)
-    integer, intent(in) :: ig, irole
-    real(dp) :: r(3), pin(0:3), a(0:3), b(0:3), xp, z3, wrad, q(0:3,3), pa(0:3), k(0:3,3), me, d(6)
-    real(dp) :: xs(5), phis(4), rat(4)
-    integer :: ix, iph, line, o1, o2
-    logical :: ok
-    xs = [0.2_dp, 0.4_dp, 0.6_dp, 0.8_dp, 0.95_dp]
-    phis = [0.0_dp, 1.0_dp, 2.0_dp, 3.0_dp]
-    line = grp(ig)%line
-    cur_pb = pb; cur_xb = xb; cur_line = line
-    r = [0.43_dp, 0.52_dp, 0.41_dp]
-    call line_radiation(pb(:,line), pb(:,3+line), xb(line), r, 1, 1d-12, pin, a, b, xp, z3, wrad, ok)
-    o1 = mod(irole, 3) + 1; o2 = mod(irole + 1, 3) + 1
-    do ix = 1, 5
-       do iph = 1, 4
-          call split_fi(a, pin, xs(ix), 1d-7, phis(iph), q(:,1), q(:,2), pa)
-          k(:,irole) = q(:,1); k(:,o1) = q(:,2); k(:,o2) = b
-          if (xb(line)*pa(0)/pb(0,line) > 1) then
-             rat(iph) = 0; cycle
-          endif
-          call set_maps_dbg(pa, k)
-          ncache = 0
-          call group_me(ig, pa, k, me, d, .false.)
-          rat(iph) = me/sum(d)
-          if (iph == 1 .and. grp(ig)%s == 2) then
-             block
-               real(dp) :: p6(0:3,6), m1, m2, direct, x
-               x = xs(ix)
-               p6(:,1:5) = pb; p6(:,1) = pin; p6(:,4) = k(:,1); p6(:,6) = k(:,3)
-               call cs_hjjj_lines(p6, [grp(ig)%fl(1), grp(ig)%fl(2), 25, grp(ig)%fl(4), grp(ig)%fl(7), 0], m1, m2)
-               direct = 8*pi*CF*(1 + x**2)/(1 - x)/(2*mdot(pa, k(:,2))*x)*m1/2
-               write(6,'(a,f5.2,a,6es11.3,a,es11.3,a,2es11.3)') '   x', x, ' d(m)', d, '  direct', direct, &
-                    & '  R, R/direct', me, me/direct
-               write(6,'(a,4es12.4)') '   mvar(4:6), x of pa: ', mvar(4:6), mdot(pin,pin)
-             end block
-          endif
-       enddo
-       write(6,'(a,i4,a,i2,a,f5.2,a,4f10.5)') ' debug_is group', ig, ' role', irole, ' x', xs(ix), &
-            & '  R/D at phi = 0,1,2,3:', rat
-    enddo
-  contains
-    subroutine set_maps_dbg(pa, k)
-      real(dp), intent(in) :: pa(0:3), k(0:3,3)
-      integer :: m, i, j, l
-      real(dp) :: y, z, x
-      cur_pa = pa; cur_k = k
-      do m = 1, 6
-         i = pairs(1, mod(m-1,3)+1); j = pairs(2, mod(m-1,3)+1); l = pairs(3, mod(m-1,3)+1)
-         if (m <= 3) then
-            call map_ff(k(:,i), k(:,j), k(:,l), mt(:,m), mk(:,m), y, z)
-            ma(:,m) = pa; mvar(m) = y; mz(m) = z
-         else
-            call map_fi(k(:,i), k(:,j), pa, mt(:,m), ma(:,m), x, z)
-            mk(:,m) = k(:,l); mvar(m) = x; mz(m) = z
-         endif
-         mok(m) = .true.
-      enddo
-    end subroutine set_maps_dbg
-  end subroutine nlo2_debug_is
-
-  ! debug: the H+4j real of group ig (S2) with gluon role 2 collinear to
-  ! the incoming quark, against 8 pi CF P(x)/(2 pa.pg x) times the H+3j
-  ! (untagged, cs_hjjj_lines) at x pa, including the symmetry factor 1/2
-  subroutine nlo2_debug_is4(pb, xb, ig)
-    real(dp), intent(in) :: pb(0:3,5), xb(2)
-    integer, intent(in) :: ig
-    real(dp) :: r(3), pin(0:3), a(0:3), b(0:3), xp, z3, wrad, q(0:3,3), pa(0:3), k(0:3,3), me
-    real(dp) :: p7(0:3,7), p6(0:3,6), m1, m2, bt, bmn(0:3,0:3), x, rat(5), rat2(5)
-    real(dp) :: xs(5)
-    integer :: ix, bfl(6)
-    logical :: ok
-    xs = [0.2_dp, 0.4_dp, 0.6_dp, 0.8_dp, 0.95_dp]
-    r = [0.43_dp, 0.52_dp, 0.41_dp]
-    call line_radiation(pb(:,1), pb(:,4), xb(1), r, 1, 1d-12, pin, a, b, xp, z3, wrad, ok)
-    do ix = 1, 5
-       x = xs(ix)
-       call split_fi(a, pin, x, 1d-8, 0.7_dp, q(:,1), q(:,2), pa)
-       ! roles: Q = q2 (~a), G1 = q1 (|| pa), G2 = b
-       k(:,1) = q(:,2); k(:,2) = q(:,1); k(:,3) = b
-       p7(:,grp(ig)%leg(1)) = pa; p7(:,grp(ig)%leg(2)) = pb(:,2); p7(:,grp(ig)%leg(3)) = pb(:,3)
-       p7(:,grp(ig)%leg(4)) = k(:,1); p7(:,grp(ig)%leg(5)) = k(:,2); p7(:,grp(ig)%leg(6)) = k(:,3)
-       p7(:,grp(ig)%leg(7)) = pb(:,5)
-       call cs_real_me(grp(ig)%rep, p7, me)
-       p6(:,1) = pin; p6(:,2) = pb(:,2); p6(:,3) = pb(:,3); p6(:,4) = a; p6(:,5) = pb(:,5); p6(:,6) = b
-       bfl = [grp(ig)%fl(1), grp(ig)%fl(2), 25, grp(ig)%fl(4), grp(ig)%fl(7), 0]
-       call cs_hjjj_lines(p6, bfl, m1, m2)
-       call cs_hjjj_born_line(p6, bfl, 1, bt, bmn)
-       rat(ix) = me*2*mdot(pa, k(:,2))*x/(8*pi*CF*(1 + x**2)/(1 - x)*m1/2)
-       rat2(ix) = bt/m1
-    enddo
-    write(6,'(a,i4,a,5f10.5,a,5f9.5)') ' debug_is4 group', ig, '  R/(P B3/2) at x = .2..95:', rat, &
-         & '  tagged/untagged Born:', rat2
-  end subroutine nlo2_debug_is4
-
-  ! debug: R of group ig with role 1 (S3: the line quark; S4: role 3)
-  ! collinear to the incoming quark, averaged over the azimuth, against
-  ! 8 pi P_gq(x)/(2 pa.pi x) times the g-initiated Born (V on the pair)
-  subroutine nlo2_debug_isg(pb, xb, ig)
-    real(dp), intent(in) :: pb(0:3,5), xb(2)
-    integer, intent(in) :: ig
-    real(dp) :: r(3), pin(0:3), a(0:3), b(0:3), xp, z3, wrad, q(0:3,3), pa(0:3), k(0:3,3), me
-    real(dp) :: p7(0:3,7), p6(0:3,6), bt, bmn(0:3,0:3), x, rat(5), ravg, xs(5)
-    integer :: ix, iph, bfl(6), ic, ip, ipb
-    logical :: ok
-    xs = [0.2_dp, 0.4_dp, 0.6_dp, 0.8_dp, 0.95_dp]
-    r = [0.43_dp, 0.52_dp, 0.41_dp]
-    call line_radiation(pb(:,1), pb(:,4), xb(1), r, 1, 1d-12, pin, a, b, xp, z3, wrad, ok)
-    ! the collinear role, and the roles of the pair the boson couples to
-    if (grp(ig)%s == 3) then
-       ic = 1; ip = 2; ipb = 3
-    else
-       ic = 3; ip = 1; ipb = 2
-    endif
-    do ix = 1, 5
-       x = xs(ix)
-       ravg = 0
-       do iph = 1, 16
-          call split_fi(a, pin, x, 1d-8, 2*pi*(iph - 0.5_dp)/16, q(:,1), q(:,2), pa)
-          k(:,ic) = q(:,1); k(:,ip) = q(:,2); k(:,ipb) = b
-          p7(:,grp(ig)%leg(1)) = pa; p7(:,grp(ig)%leg(2)) = pb(:,2); p7(:,grp(ig)%leg(3)) = pb(:,3)
-          p7(:,grp(ig)%leg(4)) = k(:,1); p7(:,grp(ig)%leg(5)) = k(:,2); p7(:,grp(ig)%leg(6)) = k(:,3)
-          p7(:,grp(ig)%leg(7)) = pb(:,5)
-          call cs_real_me(grp(ig)%rep, p7, me)
-          ravg = ravg + me/16
-       enddo
-       p6(:,1) = pin; p6(:,2) = pb(:,2); p6(:,3) = pb(:,3); p6(:,4) = a; p6(:,5) = pb(:,5); p6(:,6) = b
-       bfl = [0, grp(ig)%fl(2), 25, grp(ig)%fl(3+ip), grp(ig)%fl(7), grp(ig)%fl(3+ipb)]
-       call cs_hjjj_born_line(p6, bfl, 1, bt, bmn)
-       rat(ix) = ravg*2*mdot(pa, q(:,1))*x/(8*pi*CF*(1 + (1 - x)**2)/x*bt)
-    enddo
-    write(6,'(a,i4,a,i2,a,7i4,a,5f10.5)') ' debug_isg group', ig, ' S', grp(ig)%s, ' fl', grp(ig)%fl, &
-         & '  <R>/(P_gq B_g) at x = .2..95:', rat
-  end subroutine nlo2_debug_isg
 
 end module cs_nlo2

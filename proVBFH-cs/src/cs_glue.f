@@ -154,21 +154,3 @@ c as proVBFH does while building grids (phspcuts.f).
      $     mjj(pj(0,1),pj(0,2)).gt.mjjmin
       cs_passes = passed
       end
-c---------------------------------------------------------------------
-c debug: print the partons and the jets the analysis builds
-      subroutine cs_debug_jets(n,p)
-      implicit none
-      integer n,j
-      double precision p(0:3,n)
-      integer maxjet
-      parameter (maxjet=4)
-      double precision ptj(maxjet),yj(maxjet),pj(0:3,4)
-      integer njets
-      call cs_fill_phep(n,p)
-      do j=1,n
-         write(6,'(a,i2,4es13.5)') '   p',j,p(0,j),p(1,j),p(2,j),p(3,j)
-      enddo
-      call buildjets(pj,njets,ptj,yj)
-      write(6,'(a,i2,a,4es11.3)') '   njets',njets,'  pt:',(ptj(j),j=1,min(njets,4))
-      write(6,'(a,4es11.3)') '             y: ',(yj(j),j=1,min(njets,4))
-      end
