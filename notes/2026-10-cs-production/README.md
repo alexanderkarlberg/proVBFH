@@ -1005,3 +1005,13 @@ Script: `proVBFH-cs/production/h3j-crosscheck/pieces/vbfnlo_rd_tails.py` (output
 - Value and quoted error are anticorrelated per job (it3 -0.55, it4 -0.88, it5 -0.21): big negative spikes come with big errors, so inverse-variance weights discard exactly the negative spikes and bias the combination upward (less negative): ivw 1-5: -23.31+-0.06, ivw 3-5: -23.79+-0.06 (jackknife-equal to quoted, i.e. the error is meaningless relative to the bias).
 - Equal-weight per job, it3-5: -24.38+-0.17 (median -23.75, skew -3.7); Ncall-weighted it3-5: -24.43+-0.13; it4-5: -24.60+-0.16.
 - Verdict: real-dip = -24.35 +- 0.15 fb (last-iteration plain mean and equal-weight 3-5 agree). A residual undersampled negative tail would only push it more negative. VBFNLO sigma(>=3j) = 125.2 +- ~0.2 fb, the offset 0.96 fb to proVBFH-cs is about 4.8 sigma with quoted errors, about 3 sigma if the proVBFH-cs error is inflated by 1.7.
+
+## 12 Oct: last round on the H+3j offset (agreed with AK)
+- Status: pointwise, Born, V+I, K+P, real MEs, jets/cuts and both codes' dipole cancellation agree; integrated LO
+  and V+I+K+P agree; VBFNLO real-dip = -24.35 +- 0.15 fb (plain mean, robust); proVBFH-cs implies about -23.4.
+- Last round: proVBFH-cs per-piece production (cs_piece masks, cs_smallx 0.3 as the 749-job production), real-dip to
+  ~0.15 fb at cs_cutoff 1d-5, plus paired 1d-4 and 1d-6; submitted automatically once the DIS production is through
+  (pieces/launch_after_dis.sh, log /ptmp/mpp/akarlber/pieces/prod/launch.log).
+- Outcomes: real-dip near -24.35 -> offset was a sampling artefact of the earlier cs production; near -23.4 and
+  cutoff-dependent -> cutoff handling in cs; near -23.4, cutoff-independent -> compare real-dip per ptj3/yj3 bin.
+- If that is inconclusive, stop: record the 0.8% (~3-5 sigma depending on the cs error estimate) as an open discrepancy.
