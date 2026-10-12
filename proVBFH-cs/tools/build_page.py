@@ -213,7 +213,7 @@ def main():
   {"".join(sections)}
 </section>
 {"".join(galleries)}
-<footer class="col"><p>Errors are from the seed scatter of the finished jobs, no trimming. Raw per-job outputs stay in <code>/ptmp/mpp/akarlber/cs-production</code>. Log: <code>notes/2026-10-cs-production/README.md</code>.</p></footer>
+<footer class="col"><p>Errors are from the seed scatter of the finished jobs, no trimming. Raw per-job outputs stay in <code>/ptmp/mpp/akarlber/cs-production</code>. Summary: <code>notes/2026-10-cs-summary/README.md</code>.</p></footer>
 </div>
 """
     open(os.path.join(a.out, "index.html"), "w").write(page)

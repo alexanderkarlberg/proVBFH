@@ -1,4 +1,0 @@
-#!/bin/bash
-# run proVBFH-cs (small-x build, or the base build with BIN=base) in the current directory; environment from ./chan.env
-[ -f chan.env ] && { set -a; . ./chan.env; set +a; }
-exec /ptmp/mpp/akarlber/smallx/bin/${SMX_BIN:-new}

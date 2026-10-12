@@ -2,7 +2,7 @@
 
 Errors come from the seed scatter of the finished jobs: plain means, no trimming. Weights
 W1 = (1,1), W2 = (1/2,1/2), W3 = (2,2) of μ0(p_T,H). The exclusive and inclusive parts are
-added. The full log is in `notes/2026-10-cs-production/README.md`. The raw per-job outputs
+added. A summary is in `notes/2026-10-cs-summary/README.md`, the full logbooks are in the git tag `cs-study-2026-10`. The raw per-job outputs
 stay in `/ptmp/mpp/akarlber/cs-production`.
 
 | set-up | order | exclusive jobs | inclusive jobs |
@@ -18,7 +18,7 @@ stay in `/ptmp/mpp/akarlber/cs-production`.
 by node failures. AK decided to leave them out (no impact).
 
 Some tail bins of the NNLO distributions are dominated by single events, i.e. one job out of
-11,000 carries the bin's value and error (`tools/spikescan.py`; see the notes, 7 Oct).
+11,000 carries the bin's value and error (found with a study tool kept in the git tag `cs-study-2026-10`).
 These are under investigation and are kept in the plain mean.
 
 ## `h3j-crosscheck/`
@@ -49,4 +49,4 @@ marked LO:
 | old proVBFH (paper) | - | 133.24 |
 
 proVBFH-cs lies 0.8-0.9% (about 1 fb, 4.5-6σ) above VBFNLO at both scales; the 4-jet rates
-agree. The cause is open (see the notes).
+agree. The later per-piece study of 12 Oct, with more statistics, puts the difference at +0.5% (see `notes/2026-10-cs-summary/README.md`).

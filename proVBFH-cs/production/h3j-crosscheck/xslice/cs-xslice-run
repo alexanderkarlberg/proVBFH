@@ -1,4 +1,0 @@
-#!/bin/bash
-# run proVBFH-cs (xslice build) in the current directory; slice from ./chan.env
-[ -f chan.env ] && { set -a; . ./chan.env; set +a; }
-exec /ptmp/mpp/akarlber/chsplit/bin/proVBFH-cs-xslice-p1506

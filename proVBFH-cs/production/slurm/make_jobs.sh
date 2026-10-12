@@ -1,5 +1,5 @@
 #!/bin/bash
-# Create one directory per job for a Slurm array (see CLUSTER-INSTRUCTIONS.md).
+# Create one directory per job for a Slurm array (run_array.sh runs them, combine_and_plot.sh sums them).
 #
 #   make_jobs.sh <setup> <first seed> <njobs> <run dir> [key=value ...]
 #
