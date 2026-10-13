@@ -1,0 +1,32 @@
+V2, 13 Oct 2026: default p1506 card, 100 jobs per order (NLO seeds 9200-, NNLO 9400-; ~18 + 180 core-h), binary of 5905f1e
+(bit-identical to the cleaned-up code by V3), against production/results/final-2026-10-07. Runs: /ptmp/mpp/akarlber/csprod/v2
+
+== nlo
+histogram                     W  jobs     new [pb]        err     ref [pb]        err   pull job rel.
+sig incl cuts                 1   100      3.92768    0.00071      3.92765    2.3e-05   0.05    0.002
+sig(all VBF cuts 2 jets)      1   100     0.877597    0.00051     0.876896    2.8e-05   1.38    0.006
+sig(all VBF cuts 3 jets)      1   100     0.130233    0.00011     0.130343    1.4e-05  -0.96    0.009
+sig(all VBF cuts 4 jets)      1   100            0          0            0          0   0.00    0.000
+sig incl cuts                 2   100      3.90421    0.00072      3.90422    2.4e-05  -0.01    0.002
+sig(all VBF cuts 2 jets)      2   100     0.860261    0.00053     0.859589    3.2e-05   1.27    0.006
+sig(all VBF cuts 3 jets)      2   100     0.160466    0.00014     0.160594    1.7e-05  -0.91    0.009
+sig(all VBF cuts 4 jets)      2   100            0          0            0          0   0.00    0.000
+sig incl cuts                 3   100      3.95194    0.00071      3.95186    2.3e-05   0.11    0.002
+sig(all VBF cuts 2 jets)      3   100     0.885083    0.00049     0.884362    2.5e-05   1.48    0.006
+sig(all VBF cuts 3 jets)      3   100     0.107859    9.7e-05     0.107954    1.2e-05  -0.99    0.009
+sig(all VBF cuts 4 jets)      3   100            0          0            0          0   0.00    0.000
+
+== nnlo
+histogram                     W  jobs     new [pb]        err     ref [pb]        err   pull job rel.
+sig incl cuts                 1   100      3.88771    0.00068      3.88693    5.8e-05   1.15    0.002
+sig(all VBF cuts 2 jets)      1   100     0.841408     0.0011     0.840472    0.00018   0.88    0.013
+sig(all VBF cuts 3 jets)      1   100     0.127336    0.00051     0.126875    0.00017   0.86    0.040
+sig(all VBF cuts 4 jets)      1   100    0.0169686    8.6e-05    0.0171168    0.00015  -0.84    0.050
+sig incl cuts                 2   100        3.876    0.00068       3.8752    5.8e-05   1.16    0.002
+sig(all VBF cuts 2 jets)      2   100     0.831069     0.0013     0.830067    0.00024   0.75    0.016
+sig(all VBF cuts 3 jets)      2   100     0.122916    0.00066     0.122293    0.00023   0.89    0.054
+sig(all VBF cuts 4 jets)      2   100    0.0239452    0.00012    0.0241509    0.00021  -0.85    0.049
+sig incl cuts                 3   100      3.90373    0.00068      3.90295    5.8e-05   1.14    0.002
+sig(all VBF cuts 2 jets)      3   100     0.851333    0.00089     0.850455    0.00014   0.98    0.010
+sig(all VBF cuts 3 jets)      3   100     0.124591     0.0004     0.124236    0.00013   0.84    0.032
+sig(all VBF cuts 4 jets)      3   100    0.0124804    6.5e-05    0.0125903    0.00012  -0.83    0.052

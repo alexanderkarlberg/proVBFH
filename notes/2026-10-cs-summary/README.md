@@ -76,7 +76,11 @@ symmetric-trim merges are kept in `production/reference/hxswg136`.
 The final production (10,872 of 11,000 NNLO jobs) is in
 `production/results/final-2026-10-07/hxswg136`.
 
-V2 (100+100 jobs, running): to be filled in
+The final code with its default card (V2: 100 NLO and 100 NNLO jobs, about
+200 core-h) reproduces the final p1506 production within errors at both
+orders: at NNLO 0.8414 +- 0.0011 against 0.8405 pb for the 2-jet rate, 127.3
++- 0.5 against 126.9 fb for sigma(>= 3 jets), all pulls below 1.5
+(`proVBFH-cs/validation/v2_results.txt`).
 
 ## Final results for 1506.02660 (p1506)
 
@@ -100,7 +104,7 @@ The sigma(>= 3 jets) of proVBFH-cs is the H+3j cross section at NLO (mu = m_H,
 small-x channel (749 jobs) gave 126.185 +- 0.163 fb against 125.221 +- 0.120
 fb, i.e. +0.96 +- 0.20 fb (+0.8%), all of it in the exactly-3-jet part (sigma(>= 4
 jets) agrees). To locate it, both codes were run per piece (proVBFH-cs against
-VBFNLO 3.0):
+VBFNLO 3.0); this larger run supersedes the 749-job number:
 
 | piece | proVBFH-cs | VBFNLO |
 |---|---|---|
@@ -116,9 +120,9 @@ distributions (ptj3, yj3, y*j3, min rap(j,j3): chi2 12.1/15, 14.6/18, 37.3/24,
 Born (up to the Higgs and boson widths, 0.05 fb), V + I to 2e-14, K + P to 1e-4,
 the real matrix elements to 3e-4 or better, and the jet and cut logic in 777 four-parton points, and
 VBFNLO's dipoles cancel the real in all limits. VBFNLO's own printed real-dip,
--23.31, is biased by inverse-variance weighting: the per-job error is anticorrelated
-with the value, so the weights discard the negative spikes. The plain mean over
-800 jobs is -24.35 +- 0.15. Status: small open discrepancy.
+-23.31, is biased by the inverse-variance weighting of each job's VEGAS
+iterations: iterations hit by a negative spike also have a large error and get
+little weight. The plain mean over 800 jobs is -24.35 +- 0.15. Status: small open discrepancy.
 
 ## How to run
 
