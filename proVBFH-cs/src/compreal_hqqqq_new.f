@@ -1,6 +1,7 @@
-c proVBFH-cs: copy of ../proVBFH/src/exclusive/compreal_hqqqq_new.f with one
-c change (the pair-type index kl, marked below); it replaces the original in
-c the proVBFH-cs build (VPATH order).
+c proVBFH-cs: copy of ../proVBFH/src/exclusive/compreal_hqqqq_new.f with two
+c changes (the pair-type index kl, and the identical-quark interference
+c (cs_4qint), marked below); it replaces the original in the proVBFH-cs build
+c (VPATH order).
 c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
@@ -75,6 +76,13 @@ c
       parameter (lsymmcontrib = .true.)
       parameter (linterference = .false.)
       integer tag_type
+c proVBFH-cs (cs_4qint): identical-quark interference
+      logical l4qint,l4qonly,flip4q
+      integer i4q,ini4q
+      data ini4q/0/
+      save ini4q,l4qint,l4qonly
+      real*8 powheginput
+      external powheginput
 c
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -120,6 +128,36 @@ C     running without fulltags, so do nothing here
          stop 'compreal_hqqqq_new: invalid tags'
       endif
       
+c proVBFH-cs (2026-10-13), cs_4qint (powheg.input, default 1): add the
+c interference of the normal diagrams (line 1-2 and pair 5-6, qqh4q's
+c labels, on the line that radiates the pair) with the flipped ones (lines
+c 1-6 and 5-2, exchanged identical quarks). The flipped diagram is physical
+c iff the pair flavour equals the flavour of one leg of that line (NC: the
+c line flavour; CC: either end of the W line). Its square is the normal
+c square of another entry of the list, so only the interference is added,
+c with weight 1/2 (the partner entry carries the other half): qqh4q with
+c lsymmcontrib = .false., index 1. Other entries, and all entries with
+c cs_4qint 0, are as before (index 0). cs_4qint 2 (interference only, for
+c measuring its effect): the interference alone (index 1 - index 0) for
+c those entries, 0 for the others.
+      if (ini4q.eq.0) then
+         l4qint = nint(powheginput('#cs_4qint')).ne.0
+         l4qonly = nint(powheginput('#cs_4qint')).eq.2
+         write(*,*) 'proVBFH-cs: cs_4qint (identical-quark interference'
+     $        //' in the four-quark reals) ',l4qint,', alone ',l4qonly
+         ini4q = 1
+      endif
+      flip4q = .false.
+      if (l4qint) then
+         do i=1,nlegs
+            if (i.ne.3 .and. tags(i)/tag_factor.eq.0 .and.
+     $           mod(tags(i),tag_factor).eq.tag_type .and.
+     $           abs(bflav(i)).eq.abs(bflav(7))) flip4q = .true.
+         enddo
+      endif
+      i4q = 0
+      if (flip4q) i4q = 1
+
       call particle_identif(HWW,HZZ)
 
       if (bflav(3).eq.hww) then 
@@ -574,25 +612,25 @@ c gluon-initiated Born (logbooks in the git tag cs-study-2026-10).
 !            res_pwg = res
 
          if (new_vbfnlo) then
-            call qqh4q(pbar_cc,fsign,NCmatrix_r,CCmatrix_r,lsymmcontrib
-     $           ,cc_type,nc_type)
+            call qqh4q(pbar_cc,fsign,NCmatrix_r,CCmatrix_r,
+     $           lsymmcontrib.and..not.flip4q,cc_type,nc_type)
 
            if (kl.eq.1) then 
-               res_vbf = NCmatrix_r(0,0,0,tag_type,0)
+               res_vbf = NCmatrix_r(0,0,0,tag_type,i4q)
             elseif (kl.eq.2) then         
-               res_vbf = NCmatrix_r(0,1,0,tag_type,0)
+               res_vbf = NCmatrix_r(0,1,0,tag_type,i4q)
             elseif (kl.eq.3) then         
-               res_vbf = NCmatrix_r(1,0,0,tag_type,0)
+               res_vbf = NCmatrix_r(1,0,0,tag_type,i4q)
             elseif (kl.eq.4) then         
-               res_vbf = NCmatrix_r(1,1,0,tag_type,0)
+               res_vbf = NCmatrix_r(1,1,0,tag_type,i4q)
             elseif (kl.eq.5) then         
-               res_vbf = NCmatrix_r(0,0,1,tag_type,0)
+               res_vbf = NCmatrix_r(0,0,1,tag_type,i4q)
             elseif (kl.eq.6) then         
-               res_vbf = NCmatrix_r(0,1,1,tag_type,0)
+               res_vbf = NCmatrix_r(0,1,1,tag_type,i4q)
             elseif (kl.eq.7) then         
-               res_vbf = NCmatrix_r(1,0,1,tag_type,0)
+               res_vbf = NCmatrix_r(1,0,1,tag_type,i4q)
             elseif (kl.eq.8) then         
-               res_vbf = NCmatrix_r(1,1,1,tag_type,0)               
+               res_vbf = NCmatrix_r(1,1,1,tag_type,i4q)               
             endif
             
 !           if (kl.eq.1) then 
@@ -614,6 +652,11 @@ c gluon-initiated Born (logbooks in the git tag cs-study-2026-10).
 !            endif
             
             res = res_vbf
+            if (l4qonly) then
+               res = 0d0
+               if (flip4q) res = res_vbf-NCmatrix_r(mod((kl-1)/2,2),
+     $              mod(kl-1,2),(kl-1)/4,tag_type,0)
+            endif
 
 !         if (test_amps) then 
 !
@@ -676,13 +719,28 @@ c k-ordering (5:6) is: udsc,ducs
  !    &         call qqHqqQQ_cc_channel(pbar_cc,fsign,kl,res)
 
          if (new_vbfnlo) then
-            call qqh4q(pbar_cc,fsign,NCmatrix_r,CCmatrix_r,lsymmcontrib
-     $           ,cc_type,nc_type)
+            call qqh4q(pbar_cc,fsign,NCmatrix_r,CCmatrix_r,
+     $           lsymmcontrib.and..not.flip4q,cc_type,nc_type)
 
             if (k.eq.5) then  
               res_vbf=CCmatrix_r(0,1,0,tag_type,0)
             elseif (k.eq.6)then
               res_vbf=CCmatrix_r(1,0,0,tag_type,0)
+            endif
+c proVBFH-cs (cs_4qint): the flip depends on the pair type (index 3)
+            if (flip4q.and.k.eq.5) then
+              res_vbf=CCmatrix_r(0,1,2-ftype(7),tag_type,1)
+            elseif (flip4q.and.k.eq.6) then
+              res_vbf=CCmatrix_r(1,0,2-ftype(7),tag_type,1)
+            endif
+            if (l4qonly) then
+               if (flip4q.and.k.eq.5) then
+                  res_vbf = res_vbf-CCmatrix_r(0,1,2-ftype(7),tag_type,0)
+               elseif (flip4q.and.k.eq.6) then
+                  res_vbf = res_vbf-CCmatrix_r(1,0,2-ftype(7),tag_type,0)
+               else
+                  res_vbf = 0d0
+               endif
             endif
         
 !            if (k.eq.5) then  

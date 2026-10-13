@@ -107,3 +107,4 @@ cs_hardfrac2 0.7   ! the same for the second emission
 cs_hard2mode 1     ! 1: second-emission hard channel only behind the hard first step; 0: after every first step
 cs_smallx 0.3      ! fraction of Born phase-space points in the small-x channels (0: off)
 cs_smallx_x0 0.03  ! x limit of the small-x channels
+cs_4qint 1         ! 1: identical-quark interference in the four-quark reals (H+4 quarks, NNLO); 0: off (as before 2026-10-13); 2: the interference alone

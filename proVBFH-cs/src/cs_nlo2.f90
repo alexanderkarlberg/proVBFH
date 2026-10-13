@@ -47,6 +47,9 @@ module cs_nlo2
   public :: nlo2_ngroups, nlo2_ncount
   ! four-parton points dropped by the technical cut
   integer, public, save :: nlo2_ncut = 0
+  ! cs_4qint 2: the real is the four-quark interference alone (structures
+  ! 3, 4; zero for the groups without it), no dipoles
+  logical, public, save :: nlo2_intonly = .false.
 
   real(dp), parameter :: pi = 3.141592653589793238462643383279502884197_dp
   real(dp), parameter :: CF = 4.0_dp/3.0_dp, CA = 3.0_dp, TR = 0.5_dp
@@ -142,6 +145,9 @@ contains
           found = .false.
           do ig = 1, ngrp
              if (grp(ig)%line /= line .or. grp(ig)%s /= s) cycle
+             ! (cs_4qint 2: the entries without interference all have a zero
+             ! fingerprint; keep NC and CC apart)
+             if (nlo2_intonly .and. (grp(ig)%nc .neqv. (fl(2) == fl(7)))) cycle
              if (maxval(abs(fp - grp(ig)%fp)/max(abs(grp(ig)%fp), 1d-300)) < 1d-9) then
                 nmem = grp(ig)%n + 1
                 if (nmem > maxmem) stop 'cs_nlo2: too many members'
@@ -388,6 +394,7 @@ contains
     f4 = f4/xi4
     do ig = 1, ngrp
        if (grp(ig)%line /= cur_line) cycle
+       if (nlo2_intonly .and. (grp(ig)%s < 3 .or. all(grp(ig)%fp == 0))) cycle
        pdf = 0
        do i = 1, grp(ig)%n
           pdf = pdf + f4(grp(ig)%fa(i))*fo(grp(ig)%fo(i))
@@ -446,6 +453,7 @@ contains
     d = 0
     call cs_real_me(g%rep, p7, me)
     nlo2_ncount(1) = nlo2_ncount(1) + 1
+    if (nlo2_intonly) return
     do id = 1, ndip(s)
        dp_ = dip(id, s)
        m = map_index(dp_%i, dp_%j, dp_%typ)

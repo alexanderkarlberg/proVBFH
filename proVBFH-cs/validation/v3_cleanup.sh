@@ -12,13 +12,13 @@
 # Environment: REFDIR (default /ptmp/mpp/akarlber/csprod/v3ref: proVBFH-cs
 # and proVBFH-cs-p1506 of the pre-clean-up build, commit 5905f1e), BINDIR
 # (default ..), N (ncall1 = ncall2 of the exclusive part; default 10000),
-# SEED (default 4711).
+# SEED (default 4711), CARD (default ../example/powheg.input).
 here=$(cd "$(dirname "$0")" && pwd)
 W=${1:-/ptmp/mpp/akarlber/csprod/v3}
 REFDIR=${REFDIR:-/ptmp/mpp/akarlber/csprod/v3ref}
 BINDIR=${BINDIR:-$here/..}
 N=${N:-10000}; SEED=${SEED:-4711}
-card=$here/../example/powheg.input
+card=${CARD:-$here/../example/powheg.input}
 mk() {
     local d=$1 o=$2; mkdir -p "$d"; rm -f "$d"/*
     sed -E "s/^iseed .*/iseed $SEED/; s/^ncall1 [0-9]+/ncall1 $N/; s/^ncall2 [0-9]+/ncall2 $N/; s/^itmx1 .*/itmx1 2/; s/^itmx2 .*/itmx2 2/; s/^cs_order .*/cs_order $o/" "$card" > "$d/powheg.input"

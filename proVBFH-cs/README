@@ -53,6 +53,17 @@ FLAGS (powheg.input; absent = default)
   cs_smallx 0.3     fraction of Born phase-space points in the small-x channels
                     (0: off)
   cs_smallx_x0 0.03 x limit of the small-x channels
+  cs_4qint 1        identical-quark interference in the four-quark reals of
+                    the (2,0) and (0,2) parts (H + 4 quarks): normal x flipped
+                    diagrams when the gluon-split pair has the flavour of the
+                    radiating line (NC) or of one end of its W line (CC);
+                    0: off, as before 2026-10-13 (validation/v4_4qint);
+                    2: the interference alone, to measure its effect: the
+                    exclusive part (pwg-EXCL-W<k>.top) is then only the
+                    interference and its counterevents (needs cs_order 3;
+                    the inclusive part is run as usual and must be ignored;
+                    setreal warns once per entry without interference
+                    ("rflav ... flav+tag") at initialisation)
 
 OUTPUTS (in the run directory)
   pwg-W<k>.top      all histograms, total (inclusive + exclusive), scale point k
@@ -73,4 +84,12 @@ VALIDATION (validation/)
                     p1506 binary), cs_order 1, 2, 3, against binaries built
                     before the clean-up, every histogram bin and the xsct file to
                     1e-12 relative (v3_compare.py)
+  v4_4qint/         cs_4qint: the four-quark real matrix element of the program
+                    against an independent Dirac-matrix reference (ref.f90),
+                    pointwise for all 1640 four-quark entries, cs_4qint 1, 0
+                    and 2, and the scaling of the interference in the single-
+                    unresolved limits (run_v4.sh); e2e_4qint.sh: cs_4qint 2 =
+                    cs_4qint 1 - cs_4qint 0 bin by bin at equal points;
+                    effect.py, pilot-4qint-W<k>.top: the effect on p1506 (20
+                    jobs of cs_4qint 2). Results in RESULT.txt
   make check        unit tests (tests/)

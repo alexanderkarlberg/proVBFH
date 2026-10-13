@@ -1,0 +1,85 @@
+V4 (13 Oct 2026): identical-quark interference in the four-quark reals (cs_4qint)
+
+WHAT
+  The four-quark real (H + 6 quarks, (2,0) and (0,2) parts) read qqh4q's index 0
+  (|normal|^2) only. The flipped diagrams (lines 1-6 and 5-2 instead of 1-2 and
+  5-6, qqh4q's labels) are the normal ones of partner entries of the list, so
+  only the interference I = 2 colint Re(M_N M_F^*) (colint = -2, colsq = 6,
+  Fermi sign -1) was missing. cs_4qint 1 (default) adds I/2 per entry whose flip
+  is physical (the partner carries the other half): qqh4q with lsymmcontrib =
+  .false., index 1 = N + I/2.
+  - src/compreal_hqqqq_new.f: flip physical iff the pair flavour equals the
+    flavour of a leg of the radiating line (tags: line = tag_type, no pair flag);
+    NC: the line flavour, CC: either end of the W line. This guard replaces
+    qqh4q's missing flavour guard (NC upper line) and its type-only flavours (no
+    u-c interference). CC: index 3 = the pair type (2 - ftype(7)); the caller
+    reads only the W-on-12/34 slots (flav1 /= flav3), so qqh4q's charge-violating
+    flip for flav1 = flav3 /= flav5, fsign = -1 (W on 16/36) is never used.
+    cs_4qint 0: as before; cs_4qint 2: I/2 alone (0 for the other entries).
+  - src/qqh4q_me_new.f (copy of proVBFH's): NC lower-line interference used the
+    upper-line amplitude mat(...,1) with matflip(...,2); now mat(...,2).
+  - cs_main.f90, cs_exclusive.f90, cs_nlo2.f90: cs_4qint 2 = exclusive part made
+    of the four-parton interference events and their Born counterevents only
+    (no dipoles, no other contributions; groups without interference skipped).
+
+POINTWISE (run_v4.sh, check_4qint.f90 against the Dirac-matrix reference ref.f90 of
+the w4q-spinor check; all 1640 four-quark entries, 1000 NC + 640 CC, tag
+patterns A-D, classes: 1 no physical flip (incl. u-c / d-s mixing, 800 NC + 384
+CC), 2 identical final quarks (100 + 64), 3 crossed partner (100 + 192), 4 flip
+not in the list (0); 60 points (VBF-like, generic, p1506-like) x 24 permutations
+of the final-state labels):
+  max |caller - pred| / (N + |I|/2):  cs_4qint 1: 6.9e-12   cs_4qint 0: 4.0e-13
+                                      cs_4qint 2: 6.9e-12 (pred = I/2, or 0)
+  (pred = N + I/2 for classes 2, 3, N otherwise; largest for CC pattern 4.)
+  Size: sum |I/2| / sum N over the flip entries 2-4% (p1506-like), up to 10%.
+
+SINGLE-UNRESOLVED LIMITS (limits_4qint.f90, every flip entry, every limit, 2 base
+points x 4 azimuths, angle or energy 1e-2 .. 1e-5; |X| ~ s^-a or E^-a from the
+last two steps):
+  cc  limit           cases  N singular   max a_N   max a_I   max a_F
+   0  FF collinear     2400       400      1.0000    0.5000    1.0000
+   0  IF collinear     3200       400      1.0000    0.5000    1.0000
+   0  soft quark       1600      1200      1.0019    1.0029    1.0051
+   1  FF collinear     3072       256      1.0000    0.5000    1.0000
+   1  IF collinear     4096       256      1.0000    0.5000    1.0000
+   1  soft quark       2048       768      1.0045    1.0284    1.0058
+  max |I/2| / (|colint|/colsq sqrt(N F)) = 0.9987 (Cauchy-Schwarz, <= 1)
+  I is integrable everywhere (collinear: s^-1/2, dPS ~ ds; soft quark: E^-1, dPS
+  ~ E dE; N and F are each singular in different invariants: g -> q qbar of the
+  normal pair vs of the flipped pair, q -> q of the incoming leg of either), so
+  real - dipoles stays integrable with I added and no dipole is missing (the
+  same holds in Catani-Seymour in general: identical-quark interference has no
+  single-unresolved singularity). Its triple-collinear (double-unresolved)
+  behaviour is that of the Born-level projection, handled by P2B.
+
+END-TO-END (e2e_4qint.sh, p1506 binary, same grids, one iteration of 20000
+points): EXCL(cs_4qint 1) - EXCL(cs_4qint 0) = EXCL(cs_4qint 2) in all 426 bins
+x 3 scale points, to the 8 digits of the .top files.
+
+REGRESSION: make check passes. v3_cleanup.sh (default and p1506 binaries,
+cs_order 1, 2, 3, N = 10000): cs_4qint 0 against the build of 9fc63ea and
+cs_4qint 1 against the first cs_4qint build: all 64 .top/xsct files
+byte-identical. cs_4qint 1 against 9fc63ea: cs_order 1, 2 identical, cs_order 3
+differs (as it should).
+
+INCLUSIVE PART: hoppet's NNLO DIS coefficient functions (param-coefs, van Neerven
+and Vogt, from Zijlstra and van Neerven) are C2NN2A = C2NSP + C2NSN (NS+,
+e.m./NC F2) and C2NC2A = C2NSP - C2NSN (NS-, CC), likewise for FL and F3; the
+C2NSN part is the identical-quark interference of q V* -> q q qbar. So the
+inclusive part already contains it, for NC and CC. Before the fix the exclusive
+part lacked it, i.e. the P2B result missed its cut migration
+(int I/2 [O(Phi_4) - O(Phi_B)]); with cs_4qint 1 the two parts are consistent
+and the inclusive side needs no change.
+
+PILOT (cs_4qint 2, p1506 default card, 20 jobs, seeds 9601-9620, ~0.19 h/job,
+0.15 GB; pilot-4qint-W<k>.top = mean and seed-scatter error):
+  W1 (NNLO sig(>=2j) = 0.840 pb)   effect [pb]         rel. to NNLO   rel. to sig(>=2j)
+     sig(>= 2 jets)               (1.06 +- 0.22)e-5    1.3e-5         (1.3 +- 0.3)e-5
+     sig(>= 3 jets)               (2.67 +- 0.11)e-5    2.1e-4         (3.2 +- 0.1)e-5
+     sig(>= 4 jets)               (7.9  +- 0.24)e-6    4.6e-4         (0.94 +- 0.03)e-5
+  W2, W3 alike (2j: 1.6e-5, 1.0e-5; 3j: 3.1e-4, 1.6e-4; 4j: 4.6e-4, 4.7e-4 of NNLO).
+  Distributions: largest significant bin effects 1e-4 (2-jet observables) to
+  1.3e-3 (3-jet observables) of the NNLO bin; median per-bin error 1e-5 - 1e-4 of
+  the NNLO bin. The effect is 6-20 times below the errors of the final production.
+  Per-job scatter: 1.2e-5 of sig(>=2j) (2j), 6e-6 (3j), 1.3e-6 (4j): one job
+  already reaches 1e-4 of sig(>=2j); the pilot reaches 2.6e-6.

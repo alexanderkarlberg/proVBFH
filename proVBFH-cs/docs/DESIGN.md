@@ -150,7 +150,15 @@ POWHEG machinery (only a few POWHEG headers are needed for their common
 blocks):
 - H+3j tree: `qqhqqj_born_channel`, whose `ansc(2:3)` are the gluon
   emitted from the upper and the lower line separately.
-- H+4j real: `qqh2q2g_me_new.f`, `qqh4q_me_new.f`.
+- H+4j real: `qqh2q2g_me_new.f`, `qqh4q_me_new.f`. The four-quark
+  real (proVBFH-cs copies of `compreal_hqqqq_new.f` and `qqh4q_me_new.f`)
+  includes, since 2026-10-13, the interference of identical quarks within
+  the radiating line (pair flavour = flavour of that line, or of one end
+  of its W line): half of it per list entry, since the flipped diagram is
+  the normal one of a partner entry (`cs_4qint`, validation/v4_4qint). It
+  is integrable in all single-unresolved limits, needs no dipole, and is
+  part of the NNLO DIS coefficient functions of the inclusive part
+  (C2NSP +- C2NSN of van Neerven's program, in hoppet).
 - H+3j one loop: `qqhqqj-virt.f` (box line).
 
 Couplings come from `convert_coup.f`, and the flavour classes are those of

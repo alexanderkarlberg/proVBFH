@@ -28,6 +28,9 @@
 !             channels (cs_smallx.f90; default 0.3, 0 = off), cs_smallx_x0
 !             their x limit (default 0.03)
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-5)
+!   cs_4qint  1 (default): identical-quark interference in the four-quark
+!             reals (compreal_hqqqq_new.f); 0: off; 2: the interference
+!             alone (exclusive part, pwg-EXCL-W<k>.top; needs cs_order 3)
 !----------------------------------------------------------------------
 program provbfh_cs
   use types, only: dp
@@ -36,7 +39,7 @@ program provbfh_cs
   use phase_space, only: set_beams
   use integration
   use cs_exclusive
-  use cs_nlo2, only: nlo2_ncount, nlo2_ncut
+  use cs_nlo2, only: nlo2_ncount, nlo2_ncut, nlo2_intonly
   use cs_memo, only: memo_hits, memo_misses, memo_on
   use incl_parameters, only: incl_nscale, incl_scr, incl_scf
   use cs_smallx, only: sx_h, sx_x0, sx_dim0
@@ -115,6 +118,14 @@ program provbfh_cs
   if (powheginput('#cs_hardfrac2') >= 0) four_hard2 = powheginput('#cs_hardfrac2')
   if (powheginput('#cs_hard2mode') >= 0) four_hard2mode = nint(powheginput('#cs_hard2mode'))
   if (powheginput('#cs_cutoff') > 0) excl_cutoff = powheginput('#cs_cutoff')
+  ! cs_4qint 2: only the identical-quark interference of the four-quark reals
+  ! (no dipoles: it is integrable) and its counterevents
+  if (nint(powheginput('#cs_4qint')) == 2) then
+     if (excl_order /= 3) stop 'cs_4qint 2 needs cs_order 3'
+     excl_intonly = .true.
+     nlo2_intonly = .true.
+     write(6,'(a)') ' proVBFH-cs: cs_4qint 2, exclusive part = the four-quark interference alone (pwg-EXCL-W<k>.top)'
+  endif
   if (excl_order >= 2) then
      call cs_excl_setup2(.true.)   ! stage 2: real flavour groups, dipole tables
      call cpu_time(t1)

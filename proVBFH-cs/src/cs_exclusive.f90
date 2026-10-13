@@ -44,10 +44,12 @@ module cs_exclusive
   implicit none
   private
   public :: cs_excl_dsigma, cs_excl_setup, excl_fill, excl_npow, excl_cutoff, excl_stats
-  public :: excl_hardfrac, excl_order, cs_excl_setup2
+  public :: excl_hardfrac, excl_order, cs_excl_setup2, excl_intonly
 
   ! 1: (1,0) + (0,1) (NLO); 2: also (2,0) + (0,2); 3: also (1,1) (NNLO)
   integer, save :: excl_order = 1
+  ! cs_4qint 2: only the four-parton events (the interference, cs_nlo2)
+  logical, save :: excl_intonly = .false.
   ! stage 3: for each pair of line states (1..8: q -> q g of class cls(s);
   ! 9..12: g -> q qbar of gcls(s-8)) the class-12 real entry, the leg of
   ! line 1's extra parton in it (6 or 7), and a normalisation factor
@@ -290,6 +292,9 @@ contains
           needr(line) = passr(line) .or. any(passd(:,line)) .or. passB
        endif
     enddo
+    if (excl_intonly) then
+       need = .false.; need3 = .false.
+    endif
     if (.not. any(need) .and. .not. any(needr) .and. .not. need3) then
        excl_stats(4) = excl_stats(4) + 1
        return
