@@ -97,6 +97,16 @@ no trimming (11,000 exclusive and 1,000 inclusive jobs at NNLO). Files:
 
 At NNLO sigma(>= 3 jets) is 126.87 +- 0.17 fb and sigma(>= 4 jets) 17.12 +- 0.15 fb.
 
+These results lack the identical-quark interference in the four-quark reals
+(found 13 Oct 2026, the same omission as DISENT's MATFOR; NNLOJET drops it as
+well). The inclusive coefficient functions contain it (C2NSN), so only its cut
+migration was missing. It is now included (`cs_4qint 1`, default; validated
+pointwise to 7e-12 against a hand-coded spinor-helicity reference, integrable in
+all single-unresolved limits). Its effect on p1506, from 20 interference-only
+jobs: sigma(>= 2 jets) +1.3e-5, sigma(>= 3 jets) +2.1e-4, sigma(>= 4 jets)
++4.6e-4 relative, at most 1.3e-3 in 3-jet distribution bins, 6 to 20 times
+below the errors of the table (`proVBFH-cs/validation/v4_4qint`).
+
 ## The H+3j comparison with VBFNLO
 
 The sigma(>= 3 jets) of proVBFH-cs is the H+3j cross section at NLO (mu = m_H,
