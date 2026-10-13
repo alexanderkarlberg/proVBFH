@@ -348,19 +348,15 @@ C     so look for a 0 in position 1:2 or 4:6
             endif
          endif
          
-         p12=abs(dotrr(p(0,3),p(0,4)))   !no boxes if there are less than 3 jets
-         p1g=abs(dotrr(p(0,3),q(0)))     !these terms do not contribute anyway
-         p2g=abs(dotrr(p(0,4),q(0)))
-         if((p12.lt.1d0).or.(p1g.lt.1d0).or.(p2g.lt.1d0)) then
-            lbox43=.false.
-         endif
-
-         p12=abs(dotrr(p(0,1),p(0,2)))
-         p1g=abs(dotrr(p(0,1),q(0)))
-         p2g=abs(dotrr(p(0,2),q(0)))
-         if((p12.lt.1d0).or.(p1g.lt.1d0).or.(p2g.lt.1d0)) then
-            lbox21=.false.
-         endif         
+c proVBFH-cs (2026-10-14): VBFNLO drops the boxes of a quark line ("no
+c boxes if there are less than 3 jets") when one of its invariants |p.p|
+c is below 1 GeV^2. That is harmless for H+3j with jet cuts, but the
+c projection-to-Born needs the (2,0) virtual at every three-parton point
+c down to the cutoff: V + I jumps there by O(30-100) alpha_s/(2 pi) B,
+c which lowered sigma(VBF cuts, NNLO) by about 0.7% (2110.02818 set-up,
+c +5.7 +- 1.2 fb with the boxes kept). The boxes are now always computed;
+c below a few 1e-2 GeV^2 the gauge check above still falls back to the
+c constant (numerical instability), an effect below 1 fb.
          
 c     boxline contributions 
 c    

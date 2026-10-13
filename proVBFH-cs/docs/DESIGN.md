@@ -281,9 +281,11 @@ scales as arguments.
   Another compared the shifted V + I with a direct evaluation at
   every point: exact slope β0/(4π) for quark- and gluon-initiated lines;
   for incoming antiquarks VBFNLO's virtual deviates at the 1e-3 level of
-  the slope (flavour dependent, no gauge-check fallbacks involved), and
-  where an invariant of the line has 2 p_i.p_j < 2 GeV² VBFNLO drops the
-  boxes ("no boxes if there are less than 3 jets") and its μ_R dependence
-  is not the renormalisation-group one. In both cases the shift is the
-  consistent μ_R dependence.
+  the slope (flavour dependent, no gauge-check fallbacks involved); in
+  this case the shift is the consistent μ_R dependence. Where an invariant
+  of the line had 2 p_i.p_j < 2 GeV², VBFNLO dropped the boxes ("no boxes
+  if there are less than 3 jets"). That cut made V + I jump near the IR
+  limits and lowered σ(VBF cuts, NNLO) by about 0.7%; it is removed since
+  2026-10-14 (qqhqqj-virt.f), and the productions before that date are
+  low by 5-6 fb in the 2-jet rate.
 
