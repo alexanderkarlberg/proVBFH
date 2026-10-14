@@ -132,7 +132,42 @@ the real matrix elements to 3e-4 or better, and the jet and cut logic in 777 fou
 VBFNLO's dipoles cancel the real in all limits. VBFNLO's own printed real-dip,
 -23.31, is biased by the inverse-variance weighting of each job's VEGAS
 iterations: iterations hit by a negative spike also have a large error and get
-little weight. The plain mean over 800 jobs is -24.35 +- 0.15. Status: small open discrepancy.
+little weight. The plain mean over 800 jobs is -24.35 +- 0.15.
+
+Resolved on 14 Oct 2026 by a pointwise comparison of the subtraction terms
+(1000 VBFNLO points, all subprocesses; files in
+/ptmp/mpp/akarlber/dipcmp/result). VBFNLO has two defects: its dipole Borns
+(shared with its LO, virtual and I + K + P) use t-channel W/Z propagators
+without width while its reals use them with width (dipoles too large by 3e-4 to
+1.3e-3, a non-integrable remainder in every limit cut off only by its technical
+cut; -0.96 +- 0.02 fb), and its b-initiated CC four-quark channels lack their
+initial-state dipoles (+0.08 fb). With both fixed, R, the dipoles and R - D of
+the two codes agree pointwise (2q2g, gq, gg to 4e-5), and VBFNLO's real -
+dipoles becomes -23.46 +- 0.15 fb, total 126.11 fb: 0.25 +- 0.21 fb (1.2 sigma)
+from proVBFH-cs.
+
+## The NNLO 2-jet rate: H+3j virtual fixed on 14 Oct 2026
+
+Against 2110.02818 (stable Higgs, 13 TeV, NNPDF31, filtered jets) proVBFH-cs
+reproduced LO and NLO at all three scales, but NNLO was 0.3 to 0.6% low. The
+cause: VBFNLO's H+3j virtual (`qqhqqj-virt.f`) drops the boxes of a quark line
+when one of its invariants |p.p| is below 1 GeV^2 ("no boxes if there are less
+than 3 jets"). Harmless for H+3j with jet cuts, but projection-to-Born needs
+V + I at every three-parton point; there it jumped by O(30-100) alpha_s/(2 pi)
+B. The boxes are now always computed (commit 6086c2d). Result
+(`proVBFH-cs/production/results/2110-02818`, fb):
+
+| scale | fixed | before | 2110.02818 |
+|---|---|---|---|
+| mu0 | 857.90 +- 1.05 | 854.10 +- 1.07 | 859 |
+| mu0/2 | 848.71 +- 1.32 | 843.45 +- 1.32 | 849 |
+| 2mu0 | 867.00 +- 0.87 | 864.20 +- 0.91 | 867 |
+
+sigma(>= 3 jets) is unchanged. Below a few 1e-2 GeV^2 VBFNLO's gauge check still
+replaces the boxes by a constant (numerical instability): at most about 1 fb.
+The final p1506 and HXSWG productions and V2 above were made before the fix:
+their 2-jet rates are low by 5 to 6 fb (p1506: +5.2 +- 1.0 fb from a difference
+run, i.e. about 0.8457 pb at NNLO), and they are not yet rerun or corrected.
 
 ## How to run
 
