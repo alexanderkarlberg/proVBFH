@@ -1,0 +1,32 @@
+/ptmp/mpp/akarlber/cs2110/lo-J: 100 jobs
+  mu0      970.575 +-  0.449 fb  (0.046%)
+  mu0/2   1039.567 +-  0.488 fb  (0.047%)
+  2mu0     909.181 +-  0.416 fb  (0.046%)
+/ptmp/mpp/akarlber/cs2110/nlo-J: 40 jobs
+  mu0      890.093 +-  0.679 fb  (0.076%)
+  mu0/2    872.502 +-  0.691 fb  (0.079%)
+  2mu0     897.297 +-  0.666 fb  (0.074%)
+/ptmp/mpp/akarlber/cs2110/nlo-H: 40 jobs
+  mu0      889.205 +-  0.677 fb  (0.076%)
+  mu0/2    871.336 +-  0.688 fb  (0.079%)
+  2mu0     896.603 +-  0.665 fb  (0.074%)
+/ptmp/mpp/akarlber/cs2110/nnlo-J: 100 jobs
+  mu0      854.104 +-  1.073 fb  (0.126%)
+  mu0/2    843.454 +-  1.319 fb  (0.156%)
+  2mu0     864.201 +-  0.909 fb  (0.105%)
+/ptmp/mpp/akarlber/cs2110/nnlo-H: 40 jobs
+  mu0      852.666 +-  1.692 fb  (0.198%)
+  mu0/2    841.822 +-  2.099 fb  (0.249%)
+  2mu0     862.965 +-  1.418 fb  (0.164%)
+difference /ptmp/mpp/akarlber/cs2110/lo-J - /ptmp/mpp/akarlber/cs2110/lo-H (100 common seeds)
+  mu0        0.000 +-  0.000 fb
+  mu0/2      0.000 +-  0.000 fb
+  2mu0       0.000 +-  0.000 fb
+difference /ptmp/mpp/akarlber/cs2110/nlo-J - /ptmp/mpp/akarlber/cs2110/nlo-H (40 common seeds)
+  mu0        0.887 +-  0.008 fb
+  mu0/2      1.166 +-  0.010 fb
+  2mu0       0.694 +-  0.007 fb
+difference /ptmp/mpp/akarlber/cs2110/nnlo-J - /ptmp/mpp/akarlber/cs2110/nnlo-H (40 common seeds)
+  mu0        1.201 +-  0.159 fb
+  mu0/2      1.281 +-  0.211 fb
+  2mu0       1.085 +-  0.124 fb

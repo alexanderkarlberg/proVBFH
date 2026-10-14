@@ -461,8 +461,15 @@ c
       external powheginput
 
       include 'phspcuts.h'
+      logical jet_hardest
+      common/cjethard/jet_hardest
 
       jet_opphem = .false.
+c     jet_hardest 1: the two hardest jets of the event (any pT, y) must pass
+c     the pT and rapidity cuts (1506.02660); 0 (default): the tagging jets are
+c     the two leading jets of the list of jets with pT and |y| in range
+c     (2110.02818).
+      jet_hardest = powheginput('#jet_hardest').eq.1d0
       
 c replace default cuts by input values (if active):
       ptalljetmin=powheginput('#ptalljetmin')
@@ -483,6 +490,8 @@ c replace default cuts by input values (if active):
       implicit none
       include 'hepevt.h'
       include 'phspcuts.h'
+      logical jet_hardest
+      common/cjethard/jet_hardest
       integer maxtrack,maxjet
       parameter (maxtrack=4,maxjet=4)
       character * 6 WHCPRG
@@ -557,6 +566,17 @@ c     cut.
          endif
       enddo
       njets=j
+c     1506.02660 selection: the two hardest jets overall must be in range
+      if(jet_hardest.and.njets_all.ge.2) then
+         if(.not.(ptj_all(1).gt.ptalljetmin.and.
+     $        abs(yj_all(1)).lt.yjetmax.and.
+     $        ptj_all(2).gt.ptalljetmin.and.
+     $        abs(yj_all(2)).lt.yjetmax)) then
+            njets=0
+            ptj = 0d0
+            yj = 0d0
+         endif
+      endif
 
       pj = 0d0
 

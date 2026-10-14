@@ -8,7 +8,8 @@ module incl_parameters
 
   private
   logical, save, public :: param_initialised = .false.
-  real(dp), parameter, public :: gfermi = 1.16637e-5_dp
+  ! G_F: 1.16637e-5 unless FERMI_CONST is given in vbfnlo.input
+  real(dp), save, public :: gfermi = 1.16637e-5_dp
   real(dp), parameter, public :: gev2pb = 389379660.0_dp
   real(dp), parameter, public :: eps    = 1.0e-14_dp
   real(dp), public :: xmuf, xmur, Qmin
@@ -58,6 +59,7 @@ contains
     nflav=vbfnloinput('#NFLAVOUR')
     mh=vbfnloinput('#HMASS')
     hwidth = vbfnloinput('#HWIDTH')
+    if(vbfnloinput('#FERMI_CONST').gt.0.0_dp) gfermi = vbfnloinput('#FERMI_CONST')
     order_min= powheginput('#order_min')
     if(order_min.lt.1.) order_min = 1
     order_max=powheginput('#qcd_order')
