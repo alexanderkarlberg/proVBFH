@@ -50,3 +50,16 @@ section by 0.1% at NLO and 0.14% at NNLO. It does not explain the NNLO deficit.
 ## Cost
 LO 100 jobs about 0.1 core-h, NLO 80 jobs about 16 core-h, NNLO-J 100 jobs (+12 reruns after node failures on gt37 and gt28)
 about 236 core-h, NNLO-H 40 jobs about 85 core-h.
+
+## NNLO with the H+3j virtual fix (commit 6086c2d, boxes always computed)
+120 jobs, seeds 4000-4119, same card (2110 selection), binary /ptmp/mpp/akarlber/cs2110/bin-fix/proVBFH-cs-6086c2d
+(HEAD 6086c2d plus the analysis and G_F changes of this directory), about 280 core-h.
+
+| scale | fixed | before the fix | fixed - before | paper | fixed - paper (pull) |
+|---|---|---|---|---|---|
+| mu0 | 857.90 +- 1.05 | 854.10 +- 1.07 | +3.8 +- 1.5 | 859 | -1.1 (-1.0) |
+| mu0/2 | 848.71 +- 1.32 | 843.45 +- 1.32 | +5.3 +- 1.9 | 849 | -0.3 (-0.2) |
+| 2mu0 | 867.00 +- 0.87 | 864.20 +- 0.91 | +2.8 +- 1.3 | 867 | 0.0 (0.0) |
+
+The shifts agree with the dedicated difference run (+5.7 +- 1.2, +6.3 +- 1.5, +5.4 +- 1.0 fb) within 1-1.7 sigma,
+and the fixed NNLO agrees with 2110.02818 at all three scales. Files: nnlo-fix-W{1,2,3}.top.
