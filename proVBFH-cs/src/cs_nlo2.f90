@@ -45,6 +45,7 @@ module cs_nlo2
   public :: nlo2_init, nlo2_real_kin, nlo2_real_me, nlo2_ifin, nlo2_kp
   public :: nlo2_kp_dis, nlo2_ifin_dis
   public :: nlo2_ngroups, nlo2_ncount
+  public :: nlo2_ngrp, nlo2_group_line, nlo2_group_test
   ! four-parton points dropped by the technical cut
   integer, public, save :: nlo2_ncut = 0
   ! cs_4qint 2: the real is the four-quark interference alone (structures
@@ -115,6 +116,42 @@ module cs_nlo2
   real(dp), save :: gx(nq), gw(nq)
 
 contains
+
+  ! test hooks (tests/test_limits.f90): number of real groups, line of group
+  ! ig, and the matrix element me and the six dipoles d of group ig at the
+  ! four-parton point (pa, k) of the Born kinematics set by nlo2_real_kin
+  integer function nlo2_ngrp()
+    nlo2_ngrp = ngrp
+  end function nlo2_ngrp
+
+  integer function nlo2_group_line(ig)
+    integer, intent(in) :: ig
+    nlo2_group_line = grp(ig)%line
+  end function nlo2_group_line
+
+  subroutine nlo2_group_test(ig, pa, k, me, d)
+    integer, intent(in) :: ig
+    real(dp), intent(in) :: pa(0:3), k(0:3,3)
+    real(dp), intent(out) :: me, d(6)
+    integer :: m, i, j, l
+    real(dp) :: y, z, x
+    ! group_me reads the maps (mt, mk, ma, mvar, mz) and cur_pa, cur_k from the
+    ! module state that nlo2_real_kin sets: recompute them for (pa, k), and
+    ! clear the Born cache, so that the dipoles are those of this point
+    cur_pa = pa; cur_k = k
+    do m = 1, 6
+       i = pairs(1, mod(m-1,3)+1); j = pairs(2, mod(m-1,3)+1); l = pairs(3, mod(m-1,3)+1)
+       if (m <= 3) then
+          call map_ff(k(:,i), k(:,j), k(:,l), mt(:,m), mk(:,m), y, z)
+          ma(:,m) = pa; mvar(m) = y; mz(m) = z
+       else
+          call map_fi(k(:,i), k(:,j), pa, mt(:,m), ma(:,m), x, z)
+          mk(:,m) = k(:,l); mvar(m) = x; mz(m) = z
+       endif
+    enddo
+    ncache = 0
+    call group_me(ig, pa, k, me, d, .false.)
+  end subroutine nlo2_group_test
 
   integer function nlo2_ngroups(line)
     integer, intent(in) :: line

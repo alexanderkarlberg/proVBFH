@@ -85,10 +85,19 @@ tests/test_smallx: cs_smallx.o tests/test_smallx.f90
 tests/test_four: cs_kinematics.o cs_dipoles.o tests/test_four.f90
 	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_four.f90 $(OBJ)/cs_kinematics.o $(OBJ)/cs_dipoles.o -o $@
 
+# pointwise cancellation of the collinear singularities of the (2,0)/(0,2)
+# real against its dipoles: links the whole package but the main program
+# (tests/test_limits.f90); run from example/, which holds the cards it reads
+TESTOBJS= $(patsubst %,$(OBJ)/%,$(filter-out cs_main.o,$(OBJS)))
+tests/test_limits: $(OBJS) tests/test_limits.f90
+	$(FC) $(F90FLAGS) -I$(OBJ) tests/test_limits.f90 $(TESTOBJS) $(LIBS) $(CXXLIBS) -o $@
+
 # make check: build and run the unit tests (each exits non-zero on failure)
 TESTS= tests/test_kinematics tests/test_smallx tests/test_four
-check: $(TESTS)
-	@for t in $(TESTS); do echo "== $$t"; ./$$t || { echo "FAILED: $$t"; exit 1; }; done; echo "make check: all tests passed"
+check: $(TESTS) tests/test_limits
+	@for t in $(TESTS); do echo "== $$t"; ./$$t || { echo "FAILED: $$t"; exit 1; }; done
+	@echo "== tests/test_limits (in example/)"; cd example && ../tests/test_limits > ../tests/test_limits.out 2>&1; tail -1 ../tests/test_limits.out; grep -q 'singular cases cancel' ../tests/test_limits.out || { echo "FAILED: tests/test_limits"; exit 1; }
+	@echo "make check: all tests passed"
 
 $(OBJ):
 	mkdir -p $(OBJ)
