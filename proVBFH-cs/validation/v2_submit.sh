@@ -21,7 +21,7 @@ ROOT=${ROOT:-/ptmp/mpp/akarlber/csprod/v2}
 BIN=${BIN:-$here/../proVBFH-cs-p1506}
 case $order in nlo) co=2 ;; nnlo) co=3 ;; *) echo "order: nlo or nnlo"; exit 1 ;; esac
 run=$ROOT/$order-$first
-$prod/slurm/make_jobs.sh p1506 $first $NJOBS $run cs_order=$co "$@"
+$prod/slurm/make_jobs.sh p1506 $first $NJOBS $run qcd_order=$co "$@"
 mkdir -p $run/logs
 sbatch --partition=alma --exclude='et[07-40]' --mem=$MEM --time=$TIME -J v2-$order \
     --array=1-$NJOBS --export=ALL,BIN=$BIN,LIST=$run/jobs.list \

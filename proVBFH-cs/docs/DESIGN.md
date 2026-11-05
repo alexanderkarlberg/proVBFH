@@ -11,20 +11,20 @@ the full logbooks and the study tools are in the git tag `cs-study-2026-10`.
 ## Run model
 
 One run of `proVBFH-cs` gives the complete cross section and histograms at
-the order `cs_order` (1 = LO, 2 = NLO, 3 = NNLO; default 3), from the cards
+the order `qcd_order` (1 = LO, 2 = NLO, 3 = NNLO; default 3), from the cards
 `powheg.input` and `vbfnlo.input` of the working directory. It performs two
 VEGAS integrations in sequence, each with its own grid pass (`ncall1`,
 `itmx1`) and main pass (`ncall2`, `itmx2`):
 
 1. Inclusive part (`../proVBFH/src/inclusive`, structure functions, Born-level
-   events, 7 dimensions) at `qcd_order = cs_order`. Its number of calls per
+   events, 7 dimensions) at the order `qcd_order` of the run. Its number of calls per
    iteration is mapped from the card's: n for n <= 1e4, n/10 for 1e4 < n <=
    1e7, n/100 above (the inclusive integrand is cheap and low-dimensional).
    `cs_main.f90` calls `run_inclusive`, then stores its histograms
    (`cs_hist_save`, `cs_hist.f`) and writes `pwg-LO-W<k>.top`.
-2. Exclusive part (this package), for `cs_order` >= 2, with `ncall1`,
-   `ncall2` as in the card: `cs_order 2` is the (1,0) + (0,1) events of stage 1
-   with their Born counterevents (`excl_order 1`), `cs_order 3` adds the
+2. Exclusive part (this package), for `qcd_order` >= 2, with `ncall1`,
+   `ncall2` as in the card: `qcd_order 2` is the (1,0) + (0,1) events of stage 1
+   with their Born counterevents (`excl_order 1`), `qcd_order 3` adds the
    (2,0) + (0,2) and (1,1) terms of stages 2 and 3 (`excl_order 3`). The
    random-number stream is reset to the job seed before it. It writes
    `pwg-EXCL-W<k>.top`. The exclusive part does not contribute to
@@ -35,7 +35,7 @@ VEGAS integrations in sequence, each with its own grid pass (`ncall1`,
 Each part is normalised by its own VEGAS, then the histograms are added bin
 by bin (errors in quadrature): `pwg-W<k>.top` for the scale points k, with the
 total cross sections with the cuts of the analysis in `xsct-<lo|nlo|nnlo>.dat`.
-At `cs_order 1` only the inclusive part runs.
+At `qcd_order 1` only the inclusive part runs.
 
 The scale points are computed on the fly in both parts (`cs_scales`: 1, 3 or
 7 points; default 3: (1,1), (1/2,1/2), (2,2) times the central scale), see

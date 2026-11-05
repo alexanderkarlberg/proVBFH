@@ -1,7 +1,7 @@
 #!/bin/bash
 # V3: clean-up regression. The default example card (default binary, user
 # analysis of proVBFH) and the same card with the p1506 binary (analysis
-# analysis/p1506_analysis.f) are run at cs_order 1, 2 and 3 with a small
+# analysis/p1506_analysis.f) are run at qcd_order 1, 2 and 3 with a small
 # ncall and a fixed seed, with the current build and with a reference
 # build made before the clean-up (REFDIR). Every bin of every .top file and
 # the xsct file must agree to <= 1e-12 relative (v3_compare.py); files that
@@ -21,7 +21,7 @@ N=${N:-10000}; SEED=${SEED:-4711}
 card=${CARD:-$here/../example/powheg.input}
 mk() {
     local d=$1 o=$2; mkdir -p "$d"; rm -f "$d"/*
-    sed -E "s/^iseed .*/iseed $SEED/; s/^ncall1 [0-9]+/ncall1 $N/; s/^ncall2 [0-9]+/ncall2 $N/; s/^itmx1 .*/itmx1 2/; s/^itmx2 .*/itmx2 2/; s/^cs_order .*/cs_order $o/" "$card" > "$d/powheg.input"
+    sed -E "s/^iseed .*/iseed $SEED/; s/^ncall1 [0-9]+/ncall1 $N/; s/^ncall2 [0-9]+/ncall2 $N/; s/^itmx1 .*/itmx1 2/; s/^itmx2 .*/itmx2 2/; s/^qcd_order .*/qcd_order $o/" "$card" > "$d/powheg.input"
     cp "$here/../example/vbfnlo.input" "$d/"
 }
 mkdir -p "$W"
@@ -39,7 +39,7 @@ for v in default p1506; do
     for o in 1 2 3; do
         out=$(python3 $here/v3_compare.py $W/new-$v-$o $W/ref-$v-$o 2>&1); r=$?
         [ $r -eq 0 ] && s=PASS || { s=FAIL; rc=1; }
-        echo "V3 $v cs_order $o: $s  ($out)"
+        echo "V3 $v qcd_order $o: $s  ($out)"
     done
 done
 exit $rc

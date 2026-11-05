@@ -18,7 +18,7 @@ module incl_parameters
   ! 1 (default): off, the run is unchanged
   integer,  public :: incl_nscale = 1
   ! > 0: the QCD order of the inclusive part (instead of qcd_order of the
-  ! input card); set by proVBFH-cs (cs_order) before inclusive_init
+  ! input card); set by proVBFH-cs (its qcd_order) before inclusive_init
   integer,  public :: incl_order_override = 0
   real(dp), public :: incl_scr(7) = 1.0_dp, incl_scf(7) = 1.0_dp
   real(dp), public :: mh, mh_sq, hwidth

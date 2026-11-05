@@ -178,6 +178,6 @@ cd example && ../proVBFH-cs               # reads powheg.input and vbfnlo.input
 ```
 
 One run gives `pwg-W<k>.top` (all histograms, scale points k) and
-`xsct-<order>.dat`, with `cs_order` 1, 2 or 3. For production, `production/slurm/`
+`xsct-<order>.dat`, with `qcd_order` 1, 2 or 3. For production, `production/slurm/`
 has `make_jobs.sh` (one directory per seed), `run_array.sh` (Slurm array) and
 `combine_and_plot.sh`. The full list of options is in the README.

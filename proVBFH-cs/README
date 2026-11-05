@@ -38,8 +38,10 @@ HOW TO RUN
   for the exclusive part; both are written by a normal run).
 
 FLAGS (powheg.input; absent = default)
-  cs_order 3        QCD order: 1 LO (inclusive part only), 2 NLO, 3 NNLO
-                    (qcd_order is not used)
+  qcd_order 3       QCD order: 1 LO (inclusive part only), 2 NLO, 3 NNLO (as in the
+                    other proVBFH codes; the old name cs_order is still accepted,
+                    with a warning)
+  inclusive_only 0  1: only the inclusive part, at the order qcd_order (as in proVBFH)
   cs_scales 3       scale points computed on the fly: 1 central only; 3 adds
                     (1/2,1/2) and (2,2) (W2, W3); 7 adds (1/2,1), (1,1/2),
                     (2,1), (1,2). Needs runningscales 1 unless cs_scales 1
@@ -60,7 +62,7 @@ FLAGS (powheg.input; absent = default)
                     0: off, as before 2026-10-13 (validation/v4_4qint);
                     2: the interference alone, to measure its effect: the
                     exclusive part (pwg-EXCL-W<k>.top) is then only the
-                    interference and its counterevents (needs cs_order 3;
+                    interference and its counterevents (needs qcd_order 3;
                     the inclusive part is run as usual and must be ignored;
                     setreal warns once per entry without interference
                     ("rflav ... flav+tag") at initialisation)
@@ -71,7 +73,7 @@ OUTPUTS (in the run directory)
   pwg-LO-W<k>.top   inclusive part alone;  pwg-EXCL-W<k>.top  exclusive part alone
   xsct-<lo|nlo|nnlo>.dat   cross section with the cuts of the analysis, per scale point
   grids.dat, grids-excl.dat (plus .top) VEGAS grids; run.log is the standard output
-  At cs_order 1 only the inclusive part is run (pwg-LO-W<k>.top and pwg-W<k>.top).
+  At qcd_order 1 only the inclusive part is run (pwg-LO-W<k>.top and pwg-W<k>.top).
 
 VALIDATION (validation/)
   v1_regression.sh  the combined run reproduces the earlier two-job set-up
@@ -81,7 +83,7 @@ VALIDATION (validation/)
                     physics check of the default card at NLO and NNLO against
                     production/results/final-2026-10-07 (Slurm array)
   v3_cleanup.sh     the clean-up changed nothing: default example card (and the
-                    p1506 binary), cs_order 1, 2, 3, against binaries built
+                    p1506 binary), qcd_order 1, 2, 3, against binaries built
                     before the clean-up, every histogram bin and the xsct file to
                     1e-12 relative (v3_compare.py)
   v4_4qint/         cs_4qint: the four-quark real matrix element of the program

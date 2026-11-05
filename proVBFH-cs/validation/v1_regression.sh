@@ -1,5 +1,5 @@
 #!/bin/bash
-# V1: the combined run (cs_order 1, 2, 3) reproduces the old binary's
+# V1: the combined run (qcd_order 1, 2, 3) reproduces the old binary's
 # cs_part 1 (inclusive, qcd_order = order, ncall mapped) + cs_part 2
 # (exclusive, cs_order 1 for NLO, 3 for NNLO; qcd_order 2 as in production),
 # same seed and card, bin by bin (<= 1e-12 relative for the parts, see
@@ -30,7 +30,7 @@ mk() {
 mkdir -p "$W"
 pids=()
 for o in 1 2 3; do
-    mk $W/new-$o cs_order=$o
+    mk $W/new-$o qcd_order=$o
     ( cd $W/new-$o && $BIN > run.log 2>&1 ) & pids+=($!)
     mk $W/ref-incl-$o qcd_order=$o cs_part=1 ncall1=$(mapn $N1) ncall2=$(mapn $N2)
     ( cd $W/ref-incl-$o && $REF > run.log 2>&1 ) & pids+=($!)

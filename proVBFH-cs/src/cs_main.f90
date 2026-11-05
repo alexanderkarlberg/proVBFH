@@ -8,8 +8,10 @@
 ! written, pwg-LO-W<k>.top and pwg-EXCL-W<k>.top), and the cross section
 ! with the cuts of the analysis in xsct-<lo|nlo|nnlo><seed>.dat.
 ! Same powheg.input and vbfnlo.input as proVBFH, plus
-!   cs_order  1: LO (inclusive part only), 2: NLO, 3: NNLO (default); sets
-!             qcd_order of the inclusive part, qcd_order is not used
+!   inclusive_only 1: only the inclusive part, at the order qcd_order (any order)
+!   qcd_order 1: LO (inclusive part only), 2: NLO, 3: NNLO (default); the
+!             order of the inclusive part and of the run (as in the other
+!             proVBFH codes; cs_order is accepted as a deprecated alias)
 !   cs_scales number of on-the-fly scale points: 1, 3 (default; (1,1),
 !             (1/2,1/2), (2,2)) or 7 (needs runningscales 1 for > 1)
 !   ncall1, ncall2, itmx1, itmx2  VEGAS set-up (grid and main pass) of the
@@ -30,7 +32,7 @@
 !   cs_cutoff invariant cutoff on 1-xp, z, 1-z (default 1d-5)
 !   cs_4qint  1 (default): identical-quark interference in the four-quark
 !             reals (compreal_hqqqq_new.f); 0: off; 2: the interference
-!             alone (exclusive part, pwg-EXCL-W<k>.top; needs cs_order 3)
+!             alone (exclusive part, pwg-EXCL-W<k>.top; needs qcd_order 3)
 !----------------------------------------------------------------------
 program provbfh_cs
   use types, only: dp
@@ -65,13 +67,20 @@ program provbfh_cs
 
   call cpu_time(t0)
   corder = 3
-  if (powheginput('#cs_order') > 0) corder = nint(powheginput('#cs_order'))
-  if (corder < 1 .or. corder > 3) stop 'cs_order must be 1 (LO), 2 (NLO) or 3 (NNLO)'
+  if (powheginput('#qcd_order') > 0) corder = nint(powheginput('#qcd_order'))
+  if (powheginput('#cs_order') > 0) then
+     ! deprecated alias of qcd_order
+     if (powheginput('#qcd_order') > 0 .and. nint(powheginput('#cs_order')) /= corder) &
+          stop 'qcd_order and cs_order (deprecated alias of qcd_order) differ'
+     if (powheginput('#qcd_order') <= 0) corder = nint(powheginput('#cs_order'))
+     write(6,'(a)') ' proVBFH-cs: WARNING: cs_order is deprecated, use qcd_order'
+  endif
+  if (corder < 1 .or. corder > 3) stop 'qcd_order must be 1 (LO), 2 (NLO) or 3 (NNLO)'
   nscales = 3
   if (powheginput('#cs_scales') > 0) nscales = nint(powheginput('#cs_scales'))
   if (nscales /= 1 .and. nscales /= 3 .and. nscales /= 7) stop 'cs_scales must be 1, 3 or 7'
 
-  ! inclusive part, at the order cs_order (instead of qcd_order)
+  ! inclusive part, at the order of the run
   incl_order_override = corder
   call inclusive_init()          ! parameters, PDFs, alpha_s, scales
   idum_job = idum                ! -iseed, for the exclusive part
@@ -81,7 +90,7 @@ program provbfh_cs
      incl_scr(1:incl_nscale) = sc_r(1:incl_nscale)
      incl_scf(1:incl_nscale) = sc_f(1:incl_nscale)
   endif
-  write(6,'(a,i2,a,i2,a)') ' proVBFH-cs: cs_order ', corder, ', ', nscales, ' scale points (mu_R/mu_R0, mu_F/mu_F0), weights W1, W2, ...:'
+  write(6,'(a,i2,a,i2,a)') ' proVBFH-cs: qcd_order ', corder, ', ', nscales, ' scale points (mu_R/mu_R0, mu_F/mu_F0), weights W1, W2, ...:'
   write(6,'(7(a,f4.2,a,f4.2,a))') (' (', sc_r(i), ',', sc_f(i), ')', i = 1, nscales)
   ncall1_ex = ncall1
   ncall2_ex = ncall2
@@ -100,12 +109,14 @@ program provbfh_cs
   write(6,'(a,f12.1,a)') ' proVBFH-cs inclusive part: CPU ', t1 - t0, ' s'
   call pwhgsetout
   call cs_hist_save()
-  if (corder == 1) then
+  ! qcd_order 1, or inclusive_only 1 (as in the other proVBFH codes): the
+  ! inclusive part alone, at the order qcd_order
+  if (corder == 1 .or. nint(powheginput('#inclusive_only')) == 1) then
      call write_total()
      stop
   endif
 
-  ! exclusive part: cs_order 2 is the (1,0) + (0,1) of excl_order 1, cs_order 3
+  ! exclusive part: qcd_order 2 is the (1,0) + (0,1) of excl_order 1, qcd_order 3
   ! also the (2,0) + (0,2) and (1,1)
   if (corder == 2) excl_order = 1
   if (corder == 3) excl_order = 3
@@ -121,7 +132,7 @@ program provbfh_cs
   ! cs_4qint 2: only the identical-quark interference of the four-quark reals
   ! (no dipoles: it is integrable) and its counterevents
   if (nint(powheginput('#cs_4qint')) == 2) then
-     if (excl_order /= 3) stop 'cs_4qint 2 needs cs_order 3'
+     if (excl_order /= 3) stop 'cs_4qint 2 needs qcd_order 3'
      excl_intonly = .true.
      nlo2_intonly = .true.
      write(6,'(a)') ' proVBFH-cs: cs_4qint 2, exclusive part = the four-quark interference alone (pwg-EXCL-W<k>.top)'
@@ -211,7 +222,11 @@ contains
     xsname = 'xsct-'//trim(fname(corder))//trim(seedstr)//'.dat'
     open(unit=11, file=trim(xsname), action='write')
     write(11,'(a)') '# proVBFH-cs: total '//trim(oname(corder))//' cross section with the cuts of the analysis'
-    write(11,'(a)') '# (inclusive + exclusive part), one line per scale point (mu_R/mu_R0, mu_F/mu_F0)'
+    if (corder == 1 .or. nint(powheginput('#inclusive_only')) == 1) then
+       write(11,'(a)') '# (inclusive part only), one line per scale point (mu_R/mu_R0, mu_F/mu_F0)'
+    else
+       write(11,'(a)') '# (inclusive + exclusive part), one line per scale point (mu_R/mu_R0, mu_F/mu_F0)'
+    endif
     do k = 1, nscales
        call cs_hist_total(k, sig_k, err_k)
        write(11,'(es13.6,a,es13.6,a,2f5.2)') sig_k, ' +/- ', err_k, ' (pb)  # W', sc_r(k), sc_f(k)
