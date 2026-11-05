@@ -12,8 +12,14 @@
 # analysis/hxswg136_analysis.f instead of proVBFH's user_analysis.f.
 #############################################################################
 
-# external tools (hoppet, LHAPDF, FastJet), as configured for proVBFH
+# external tools (hoppet, LHAPDF, FastJet), as configured for proVBFH: the
+# sources of the inclusive part and of the VBFNLO matrix elements are compiled
+# from ../proVBFH, so a fresh checkout only needs ../proVBFH configured once
+# (done here automatically, with the defaults)
+../proVBFH/Makefile.inc:
+	cd ../proVBFH && ./configure
 include ../proVBFH/Makefile.inc
+.DEFAULT_GOAL := all
 
 LHAPDFLIBS=-Wl,-rpath,$(shell $(LHEXEC) --prefix)/lib -L$(shell $(LHEXEC) --prefix)/lib -lLHAPDF
 FASTJETLIBS=$(shell $(FJEXEC) --libs --plugins)
