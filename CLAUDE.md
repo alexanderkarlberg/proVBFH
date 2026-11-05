@@ -66,6 +66,14 @@ that runs complete with finite output. They are not physics validations.
 widths.
 `ci/nf-checks.sh` checks that the non-factorisable corrections do not depend on the gluon-mass
 regulator (`nf_regfact`).
+`proVBFH-cs/` (the line-by-line Catani-Seymour NNLO code, see its `README`; it takes its tool paths and
+inclusive-part sources from `../proVBFH`, so build that first) is built and tested too: `make check`,
+a smoke test, and `ci/physics-checks.py`, which compares the inclusive cross section of the three
+implementations and the `proVBFH-cs` histograms with frozen references (`ci/reference/`, regenerated with
+`ci/physics-checks.py generate`) and checks that the exclusive part leaves the Higgs-only observables
+unchanged. The physics checks use the hoppet benchmark PDF (`ci/benchmark-pdf.sh` writes it as a local
+LHAPDF set), so they need no PDF download. All programs select the QCD order with `qcd_order`
+(`proVBFH-cs` also accepts the old name `cs_order`).
 `ci/run-local.sh` runs all of these checks locally on the current builds (no copy, no rebuild by
 default; `--build`, `--clean`, `--committed` for the other cases).
 

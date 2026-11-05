@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 #
-# Run the CI checks locally: smoke-tests.sh, tensor-checks.sh and
-# nf-checks.sh, as in .github/workflows/ci.yml. By default they run on
+# Run the CI checks locally: smoke-tests.sh, tensor-checks.sh,
+# nf-checks.sh, the unit tests of proVBFH-cs and physics-checks.py, as in
+# .github/workflows/ci.yml. By default they run on
 # the programs as they are currently built in the repository, without
 # copying or rebuilding anything. Continues after a failure and prints a
 # summary; the exit status is non-zero if any check failed.
 #
 # Usage: ci/run-local.sh [options] [package ...]
 #
-#   package        proVBFH-inclusive, proVBFH and/or proVBFHH [default: all]
-#                  (tensor-checks need proVBFH-inclusive, nf-checks
-#                  proVBFH and/or proVBFHH)
+#   package        proVBFH-inclusive, proVBFH, proVBFHH and/or proVBFH-cs
+#                  [default: all] (tensor-checks need proVBFH-inclusive,
+#                  nf-checks proVBFH and/or proVBFHH, proVBFH-cs the build
+#                  of proVBFH, physics-checks proVBFH-inclusive, proVBFH
+#                  and proVBFH-cs)
 #   (default)      use the existing builds in the repository; a package
 #                  that is not built is skipped, and a warning is printed
 #                  if sources are newer than its executable
@@ -50,12 +53,12 @@ while [ $# -gt 0 ]; do
         -j)          JOBS=${2:?-j needs an argument}; shift ;;
         -j*)         JOBS=${1#-j} ;;
         -h|--help)   usage; exit 0 ;;
-        proVBFH-inclusive|proVBFH|proVBFHH) PKGS+=("$1") ;;
+        proVBFH-inclusive|proVBFH|proVBFHH|proVBFH-cs) PKGS+=("$1") ;;
         *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
     shift
 done
-[ ${#PKGS[@]} -gt 0 ] || PKGS=(proVBFH-inclusive proVBFH proVBFHH)
+[ ${#PKGS[@]} -gt 0 ] || PKGS=(proVBFH-inclusive proVBFH proVBFHH proVBFH-cs)
 has() { local p; for p in "${PKGS[@]}"; do [ "$p" = "$1" ] && return 0; done; return 1; }
 
 REPO=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "not in a git repository" >&2; exit 2; }
@@ -143,7 +146,10 @@ note() {
 build() {
     local pkg=$1
     cd "$pkg" || return 1
-    if [ "$MODE" = build ] && [ -f Makefile.inc ]; then
+    if [ "$pkg" = proVBFH-cs ]; then
+        # no configure: takes the tool paths and sources from ../proVBFH
+        make -j"$JOBS"
+    elif [ "$MODE" = build ] && [ -f Makefile.inc ]; then
         make -j"$JOBS"
     else
         ./configure && make -j"$JOBS"
@@ -191,6 +197,16 @@ done
 if [[ $BUILT == *" proVBFH-inclusive "* ]]; then
     # make check builds and runs the unit test (in the package's obj/)
     step "tensor checks" "$LOGS/tensor-checks.log" ci/tensor-checks.sh
+fi
+
+if [[ $BUILT == *" proVBFH-cs "* ]]; then
+    step "unit tests proVBFH-cs" "$LOGS/unit-proVBFH-cs.log" make -C proVBFH-cs check
+fi
+
+if [[ $BUILT == *" proVBFH-inclusive "* && $BUILT == *" proVBFH "* && $BUILT == *" proVBFH-cs "* ]]; then
+    step "physics checks" "$LOGS/physics-checks.log" ci/physics-checks.py
+else
+    note "physics checks" "skipped (needs proVBFH-inclusive, proVBFH and proVBFH-cs)"
 fi
 
 NF=()

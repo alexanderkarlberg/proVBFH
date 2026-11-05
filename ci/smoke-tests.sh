@@ -4,7 +4,7 @@
 # end to end and produces finite output. These are NOT physics
 # validations: the numbers are far too imprecise for that.
 #
-# Usage: ci/smoke-tests.sh <proVBFH|proVBFHH|proVBFH-inclusive>
+# Usage: ci/smoke-tests.sh <proVBFH|proVBFHH|proVBFH-inclusive|proVBFH-cs>
 #
 # Must be run from the repository root. Uses the PDF set PDF4LHC21_40
 # (LHAPDF ID 93100), which must be installed. Run directories are
@@ -120,7 +120,42 @@ smoke_powheg() {
     cat "$dir/pwg-st2-0001-stat.dat"
 }
 
+# ----------------------------------------------------------------------
+# proVBFH-cs: NNLO run (inclusive and exclusive part) and a
+# LO run (inclusive part only), from example/
+# ----------------------------------------------------------------------
+smoke_cs() {
+    local exe="$ROOT/$PKG/$PKG" dir
+    dir="$RUNDIR/nnlo"
+    mkdir -p "$dir"
+    cp -r "$ROOT/$PKG/example/." "$dir"
+    sed -i.bak \
+        -e "s/^lhans\([12]\) .*/lhans\1 $PDFID/" \
+        -e "s/^qcd_order .*/qcd_order 3/" \
+        -e "s/^ncall1 .*/ncall1 5000/" \
+        -e "s/^ncall2 .*/ncall2 5000/" \
+        -e "s/^itmx1 .*/itmx1 1/" \
+        -e "s/^itmx2 .*/itmx2 1/" \
+        "$dir/powheg.input"
+    echo "$PKG NNLO"
+    (cd "$dir" && echo 1 | run_logged run.log "$exe")
+    check_output "$dir/xsct-nnlo.dat"
+    check_output "$dir/pwg-W1.top"
+    check_output "$dir/pwg-EXCL-W3.top"
+    cat "$dir/xsct-nnlo.dat"
+
+    dir="$RUNDIR/lo"
+    mkdir -p "$dir"
+    cp "$RUNDIR/nnlo/powheg.input" "$RUNDIR/nnlo/vbfnlo.input" "$dir"
+    sed -i.bak "s/^qcd_order .*/qcd_order 1/" "$dir/powheg.input"
+    echo "$PKG LO"
+    (cd "$dir" && echo 1 | run_logged run.log "$exe")
+    check_output "$dir/xsct-lo.dat"
+    check_output "$dir/pwg-W1.top"
+}
+
 case "$PKG" in
+    proVBFH-cs)        smoke_cs ;;
     proVBFH-inclusive) smoke_inclusive ;;
     proVBFH|proVBFHH)  smoke_powheg ;;
     *) echo "unknown package $PKG" >&2; exit 1 ;;

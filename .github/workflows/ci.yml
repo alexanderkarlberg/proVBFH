@@ -1,8 +1,10 @@
 name: CI
 
-# Build all three programs against the latest releases of hoppet, LHAPDF
-# and FastJet, and run short smoke tests. The weekly run catches
-# breakage caused by new dependency releases.
+# Build all four programs against the latest releases of hoppet, LHAPDF
+# and FastJet, and run short smoke tests, unit tests and physics checks
+# (the latter with the hoppet benchmark PDF generated on the fly, not a
+# downloaded PDF set). The weekly run catches breakage caused by new
+# dependency releases.
 
 on:
   push:
@@ -148,6 +150,27 @@ jobs:
       - name: NF checks
         if: ${{ !cancelled() && steps.build-h.outcome == 'success' && steps.build-hh.outcome == 'success' }}
         run: ci/annotate.sh ci/nf-checks.sh
+
+      # proVBFH-cs takes its tool paths and inclusive-part sources from
+      # ../proVBFH, which is therefore built first
+      - name: Build proVBFH-cs
+        id: build-cs
+        if: ${{ !cancelled() && steps.build-h.outcome == 'success' }}
+        working-directory: proVBFH-cs
+        run: ../ci/annotate.sh make
+
+      - name: Unit tests proVBFH-cs
+        if: ${{ !cancelled() && steps.build-cs.outcome == 'success' }}
+        working-directory: proVBFH-cs
+        run: ../ci/annotate.sh make check
+
+      - name: Smoke tests proVBFH-cs
+        if: ${{ !cancelled() && steps.build-cs.outcome == 'success' }}
+        run: ci/annotate.sh ci/smoke-tests.sh proVBFH-cs
+
+      - name: Physics checks
+        if: ${{ !cancelled() && steps.build-incl.outcome == 'success' && steps.build-h.outcome == 'success' && steps.build-cs.outcome == 'success' }}
+        run: ci/annotate.sh ci/physics-checks.py
 
       - name: Upload run directories
         if: failure()
