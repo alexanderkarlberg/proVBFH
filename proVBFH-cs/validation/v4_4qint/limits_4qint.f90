@@ -133,6 +133,22 @@ program limits_4qint
   end do
   write(*,'(a,f8.4)') ' max |I/2| / (|colint|/colsq sqrt(N F)) (Cauchy-Schwarz bound, must be <= 1):', csmax
   write(*,'(a,es10.2)') ' caller (cs_4qint 1) vs N + I/2 along the limits, max rel. difference:', precmax
+  ! pass/fail (ci/limit-checks.sh): I integrable in every limit, the Cauchy-Schwarz
+  ! bound holds, the caller agrees with N + I/2, and every limit was sampled
+  ok = .true.
+  do icc = 0, 1
+     if (aImax(icc,1) >= 1d0 .or. aImax(icc,2) >= 1d0) ok = .false.   ! collinear: a < 1
+     if (aImax(icc,3) >= 2d0) ok = .false.                            ! soft: a < 2
+     if (nlim(icc,1) == 0 .or. nlim(icc,2) == 0 .or. nlim(icc,3) == 0) ok = .false.
+  end do
+  if (csmax > 1d0) ok = .false.
+  if (precmax > 1d-5) ok = .false.
+  if (ok) then
+     write(*,'(a)') ' limits_4qint: all checks pass'
+  else
+     write(*,'(a)') ' limits_4qint: FAILED'
+     error stop 1
+  endif
 
 contains
 

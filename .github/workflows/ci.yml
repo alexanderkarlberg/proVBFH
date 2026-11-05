@@ -172,6 +172,11 @@ jobs:
         if: ${{ !cancelled() && steps.build-incl.outcome == 'success' && steps.build-h.outcome == 'success' && steps.build-cs.outcome == 'success' }}
         run: ci/annotate.sh ci/physics-checks.py
 
+      # about 4 minutes: only on the weekly run and on demand
+      - name: Limit checks proVBFH-cs (weekly and on demand)
+        if: ${{ !cancelled() && github.event_name != 'push' && github.event_name != 'pull_request' && steps.build-cs.outcome == 'success' }}
+        run: ci/annotate.sh ci/limit-checks.sh
+
       - name: Upload run directories
         if: failure()
         uses: actions/upload-artifact@v7

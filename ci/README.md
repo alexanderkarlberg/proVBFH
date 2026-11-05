@@ -8,6 +8,12 @@ pull request, weekly (Mondays 05:00 UTC) to catch new dependency releases,
 and on demand from the Actions tab, where specific dependency versions can
 be pinned.
 
+`ci/limit-checks.sh` (weekly and on demand, about 4 minutes) runs the
+single-unresolved limits of the identical-quark interference of the
+four-quark reals of `proVBFH-cs` (`validation/v4_4qint`): the scalings of
+the interference in the collinear and soft limits, the Cauchy-Schwarz bound,
+and agreement of the code with N + I/2 in the limits.
+
 The smoke tests only check that the programs run to completion and write
 finite results. The statistics are far too low for the numbers to mean
 anything physically.
@@ -44,8 +50,12 @@ with pulls; see its `--help` for the options):
   `yH-incl`): they cancel point by point between the real radiation and its
   projection to Born, so these histograms vanish to rounding precision.
 - `cs`: all histograms of `proVBFH-cs` at LO, NLO and NNLO and the three
-  scale points against the frozen references `ci/reference/cs-<order>-W<k>.top`
-  (chi2 over the bins, pull for the single-bin cross sections).
+  scale points against the frozen references `ci/reference/cs-<order>-W<k>.top`:
+  the integral of each histogram (the bins weighted by their widths) is a pull,
+  and the shape is a chi2 over the bins whose relative error is below 15%.
+  At NNLO most differential histograms have no such bin with 500k points per
+  run, so their shapes are not compared and only the integrals are; the check
+  prints the histograms it could not compare.
 
 All of them use the hoppet benchmark PDF: `ci/benchmark-pdf.sh` evolves the
 Les Houches benchmark initial condition with hoppet and writes it as a local

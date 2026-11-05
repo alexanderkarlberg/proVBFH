@@ -253,6 +253,7 @@ class Report:
     def __init__(self, nsigma):
         self.nsigma = nsigma
         self.failed = []
+        self.uncompared = []
         self.n = 0
 
     def pull(self, label, a, b, what=("run", "ref")):
@@ -291,8 +292,19 @@ class Report:
                 if a[2] != 0 and 0 < a[3] <= MAXRELERR * abs(a[2]):
                     chi2 += (a[2] - b[2]) ** 2 / (a[3] ** 2 + b[3] ** 2)
                     ndf += 1
+            # the integral (sum of the bins) of every histogram: a single number with
+            # an error, also where no bin passes the chi2 cut
+            # weighted by the bin widths, so that it is the cross section of the histogram
+            self.pull("%s %s integral" % (label, name),
+                      (sum(a[2] * (a[1] - a[0]) for a in r), math.sqrt(sum((a[3] * (a[1] - a[0])) ** 2 for a in r))),
+                      (sum(b[2] * (b[1] - b[0]) for b in g), math.sqrt(sum((b[3] * (b[1] - b[0])) ** 2 for b in g))))
+            if ndf == 0:
+                self.uncompared.append("%s %s" % (label, name))
+                print("  --   %-42s no bin with a relative error below %.0f%%: shape not compared" % (
+                    "%s %s" % (label, name), 100 * MAXRELERR), flush=True)
+                continue
             limit = ndf + self.nsigma * math.sqrt(2.0 * ndf) + self.nsigma ** 2 / 2   # ~ nsigma of the chi2 distribution
-            ok = ndf == 0 or chi2 <= limit
+            ok = chi2 <= limit
             self.n += 1
             print("  %-4s %-42s chi2/ndf = %.1f/%d (limit %.1f)" % ("ok" if ok else "FAIL", "%s %s" % (label, name), chi2, ndf, limit), flush=True)
             if not ok:
@@ -470,6 +482,9 @@ def main():
             print("ERROR: %s" % e, file=sys.stderr)
             rep.failed.append(c)
     print("%d comparisons in %.0f s, %d failed" % (rep.n, time.time() - t0, len(rep.failed)))
+    if rep.uncompared:
+        print("%d histograms with no bin for the shape comparison (their integrals were compared): %s" % (
+            len(rep.uncompared), ", ".join(rep.uncompared)))
     for f in rep.failed:
         print("ERROR: physics check failed: %s" % f, file=sys.stderr)
     return 1 if rep.failed else 0
