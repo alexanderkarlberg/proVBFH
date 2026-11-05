@@ -25,7 +25,12 @@ FFLAGS = -O3 -fno-automatic -ffixed-line-length-132 -std=legacy
 F90FLAGS = -O3 -fno-automatic -ffree-line-length-none $(shell $(HPEXEC) --fflags)
 CXX ?= g++
 CXXFLAGS = -O3 $(shell $(FJEXEC) --cxxflags)
-CXXLIBS = -lstdc++
+# C++ runtime of the FastJet interface: libc++ with Apple's g++ (as in proVBFH)
+ifeq ($(shell uname), Darwin)
+  CXXLIBS = -lc++
+else
+  CXXLIBS = -lstdc++
+endif
 
 PV=../proVBFH
 SRC=src
