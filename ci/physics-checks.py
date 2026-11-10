@@ -204,6 +204,12 @@ class Setup:
     def prepare(self):
         """benchmark PDF, and the environment for the programs"""
         a = self.a
+        # byte-identical exact checks need the same floating-point
+        # environment on every machine: glibc dispatches exp/log/pow to
+        # CPU-specific implementations (AVX2/FMA/AVX512), whose last bits
+        # differ between CPUs; force the baseline ones, so the results do
+        # not depend on the CPU of the run
+        os.environ["GLIBC_TUNABLES"] = "glibc.cpu.hwcaps=-AVX2,-FMA,-AVX512F"
         self.pdfdir = subprocess.run([os.path.join(HERE, "benchmark-pdf.sh"), os.path.join(a.runroot, "pdf")],
                                      check=True, stdout=subprocess.PIPE, text=True).stdout.strip().splitlines()[-1]
         path = [self.pdfdir]
@@ -534,6 +540,9 @@ def generate(S, parts):
                     "code or of the dependencies or compiler.\n\n"
                     "- Generated: %s\n- Code: commit %s%s\n- gfortran: %s\n- hoppet: %s\n- LHAPDF: %s\n"
                     "- PDF: the hoppet benchmark (ci/benchmark-pdf.sh)\n"
+                    "- Floating point: GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX2,-FMA,-AVX512F\n"
+                    "  (baseline glibc math, so the results do not depend on the CPU; set by\n"
+                    "  ci/physics-checks.py)\n"
                     "- Runs: qcd_order 2 and 3, iseed %d, ncall1 = ncall2 = %d, itmx1 = itmx2 = 1,\n"
                     "  13 TeV, scale of 1506.02660 (cs_scales 3), default card otherwise\n"
                     "- Compared: xsct-*.dat and pwg-*.top of each run (not the grids)\n"
