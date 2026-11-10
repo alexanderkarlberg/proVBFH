@@ -205,8 +205,8 @@ if [[ $BUILT == *" proVBFH-cs "* ]]; then
 fi
 
 if [[ $BUILT == *" proVBFH-inclusive "* && $BUILT == *" proVBFH "* && $BUILT == *" proVBFH-cs "* ]]; then
-    # the exact check compares byte for byte with frozen references,
-    # which is only meaningful on the platform they were generated on
+    # the exact check compares fixed runs with frozen references, which is
+    # only meaningful on the platform they were generated on
     checks="inclusive projection cs"
     [ "$(uname)" = Linux ] && checks="$checks exact"
     step "physics checks" "$LOGS/physics-checks.log" ci/physics-checks.py $checks

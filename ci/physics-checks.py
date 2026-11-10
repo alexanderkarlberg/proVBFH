@@ -25,14 +25,18 @@ Checks (default: all):
               (chi2 over the bins, pull for the single-bin cross sections).
               At NLO and NNLO the exact check replaces it.
   exact       proVBFH-cs at NLO and NNLO: short, fixed runs (fixed seed,
-              fixed ncall) whose outputs (histograms, cross-section lines)
-              must be reproduced byte for byte against the frozen ones in
-              <reference-dir>/exact. The runs are deterministic, so any
-              change of the code, the compiler or a library version (hoppet,
-              LHAPDF) shifts at least one digit and fails; a dependency or
-              compiler update requires the deliberate regeneration
-              'ci/physics-checks.py generate exact'. Ignores --seed and
-              --stat, so that it stays in sync with the frozen outputs.
+              fixed ncall) against the frozen outputs in <reference-dir>/exact.
+              The cross sections (xsct-*.dat) must be reproduced byte for
+              byte; the histograms must agree bin by bin (third column), the
+              LO ones (pwg-LO-*.top) to EXACT_RTOL_LO, the NLO/NNLO ones
+              (pwg-W*.top, pwg-EXCL-*.top) to EXACT_RTOL of the bin or
+              EXACT_ATOL of the VBF cross section. The tolerance is needed
+              because the exclusive part of proVBFH-cs turns last-bit
+              differences of the phase space into jumps of a few events (see
+              the comment at EXACT_RTOL); it is still far below any change of
+              the physics. Runs are deterministic and fixed, so the check
+              does not follow --seed and --stat, and a deliberate change of
+              the output requires 'ci/physics-checks.py generate exact'.
 
 All runs use the hoppet benchmark PDF (ci/benchmark-pdf.sh), so no PDF set is
 downloaded. The statistics are chosen so that the checks take a few minutes;
@@ -82,10 +86,28 @@ N_PROJ = 10000
 MAXRELERR = 0.15      # bins with a larger relative error of the run are not part of the chi2
 
 # the exact runs: short, fixed, so that their outputs can be frozen and
-# compared byte for byte; they must stay in sync with the frozen outputs
-# in <reference-dir>/exact, so they do not follow --seed and --stat
+# compared with fixed references; they must stay in sync with the frozen
+# outputs in <reference-dir>/exact, so they do not follow --seed and --stat
 EXACT_SEED = 1
 N_EXACT = 2000        # ncall1 = ncall2 of the exact runs, itmx1 = itmx2 = 1
+
+# Comparison of the exact runs with the frozen outputs. The cross sections
+# are reproduced byte for byte; the LO histograms are stable to their last
+# digit. The NLO/NNLO histograms are compared bin by bin, because the
+# exclusive part of proVBFH-cs contains discrete decisions (the cutoff of the
+# radiation, the VBF cuts applied to the dipoles): a last-bit difference of
+# the phase space moves a few events across such a threshold, which changes a
+# bin by the weight of those events. Measured over two machines (different
+# CPUs and glibc builds, same compiler and libraries): every inclusive
+# observable is identical, the largest bin difference is 0.2 % of a bin (1.2e-4
+# of the VBF cross section) and every other bin stays within rounding. The
+# tolerance below is about five times that; it is still two orders of
+# magnitude below any change of the physics, and far below the statistical
+# checks.
+EXACT_RTOL = 1e-2     # pwg-W, pwg-EXCL: per bin, relative to the frozen bin
+EXACT_ATOL = 3e-5     # pwg-W, pwg-EXCL: per bin, in units of the VBF cross section
+EXACT_RTOL_LO = 1e-5  # pwg-LO: the LO histograms are stable to their last digit
+EXACT_ATOL_LO = 1e-9
 
 
 # ----------------------------------------------------------------------------
@@ -204,12 +226,6 @@ class Setup:
     def prepare(self):
         """benchmark PDF, and the environment for the programs"""
         a = self.a
-        # byte-identical exact checks need the same floating-point
-        # environment on every machine: glibc dispatches exp/log/pow to
-        # CPU-specific implementations (AVX2/FMA/AVX512), whose last bits
-        # differ between CPUs; force the baseline ones, so the results do
-        # not depend on the CPU of the run
-        os.environ["GLIBC_TUNABLES"] = "glibc.cpu.hwcaps=-AVX2,-FMA,-AVX512F"
         self.pdfdir = subprocess.run([os.path.join(HERE, "benchmark-pdf.sh"), os.path.join(a.runroot, "pdf")],
                                      check=True, stdout=subprocess.PIPE, text=True).stdout.strip().splitlines()[-1]
         path = [self.pdfdir]
@@ -440,10 +456,67 @@ def first_diff(path_a, path_b):
     return "%s has %d lines, %s has %d" % (os.path.basename(path_a), na, os.path.basename(path_b), nb)
 
 
+def read_top_blocks(path):
+    """The histograms of a top file: [(header, [(lo, hi, value), ...]), ...]."""
+    blocks = []
+    with open(path) as f:
+        for line in f:
+            if line.startswith("#"):
+                blocks.append((line.strip(), []))
+            elif blocks:
+                t = line.split()
+                if len(t) >= 3:
+                    try:
+                        blocks[-1][1].append((float(t[0]), float(t[1]), float(t[2])))
+                    except ValueError:
+                        pass
+    return blocks
+
+
+def vbf_sigma(path):
+    """The VBF cross section of a pwg-W<k>.top file (the scale of the exact
+    tolerances)."""
+    blocks = read_top_blocks(path)
+    for h, rows in blocks:
+        if SIGMA_VBF in h and rows:
+            return abs(rows[0][2])
+    return max([abs(v) for _, rows in blocks for _, _, v in rows] + [1.0])
+
+
+def compare_top(path_run, path_ref, sigma, rtol, atol):
+    """Compare the bin contents of a histogram file with the frozen one,
+    within rtol of the bin or atol of the VBF cross section.
+    Returns (ok, message)."""
+    run, ref = read_top_blocks(path_run), read_top_blocks(path_ref)
+    if len(run) != len(ref):
+        return False, "%d histograms, the frozen output has %d" % (len(run), len(ref))
+    worst = 0
+    for (hr, rows_r), (hf, rows_f) in zip(run, ref):
+        if hr != hf:
+            return False, "histogram '%s' where the frozen output has '%s'" % (hr[:40], hf[:40])
+        if len(rows_r) != len(rows_f):
+            return False, "'%s': %d bins, the frozen output has %d" % (hf[:30], len(rows_r), len(rows_f))
+        for (lo, hi, vr), (_, _, vf) in zip(rows_r, rows_f):
+            d = abs(vr - vf)
+            tol = rtol * abs(vf) + atol * sigma
+            worst = max(worst, d / tol)
+            if d > tol:
+                return False, "'%s' bin [%g, %g]: %.8g vs %.8g (tolerance %.2g)" % (
+                    hf[2:32].strip(), lo, hi, vr, vf, tol)
+    return True, "within tolerance (max |diff|/tol = %.2f)" % worst
+
+
+def tol_str(x):
+    """A tolerance as a short string: 1e-5, 1e-2, 3e-5."""
+    m, e = ("%.0e" % x).split("e")
+    return "%se%d" % (m, int(e))
+
+
 def check_exact(S, rep):
-    """proVBFH-cs at NLO and NNLO: short, fixed runs whose outputs must be
-    reproduced byte for byte against the frozen ones in
-    <reference-dir>/exact (see the 'exact' check of the module docstring)."""
+    """proVBFH-cs at NLO and NNLO: short, fixed runs whose outputs must
+    match the frozen ones in <reference-dir>/exact, the cross sections byte
+    for byte and the histograms within the tolerances (see the 'exact' check
+    of the module docstring)."""
     a = S.a
     for o in ("nlo", "nnlo"):
         d, t = S.cs_run("exact-" + o, o, EXACT_SEED, N_EXACT, 1)
@@ -464,6 +537,18 @@ def check_exact(S, rep):
             if not os.path.exists(ref):
                 rep.failed.append("exact %s %s" % (o, name))
                 print("  FAIL %-22s no frozen output %s" % (name, ref), flush=True)
+            elif name.startswith(("pwg-LO-", "pwg-W", "pwg-EXCL-")):
+                k = int(name.rsplit("-", 1)[-1].split(".")[0].lstrip("W"))
+                sigma = vbf_sigma(os.path.join(a.refdir, "exact", o, "pwg-W%d.top" % k))
+                lo = name.startswith("pwg-LO-")
+                ok, msg = compare_top(f, ref, sigma,
+                                      EXACT_RTOL_LO if lo else EXACT_RTOL,
+                                      EXACT_ATOL_LO if lo else EXACT_ATOL)
+                if ok:
+                    print("  ok   %-22s %s" % (name, msg), flush=True)
+                else:
+                    rep.failed.append("exact %s %s" % (o, name))
+                    print("  FAIL %-22s %s" % (name, msg), flush=True)
             elif filecmp.cmp(f, ref, shallow=False):
                 print("  ok   %-22s byte-identical" % name, flush=True)
             else:
@@ -523,7 +608,7 @@ def generate(S, parts):
             write_top(os.path.join(a.refdir, "cs-%s-W%d.top" % (o, k)), h,
                       header + "\n%s: mean of %d seeds, ncall1 = ncall2 = %d" % (o, ns, n))
     if "exact" in parts:
-        # the frozen outputs must stay byte-identical, so their metadata
+        # the frozen outputs must stay comparable, so their metadata
         # (code, dependencies, settings) goes into a README next to them
         versions = {}
         for t in ("gfortran", "hoppet-config", "lhapdf-config"):
@@ -538,19 +623,19 @@ def generate(S, parts):
             print("exact %s reference written (%.0f s)" % (o, t), flush=True)
         with open(os.path.join(a.refdir, "exact", "README.md"), "w") as f:
             f.write("# Exact-check references\n\n"
-                    "Frozen outputs of short, fixed proVBFH-cs runs, compared byte for byte\n"
-                    "by `ci/physics-checks.py exact` (see its docstring). Regenerate with\n"
+                    "Frozen outputs of short, fixed proVBFH-cs runs, compared by\n"
+                    "`ci/physics-checks.py exact` (see its docstring): the cross sections\n"
+                    "byte for byte, the histograms bin by bin (LO to %s, NLO/NNLO to %s of\n"
+                    "a bin or %s of the VBF cross section). Regenerate with\n"
                     "`ci/physics-checks.py generate exact` after a deliberate change of the\n"
                     "code or of the dependencies or compiler.\n\n"
                     "- Generated: %s\n- Code: commit %s%s\n- gfortran: %s\n- hoppet: %s\n- LHAPDF: %s\n"
                     "- PDF: the hoppet benchmark (ci/benchmark-pdf.sh)\n"
-                    "- Floating point: GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX2,-FMA,-AVX512F\n"
-                    "  (baseline glibc math, so the results do not depend on the CPU; set by\n"
-                    "  ci/physics-checks.py)\n"
                     "- Runs: qcd_order 2 and 3, iseed %d, ncall1 = ncall2 = %d, itmx1 = itmx2 = 1,\n"
                     "  13 TeV, scale of 1506.02660 (cs_scales 3), default card otherwise\n"
                     "- Compared: xsct-*.dat and pwg-*.top of each run (not the grids)\n"
-                    % (time.strftime("%Y-%m-%d"), info, " (+ uncommitted changes)" if dirty else "",
+                    % (tol_str(EXACT_RTOL_LO), tol_str(EXACT_RTOL), tol_str(EXACT_ATOL),
+                       time.strftime("%Y-%m-%d"), info, " (+ uncommitted changes)" if dirty else "",
                        versions["gfortran"], versions["hoppet-config"], versions["lhapdf-config"],
                        EXACT_SEED, N_EXACT))
     print("references written to", a.refdir)

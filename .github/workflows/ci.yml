@@ -3,11 +3,11 @@ name: CI
 # Build all four programs against the latest releases of hoppet, LHAPDF
 # and FastJet, and run short smoke tests, unit tests and physics checks
 # (the latter with the hoppet benchmark PDF generated on the fly, not a
-# downloaded PDF set; the exact checks, byte-for-byte comparisons with
-# frozen outputs, run on Linux only). The exact checks require the
-# compiler of the frozen outputs, so Linux is pinned to Ubuntu 26.04
-# with GCC 15.2.0 (not the ubuntu-latest alias, currently 24.04). The
-# weekly run catches breakage caused by new dependency releases.
+# downloaded PDF set; the exact checks, fixed runs against frozen outputs,
+# run on Linux only). They require the compiler of the frozen outputs, so
+# Linux is pinned to Ubuntu 26.04 with GCC 15.2.0 (not the ubuntu-latest
+# alias, currently 24.04). The weekly run catches breakage caused by new
+# dependency releases.
 
 on:
   push:
@@ -72,8 +72,8 @@ jobs:
         run: |
           sudo apt-get update
           # Ubuntu 26.04 ships GCC 15.2.0; install gcc 15 explicitly and
-          # make it the default, the exact checks compare byte for byte
-          # with references generated with gcc 15.2.0
+          # make it the default, matching the compiler of the frozen
+          # references of the exact checks
           sudo apt-get install -y gcc-15 g++-15 gfortran-15
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
@@ -191,9 +191,9 @@ jobs:
         if: ${{ !cancelled() && steps.build-incl.outcome == 'success' && steps.build-h.outcome == 'success' && steps.build-cs.outcome == 'success' }}
         run: ci/annotate.sh ci/physics-checks.py inclusive projection cs
 
-      # the exact check compares the outputs of fixed runs byte for byte
-      # with frozen references, which is only meaningful on the platform
-      # they were generated on
+      # the exact check compares the outputs of fixed runs with frozen
+      # references, which is only meaningful on the platform they were
+      # generated on
       - name: Exact checks proVBFH-cs (Linux)
         if: ${{ !cancelled() && runner.os == 'Linux' && steps.build-cs.outcome == 'success' }}
         run: ci/annotate.sh ci/physics-checks.py exact
