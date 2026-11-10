@@ -4,8 +4,10 @@ name: CI
 # and FastJet, and run short smoke tests, unit tests and physics checks
 # (the latter with the hoppet benchmark PDF generated on the fly, not a
 # downloaded PDF set; the exact checks, byte-for-byte comparisons with
-# frozen outputs, run on Linux only). The weekly run catches breakage
-# caused by new dependency releases.
+# frozen outputs, run on Linux only). The exact checks require the
+# compiler of the frozen outputs, so Linux is pinned to Ubuntu 26.04
+# with GCC 15.2.0 (not the ubuntu-latest alias, currently 24.04). The
+# weekly run catches breakage caused by new dependency releases.
 
 on:
   push:
@@ -31,7 +33,7 @@ permissions:
 
 jobs:
   versions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       hoppet: ${{ steps.resolve.outputs.hoppet }}
       lhapdf: ${{ steps.resolve.outputs.lhapdf }}
@@ -56,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-latest]
     env:
       HOPPET_VERSION: ${{ needs.versions.outputs.hoppet }}
       LHAPDF_VERSION: ${{ needs.versions.outputs.lhapdf }}
@@ -67,7 +69,23 @@ jobs:
 
       - name: Install compilers (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y gfortran
+        run: |
+          sudo apt-get update
+          # Ubuntu 26.04 ships GCC 15.2.0; install gcc 15 explicitly and
+          # make it the default, the exact checks compare byte for byte
+          # with references generated with gcc 15.2.0
+          sudo apt-get install -y gcc-15 g++-15 gfortran-15
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
+          sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-15 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-15 100
+          gcc --version | head -1
+          g++ --version | head -1
+          gfortran --version | head -1
+          case "$(gfortran -dumpversion)" in
+            15.2.*) ;;
+            *) echo "expected gfortran 15.2 (the exact references), got $(gfortran -dumpversion)" >&2; exit 1 ;;
+          esac
 
       - name: Install compilers (macOS)
         if: runner.os == 'macOS'
