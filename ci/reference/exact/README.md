@@ -6,11 +6,14 @@ by `ci/physics-checks.py exact` (see its docstring). Regenerate with
 code or of the dependencies or compiler.
 
 - Generated: 2026-11-10
-- Code: commit e1c3dac
+- Code: commit 66bca3c
 - gfortran: GNU Fortran (Ubuntu 15.2.0-16ubuntu1) 15.2.0
 - hoppet: 2.3.1
 - LHAPDF: 6.5.6
 - PDF: the hoppet benchmark (ci/benchmark-pdf.sh)
+- Floating point: GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX2,-FMA,-AVX512F
+  (baseline glibc math, so the results do not depend on the CPU; set by
+  ci/physics-checks.py)
 - Runs: qcd_order 2 and 3, iseed 1, ncall1 = ncall2 = 2000, itmx1 = itmx2 = 1,
   13 TeV, scale of 1506.02660 (cs_scales 3), default card otherwise
 - Compared: xsct-*.dat and pwg-*.top of each run (not the grids)
