@@ -37,7 +37,8 @@ small-x channel and the four-parton generator), a smoke test of an NNLO
 and an LO run, and the physics checks.
 
 `ci/physics-checks.py` runs the physics checks (statistical comparisons
-with pulls; see its `--help` for the options):
+with pulls, and byte-for-byte exact comparisons; see its `--help` for the
+options):
 
 - `inclusive`: the inclusive cross section of `provbfh_incl`, `proVBFH`
   (`inclusive_only 1`) and the inclusive part of `proVBFH-cs` at LO, NLO,
@@ -49,13 +50,22 @@ with pulls; see its `--help` for the options):
   change the Higgs-only observables (cross section without cuts, `ptH-incl`,
   `yH-incl`): they cancel point by point between the real radiation and its
   projection to Born, so these histograms vanish to rounding precision.
-- `cs`: all histograms of `proVBFH-cs` at LO, NLO and NNLO and the three
-  scale points against the frozen references `ci/reference/cs-<order>-W<k>.top`:
+- `cs`: all histograms of `proVBFH-cs` at LO and the three
+  scale points against the frozen references `ci/reference/cs-lo-W<k>.top`:
   the integral of each histogram (the bins weighted by their widths) is a pull,
   and the shape is a chi2 over the bins whose relative error is below 15%.
-  At NNLO most differential histograms have no such bin with 500k points per
-  run, so their shapes are not compared and only the integrals are; the check
-  prints the histograms it could not compare.
+  At NLO and NNLO the `exact` check replaces this statistical comparison.
+- `exact` (Linux only, as in CI): `proVBFH-cs` at NLO and NNLO in short,
+  fixed runs (fixed seed, fixed ncall) whose outputs (`xsct-*.dat`,
+  `pwg-*.top`) must be reproduced byte for byte against the frozen ones in
+  `ci/reference/exact/`. The runs are deterministic, so any change of the
+  code, the compiler or a library version (hoppet, LHAPDF) shifts at least
+  one digit and fails, however small — the check is insensitive by
+  construction, not by statistics. A dependency or compiler update requires
+  the deliberate regeneration `ci/physics-checks.py generate exact`, and the
+  environment of the frozen outputs is recorded in
+  `ci/reference/exact/README.md`. The frozen outputs are only comparable on
+  the platform they were generated on, so the check runs on Linux only.
 
 All of them use the hoppet benchmark PDF: `ci/benchmark-pdf.sh` evolves the
 Les Houches benchmark initial condition with hoppet and writes it as a local
@@ -67,12 +77,11 @@ The references are frozen: they come from long runs of the code at the
 commit recorded in their headers, not from the run being tested, so a change
 of the physics results (intended or not) is flagged. After an intended change,
 regenerate them with `ci/physics-checks.py generate` (about an hour on 16
-cores, mostly the NNLO exclusive part; `generate inclusive` or `generate
-cs-nnlo` regenerate one part) and commit them with the change that needs them.
-The sensitivity is limited by the statistics of the check runs: about 0.2%
-on the inclusive cross sections, a few percent on the exclusive NLO and NNLO
-cross sections with VBF cuts (more in the tails). `--stat 10` gives
-sqrt(10) smaller errors at 10 times the run time, e.g. for a weekly run.
+cores, mostly the NNLO exclusive part; `generate inclusive`, `generate cs-lo`
+or `generate exact` regenerate one part) and commit them with the change that
+needs them. The sensitivity of the statistical checks is limited by the
+statistics of the check runs: about 0.2% on the inclusive cross sections.
+`exact` has no such limit: it compares byte for byte (see above).
 
 In the workflow each step runs through `ci/annotate.sh`, which reports
 the error lines of a failing step as annotations in the run summary.

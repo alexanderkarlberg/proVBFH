@@ -2,7 +2,8 @@
 #
 # Run the CI checks locally: smoke-tests.sh, tensor-checks.sh,
 # nf-checks.sh, the unit tests of proVBFH-cs and physics-checks.py, as in
-# .github/workflows/ci.yml. By default they run on
+# .github/workflows/ci.yml (the exact checks of physics-checks.py only on
+# Linux, as in CI). By default they run on
 # the programs as they are currently built in the repository, without
 # copying or rebuilding anything. Continues after a failure and prints a
 # summary; the exit status is non-zero if any check failed.
@@ -204,7 +205,11 @@ if [[ $BUILT == *" proVBFH-cs "* ]]; then
 fi
 
 if [[ $BUILT == *" proVBFH-inclusive "* && $BUILT == *" proVBFH "* && $BUILT == *" proVBFH-cs "* ]]; then
-    step "physics checks" "$LOGS/physics-checks.log" ci/physics-checks.py
+    # the exact check compares byte for byte with frozen references,
+    # which is only meaningful on the platform they were generated on
+    checks="inclusive projection cs"
+    [ "$(uname)" = Linux ] && checks="$checks exact"
+    step "physics checks" "$LOGS/physics-checks.log" ci/physics-checks.py $checks
 else
     note "physics checks" "skipped (needs proVBFH-inclusive, proVBFH and proVBFH-cs)"
 fi

@@ -3,8 +3,9 @@ name: CI
 # Build all four programs against the latest releases of hoppet, LHAPDF
 # and FastJet, and run short smoke tests, unit tests and physics checks
 # (the latter with the hoppet benchmark PDF generated on the fly, not a
-# downloaded PDF set). The weekly run catches breakage caused by new
-# dependency releases.
+# downloaded PDF set; the exact checks, byte-for-byte comparisons with
+# frozen outputs, run on Linux only). The weekly run catches breakage
+# caused by new dependency releases.
 
 on:
   push:
@@ -170,7 +171,14 @@ jobs:
 
       - name: Physics checks
         if: ${{ !cancelled() && steps.build-incl.outcome == 'success' && steps.build-h.outcome == 'success' && steps.build-cs.outcome == 'success' }}
-        run: ci/annotate.sh ci/physics-checks.py
+        run: ci/annotate.sh ci/physics-checks.py inclusive projection cs
+
+      # the exact check compares the outputs of fixed runs byte for byte
+      # with frozen references, which is only meaningful on the platform
+      # they were generated on
+      - name: Exact checks proVBFH-cs (Linux)
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.build-cs.outcome == 'success' }}
+        run: ci/annotate.sh ci/physics-checks.py exact
 
       # about 4 minutes: only on the weekly run and on demand
       - name: Limit checks proVBFH-cs (weekly and on demand)
