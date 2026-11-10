@@ -82,9 +82,9 @@ jobs:
           gcc --version | head -1
           g++ --version | head -1
           gfortran --version | head -1
-          case "$(gfortran -dumpversion)" in
+          case "$(gfortran -dumpfullversion)" in
             15.2.*) ;;
-            *) echo "expected gfortran 15.2 (the exact references), got $(gfortran -dumpversion)" >&2; exit 1 ;;
+            *) echo "expected gfortran 15.2 (the exact references), got $(gfortran -dumpfullversion)" >&2; exit 1 ;;
           esac
 
       - name: Install compilers (macOS)
