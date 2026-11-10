@@ -20,10 +20,19 @@ Checks (default: all):
               section without cuts, ptH-incl, yH-incl): it integrates to zero
               point by point, so its histograms must vanish to rounding
               precision, at all scale points.
-  cs          proVBFH-cs at LO, NLO and NNLO, all histograms at the three
-              scale points against the frozen references
-              ci/reference/cs-<order>-W<k>.top (chi2 over the bins, pull for
-              the single-bin cross sections).
+  cs          proVBFH-cs at LO, all histograms at the three scale points
+              against the frozen references ci/reference/cs-lo-W<k>.top
+              (chi2 over the bins, pull for the single-bin cross sections).
+              At NLO and NNLO the exact check replaces it.
+  exact       proVBFH-cs at NLO and NNLO: short, fixed runs (fixed seed,
+              fixed ncall) whose outputs (histograms, cross-section lines)
+              must be reproduced byte for byte against the frozen ones in
+              <reference-dir>/exact. The runs are deterministic, so any
+              change of the code, the compiler or a library version (hoppet,
+              LHAPDF) shifts at least one digit and fails; a dependency or
+              compiler update requires the deliberate regeneration
+              'ci/physics-checks.py generate exact'. Ignores --seed and
+              --stat, so that it stays in sync with the frozen outputs.
 
 All runs use the hoppet benchmark PDF (ci/benchmark-pdf.sh), so no PDF set is
 downloaded. The statistics are chosen so that the checks take a few minutes;
@@ -41,10 +50,11 @@ Options:
                   sensitivity of the checks, e.g. --cs-extra renscfact=1.2
 generate options:
   --seeds N       number of seeds of the exclusive references [default 12]
-Parts of generate: inclusive, cs-lo, cs-nlo, cs-nnlo (default: all).
+Parts of generate: inclusive, cs-lo, exact (default: all).
 """
 import argparse
 import concurrent.futures as cf
+import filecmp
 import glob
 import math
 import os
@@ -68,9 +78,14 @@ SIGMA_VBF = "sig(all VBF cuts 2 jets)"
 # number of points per iteration, cs maps ncall of the card (n <= 1e4: n,
 # n <= 1e7: n/10) for its inclusive part
 N_INCL = 200000
-N_CS = {"nlo": 100000, "nnlo": 50000}
 N_PROJ = 10000
 MAXRELERR = 0.15      # bins with a larger relative error of the run are not part of the chi2
+
+# the exact runs: short, fixed, so that their outputs can be frozen and
+# compared byte for byte; they must stay in sync with the frozen outputs
+# in <reference-dir>/exact, so they do not follow --seed and --stat
+EXACT_SEED = 1
+N_EXACT = 2000        # ncall1 = ncall2 of the exact runs, itmx1 = itmx2 = 1
 
 
 # ----------------------------------------------------------------------------
@@ -125,6 +140,15 @@ def combine(files):
 # ----------------------------------------------------------------------------
 class Failure(Exception):
     pass
+
+
+def copy_inputs(ex, d):
+    """Copy only the input files of an example directory (never run
+    products: a manual run in the example directory must not break the
+    checks, and the runs must not see its leftovers)."""
+    for f in os.listdir(ex):
+        if f.endswith(".input") or f == "pwgseeds.dat":
+            shutil.copy(os.path.join(ex, f), d)
 
 
 def set_card(src, dst, **kv):
@@ -208,8 +232,7 @@ class Setup:
         shutil.rmtree(d, ignore_errors=True)
         os.makedirs(d)
         ex = os.path.join(ROOT, "proVBFH", "example")
-        for f in os.listdir(ex):
-            shutil.copy(os.path.join(ex, f), d)
+        copy_inputs(ex, d)
         set_card(os.path.join(ex, "powheg.input"), os.path.join(d, "powheg.input"),
                  lhans1=PDFID, lhans2=PDFID, qcd_order=ORDERS[order], inclusive_only=1,
                  ncall1=n, ncall2=n, itmx1=2, itmx2=2, iseed=seed, renscfact=mu, facscfact=mu)
@@ -226,8 +249,7 @@ class Setup:
         shutil.rmtree(d, ignore_errors=True)
         os.makedirs(d)
         ex = os.path.join(ROOT, "proVBFH-cs", "example")
-        for f in os.listdir(ex):
-            shutil.copy(os.path.join(ex, f), d)
+        copy_inputs(ex, d)
         set_card(os.path.join(ex, "powheg.input"), os.path.join(d, "powheg.input"),
                  lhans1=PDFID, lhans2=PDFID, qcd_order=ORDERS[order], inclusive_only=int(inclusive_only),
                  ncall1=ncall, ncall2=ncall, itmx1=itmx, itmx2=itmx, iseed=seed, cs_scales=3,
@@ -383,15 +405,64 @@ def check_cs(S, rep):
     with cf.ThreadPoolExecutor(a.jobs) as ex:
         n = int(N_INCL * a.stat)
         jobs["lo"] = ex.submit(S.cs_run, "ref-lo", "lo", a.seed, 10 * n if n > 10000 else n, 2)
-        for o in ("nlo", "nnlo"):
-            jobs[o] = ex.submit(S.cs_run, "ref-" + o, o, a.seed, int(N_CS[o] * a.stat))
         res = {o: j.result() for o, j in jobs.items()}
-    for o in ("lo", "nlo", "nnlo"):
+    for o in ("lo",):
         d, t = res[o]
         print("%s (%.0f s):" % (o.upper(), t))
         for k in (1, 2, 3):
             rep.hist("%s W%d" % (o, k), read_top(os.path.join(d, "pwg-W%d.top" % k)),
                      read_top(os.path.join(a.refdir, "cs-%s-W%d.top" % (o, k))))
+
+
+def exact_files(d):
+    """The outputs of a cs run that the exact check freezes and compares:
+    the histograms and the cross-section lines (not the grids)."""
+    files = []
+    for pattern in ("xsct-*.dat", "pwg-*.top"):
+        files += sorted(glob.glob(os.path.join(d, pattern)))
+    return files
+
+
+def first_diff(path_a, path_b):
+    """Description of the first differing line of two text files."""
+    with open(path_a) as fa, open(path_b) as fb:
+        for i, (la, lb) in enumerate(zip(fa, fb)):
+            if la != lb:
+                return "line %d: '%s' vs '%s'" % (i + 1, la.strip()[:40], lb.strip()[:40])
+    na = sum(1 for _ in fa)
+    nb = sum(1 for _ in fb)
+    return "%s has %d lines, %s has %d" % (os.path.basename(path_a), na, os.path.basename(path_b), nb)
+
+
+def check_exact(S, rep):
+    """proVBFH-cs at NLO and NNLO: short, fixed runs whose outputs must be
+    reproduced byte for byte against the frozen ones in
+    <reference-dir>/exact (see the 'exact' check of the module docstring)."""
+    a = S.a
+    for o in ("nlo", "nnlo"):
+        d, t = S.cs_run("exact-" + o, o, EXACT_SEED, N_EXACT, 1)
+        print("%s (%.0f s):" % (o.upper(), t), flush=True)
+        produced = exact_files(d)
+        frozen = sorted(glob.glob(os.path.join(a.refdir, "exact", o, "*")))
+        names_p = {os.path.basename(f) for f in produced}
+        names_f = {os.path.basename(f) for f in frozen}
+        for name in sorted(names_p ^ names_f):
+            rep.n += 1
+            rep.failed.append("exact %s %s" % (o, name))
+            print("  FAIL %s: %s (frozen outputs and the run disagree; regenerate with"
+                  " 'ci/physics-checks.py generate exact')" % (name, "not produced by the run" if name in names_f else "not frozen"), flush=True)
+        for f in produced:
+            name = os.path.basename(f)
+            ref = os.path.join(a.refdir, "exact", o, name)
+            rep.n += 1
+            if not os.path.exists(ref):
+                rep.failed.append("exact %s %s" % (o, name))
+                print("  FAIL %-22s no frozen output %s" % (name, ref), flush=True)
+            elif filecmp.cmp(f, ref, shallow=False):
+                print("  ok   %-22s byte-identical" % name, flush=True)
+            else:
+                rep.failed.append("exact %s %s" % (o, name))
+                print("  FAIL %-22s differs from the frozen output: %s" % (name, first_diff(f, ref)), flush=True)
 
 
 # ----------------------------------------------------------------------------
@@ -428,10 +499,10 @@ def generate(S, parts):
                 ev = math.sqrt(sum(x[1] ** 2 for x in v)) / len(v)
                 es = math.sqrt(sum((x[0] - m) ** 2 for x in v) / (len(v) - 1) / len(v))
                 f.write("%s_%g %.8e %.3e\n" % (o, mu, m, max(ev, es)))
-    for o, n, itmx in (("lo", 10000000, 2), ("nlo", 1000000, 1), ("nnlo", 500000, 1)):
+    for o, n, itmx in (("lo", 10000000, 2),):
         if "cs-" + o not in parts:
             continue
-        ns = 8 if o == "lo" else a.seeds
+        ns = 8
         n = int(n * a.stat)
         print("cs-%s reference: %d seeds, ncall1 = ncall2 = %d" % (o, ns, n), flush=True)
         with cf.ThreadPoolExecutor(a.jobs) as ex:
@@ -441,6 +512,34 @@ def generate(S, parts):
             h = combine([os.path.join(d, "pwg-W%d.top" % k) for d in dirs])
             write_top(os.path.join(a.refdir, "cs-%s-W%d.top" % (o, k)), h,
                       header + "\n%s: mean of %d seeds, ncall1 = ncall2 = %d" % (o, ns, n))
+    if "exact" in parts:
+        # the frozen outputs must stay byte-identical, so their metadata
+        # (code, dependencies, settings) goes into a README next to them
+        versions = {}
+        for t in ("gfortran", "hoppet-config", "lhapdf-config"):
+            versions[t] = subprocess.run([t, "--version"], stdout=subprocess.PIPE,
+                                         stderr=subprocess.DEVNULL, text=True).stdout.strip().splitlines()[0]
+        for o in ("nlo", "nnlo"):
+            d, t = S.cs_run("gen-exact-" + o, o, EXACT_SEED, N_EXACT, 1)
+            out = os.path.join(a.refdir, "exact", o)
+            os.makedirs(out, exist_ok=True)
+            for f in exact_files(d):
+                shutil.copy(f, os.path.join(out, os.path.basename(f)))
+            print("exact %s reference written (%.0f s)" % (o, t), flush=True)
+        with open(os.path.join(a.refdir, "exact", "README.md"), "w") as f:
+            f.write("# Exact-check references\n\n"
+                    "Frozen outputs of short, fixed proVBFH-cs runs, compared byte for byte\n"
+                    "by `ci/physics-checks.py exact` (see its docstring). Regenerate with\n"
+                    "`ci/physics-checks.py generate exact` after a deliberate change of the\n"
+                    "code or of the dependencies or compiler.\n\n"
+                    "- Generated: %s\n- Code: commit %s%s\n- gfortran: %s\n- hoppet: %s\n- LHAPDF: %s\n"
+                    "- PDF: the hoppet benchmark (ci/benchmark-pdf.sh)\n"
+                    "- Runs: qcd_order 2 and 3, iseed %d, ncall1 = ncall2 = %d, itmx1 = itmx2 = 1,\n"
+                    "  13 TeV, scale of 1506.02660 (cs_scales 3), default card otherwise\n"
+                    "- Compared: xsct-*.dat and pwg-*.top of each run (not the grids)\n"
+                    % (time.strftime("%Y-%m-%d"), info, " (+ uncommitted changes)" if dirty else "",
+                       versions["gfortran"], versions["hoppet-config"], versions["lhapdf-config"],
+                       EXACT_SEED, N_EXACT))
     print("references written to", a.refdir)
 
 
@@ -465,11 +564,12 @@ def main():
     S = Setup(a)
     S.prepare()
     if a.checks and a.checks[0] == "generate":
-        parts = a.checks[1:] or ["inclusive", "cs-lo", "cs-nlo", "cs-nnlo"]
+        parts = a.checks[1:] or ["inclusive", "cs-lo", "exact"]
         generate(S, parts)
         return 0
-    checks = a.checks or ["inclusive", "projection", "cs"]
-    funcs = {"inclusive": check_inclusive, "projection": check_projection, "cs": check_cs}
+    checks = a.checks or ["inclusive", "projection", "cs", "exact"]
+    funcs = {"inclusive": check_inclusive, "projection": check_projection, "cs": check_cs,
+             "exact": check_exact}
     rep = Report(a.nsigma)
     t0 = time.time()
     for c in checks:
