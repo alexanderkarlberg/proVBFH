@@ -1,0 +1,5 @@
+# proVBFH-cs: total NNLO cross section with the cuts of the analysis
+# (inclusive + exclusive part), one line per scale point (mu_R/mu_R0, mu_F/mu_F0)
+ 3.729991E+00 +/-  2.127477E-01 (pb)  # W 1.00 1.00
+ 3.716807E+00 +/-  2.121805E-01 (pb)  # W 0.50 0.50
+ 3.747178E+00 +/-  2.135682E-01 (pb)  # W 2.00 2.00
