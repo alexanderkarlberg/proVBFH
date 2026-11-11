@@ -33,7 +33,9 @@ OBJS=$(ls "$CS"/obj/*.o | grep -v 'cs_main.o\|_analysis.o\|user_analysis.o')
 OBJS="$OBJS $CS/obj/user_analysis.o"
 LIBS="-Wl,-rpath,$(lhapdf-config --prefix)/lib -L$(lhapdf-config --prefix)/lib -lLHAPDF"
 LIBS="$LIBS -Wl,-rpath,$(hoppet-config --prefix)/lib $(hoppet-config --libs)"
-LIBS="$LIBS $(fastjet-config --libs --plugins) -lstdc++"
+# the C++ runtime of FastJet: libc++ on macOS (as in the Makefile of proVBFH-cs)
+if [ "$(uname)" = Darwin ]; then CXXLIB=-lc++; else CXXLIB=-lstdc++; fi
+LIBS="$LIBS $(fastjet-config --libs --plugins) $CXXLIB"
 
 gfortran -O2 -ffree-line-length-none -fno-automatic -c "$V4/ref.f90" -o ref.o
 gfortran -O2 -ffree-line-length-none -fno-automatic -I. "$V4/limits_4qint.f90" ref.o \
