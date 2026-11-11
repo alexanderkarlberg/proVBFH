@@ -136,13 +136,19 @@ smoke_cs() {
         -e "s/^ncall2 .*/ncall2 5000/" \
         -e "s/^itmx1 .*/itmx1 1/" \
         -e "s/^itmx2 .*/itmx2 1/" \
+        -e "s/^iseed .*/iseed 1/" \
         "$dir/powheg.input"
     echo "$PKG NNLO"
     (cd "$dir" && echo 1 | run_logged run.log "$exe")
-    check_output "$dir/xsct-nnlo.dat"
-    check_output "$dir/pwg-W1.top"
-    check_output "$dir/pwg-EXCL-W3.top"
-    cat "$dir/xsct-nnlo.dat"
+    check_output "$dir/provbfh-0001-NNLO.dat"
+    check_output "$dir/provbfh-0001-NNLO-W1.top"
+    check_output "$dir/provbfh-0001-NNLO-W3.top"
+    # only the sum is written, unless cs_write_parts 1
+    if ls "$dir"/provbfh-*-incl-* "$dir"/provbfh-*-excl-* > /dev/null 2>&1; then
+        echo "ERROR: the parts were written without cs_write_parts" >&2
+        exit 1
+    fi
+    cat "$dir/provbfh-0001-NNLO.dat"
 
     dir="$RUNDIR/lo"
     mkdir -p "$dir"
@@ -150,8 +156,18 @@ smoke_cs() {
     sed -i.bak "s/^qcd_order .*/qcd_order 1/" "$dir/powheg.input"
     echo "$PKG LO"
     (cd "$dir" && echo 1 | run_logged run.log "$exe")
-    check_output "$dir/xsct-lo.dat"
-    check_output "$dir/pwg-W1.top"
+    check_output "$dir/provbfh-0001-LO.dat"
+    check_output "$dir/provbfh-0001-LO-W1.top"
+
+    # the parts on request
+    dir="$RUNDIR/parts"
+    mkdir -p "$dir"
+    cp "$RUNDIR/nnlo/powheg.input" "$RUNDIR/nnlo/vbfnlo.input" "$dir"
+    sed -i.bak "s/^cs_write_parts .*/cs_write_parts 1/" "$dir/powheg.input"
+    echo "$PKG NNLO, cs_write_parts 1"
+    (cd "$dir" && echo 1 | run_logged run.log "$exe")
+    check_output "$dir/provbfh-0001-NNLO-incl-W1.top"
+    check_output "$dir/provbfh-0001-NNLO-excl-W3.top"
 }
 
 case "$PKG" in

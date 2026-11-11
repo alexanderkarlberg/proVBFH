@@ -9,7 +9,7 @@ construction, such as 'sig incl cuts').
 Prints, per scale point, the largest ratio of the two sides over all bins and
 the cross sections with cuts; exit code 0 if it is <= 1 everywhere.
 """
-import os, sys
+import glob, os, sys
 here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, '..', '..', 'tools'))
 from combine_parts import read_top
@@ -17,7 +17,8 @@ from combine_parts import read_top
 W = sys.argv[1]
 rc = 0
 for w in (1, 2, 3):
-    h = [read_top(os.path.join(W, 'm%d' % m, 'pwg-EXCL-W%d.top' % w))[0] for m in (0, 1, 2)]
+    # the exclusive part (cs_write_parts 1), provbfh-<iseed>-NNLO-excl-W<k>.top
+    h = [read_top(glob.glob(os.path.join(W, 'm%d' % m, 'provbfh-*-NNLO-excl-W%d.top' % w))[0])[0] for m in (0, 1, 2)]
     worst, wname, nb = 0.0, '', 0
     floor = 1e-12 * abs(h[0]['sig(all VBF cuts 2 jets)'][0][2])
     for name in h[2]:

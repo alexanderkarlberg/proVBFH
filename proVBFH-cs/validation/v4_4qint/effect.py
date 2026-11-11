@@ -2,7 +2,7 @@
 """cs_4qint 2 runs (the four-quark interference alone): its effect on the p1506
 set-up, against the final production (production/results/final-2026-10-07).
 
-  effect.py '<run dir>/job-*/pwg-EXCL-W%d.top' [target]
+  effect.py '<run dir>/job-*/provbfh-*-NNLO-excl-W%d.top' [target]
 
 Per scale point W1..W3: the interference contribution to sig(>= 2, 3, 4 jets)
 (mean of the jobs, error of the mean from the seed scatter), relative to the

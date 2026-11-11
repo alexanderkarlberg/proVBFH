@@ -17,7 +17,7 @@ card 1 0 > $W/grid/powheg.input; cp $CS/example/vbfnlo.input $W/grid/
 ( cd $W/grid && $CS/proVBFH-cs-p1506 > run.log 2>&1 )
 for m in 0 1 2; do
     d=$W/m$m; mkdir -p $d
-    card 1 $m > $d/powheg.input; echo "readingrid 1" >> $d/powheg.input
+    card 1 $m > $d/powheg.input; printf 'readingrid 1\ncs_write_parts 1\n' >> $d/powheg.input
     cp $CS/example/vbfnlo.input $W/grid/grids*.dat $d/
     ( cd $d && $CS/proVBFH-cs-p1506 > run.log 2>&1 ) &
 done

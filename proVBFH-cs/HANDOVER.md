@@ -5,6 +5,11 @@ and macOS, run 42828030165).
 
 ## What is done
 
+- Output (since the 3.0.0 preparation): only the sum is written, as
+  `provbfh-<iseed>-<order>.dat` and `provbfh-<iseed>-<order>-W<k>.top` (`cs_write_parts 1` adds the
+  parts `-incl-`, `-excl-`); `ncall1`/`ncall2` are used as given by both parts (the old
+  mapping of the inclusive part is gone). `validation/v1_*` and `v3_*` compare with builds made
+  before this and cannot be run with the current code (old file names, mapped ncall).
 - `qcd_order` selects the order in all codes; `cs_order` is a deprecated alias.
   `inclusive_only 1` runs only the inclusive part at any order.
 - `make` in `proVBFH-cs` configures `../proVBFH` on demand; a fresh checkout builds.
@@ -19,11 +24,11 @@ and macOS, run 42828030165).
     integral (bins weighted by width) is a pull; the shape is a chi2 only where bins have
     relative error below 15%. At NLO and NNLO `exact` replaces this statistical comparison.
   - `exact` (Linux only): proVBFH-cs at NLO and NNLO in short fixed runs (iseed 1,
-    ncall1 = ncall2 = 2000, itmx1 = itmx2 = 1, 13 TeV, `cs_scales 3`, default card
+    ncall1 = ncall2 = 2000, `cs_write_parts 1`, 13 TeV, `cs_scales 3`, default card
     otherwise) against the frozen outputs in `ci/reference/exact/`. The cross sections
-    (`xsct-*.dat`) must be reproduced byte for byte, the histograms bin by bin: the LO
-    ones (`pwg-LO-*.top`) to 1e-5, the NLO/NNLO ones (`pwg-W*.top`, `pwg-EXCL-*.top`) to
-    1% of the bin or 3e-5 of the VBF cross section. Histogram order, bin counts and the
+    (`provbfh-0001-<order>.dat`) must be reproduced byte for byte, the histograms bin by bin:
+    the inclusive part (`-incl-W<k>.top`) to 1e-5, the sum (`-W<k>.top`) and the exclusive
+    part (`-excl-W<k>.top`) to 1% of the bin or 3e-5 of the VBF cross section. Histogram order, bin counts and the
     set of files are compared exactly. See "Things to keep in mind" for why the
     histograms need a tolerance.
 - Frozen references: `ci/reference/inclusive.ref` and `ci/reference/cs-lo-W<k>.top` from

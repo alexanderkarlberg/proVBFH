@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """Combine proVBFH-cs runs and compare with a reference .top file.
 
-Usage:
-  combine_parts.py --part 'incl-s*/pwg*-LO*.top' --part 'excl-s*/pwg*-EXCL*.top'
+Usage (the sum of several seeds; the files of a run are
+provbfh-<iseed>-<order>-W<k>.top):
+  combine_parts.py --part 'seed*/provbfh-*-NNLO-W1.top' --error scatter
                    [--ref total_distrib.top] [--out total.top] [--hist NAME ...]
+The parts of a run (cs_write_parts 1) can be combined separately and then
+added, by one --part each:
+  combine_parts.py --part 'seed*/provbfh-*-NNLO-incl-W1.top'
+                   --part 'seed*/provbfh-*-NNLO-excl-W1.top'
+Take care with the globs: 'provbfh-*-W1.top' matches the sum and both parts;
+the order (NLO, NNLO) and -incl-/-excl- in the glob select the files.
 
 Each --part is a glob of .top files from runs of one part with equal
 statistics: they are averaged (mean, error sqrt(sum err^2)/N from the

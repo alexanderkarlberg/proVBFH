@@ -119,7 +119,8 @@ contains
     ! output results
     
     ! write histograms to file if they have been requested
-    if (fill_plots) then
+    ! (embedded in proVBFH-cs: the caller writes the histograms)
+    if (fill_plots .and. .not. embed) then
        call pwhgsetout
        histname=pwgprefix(1:lprefix)//'-LO'//trim(seedstr)
        call pwhgtopout(histname)

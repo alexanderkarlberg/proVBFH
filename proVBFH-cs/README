@@ -30,8 +30,7 @@ HOW TO RUN
   (combine the seeds, plot against the old proVBFH).
 
   ncall1, itmx1: VEGAS grid pass; ncall2, itmx2: main pass. They are used as given
-  for the exclusive part. The inclusive part (7 dimensions) uses the mapped
-  numbers: n <= 1e4 -> n, 1e4 < n <= 1e7 -> n/10, n > 1e7 -> n/100.
+  by both parts (the inclusive part is much cheaper per point than the exclusive one).
   iseed sets the seed; the random numbers of the exclusive part restart from it.
   readingrid 1 reads the grids of a previous run with the same seed instead
   of the grid pass (grids<seed>.dat for the inclusive and grids-excl<seed>.dat
@@ -55,25 +54,33 @@ FLAGS (powheg.input; absent = default)
   cs_smallx 0.3     fraction of Born phase-space points in the small-x channels
                     (0: off)
   cs_smallx_x0 0.03 x limit of the small-x channels
+  cs_write_parts 0  1: also write the inclusive and the exclusive part, besides the sum
   cs_4qint 1        identical-quark interference in the four-quark reals of
                     the (2,0) and (0,2) parts (H + 4 quarks): normal x flipped
                     diagrams when the gluon-split pair has the flavour of the
                     radiating line (NC) or of one end of its W line (CC);
                     0: off, as before 2026-10-13 (validation/v4_4qint);
                     2: the interference alone, to measure its effect: the
-                    exclusive part (pwg-EXCL-W<k>.top) is then only the
+                    exclusive part (provbfh-<iseed>-NNLO-excl-W<k>.top, written
+                    in this mode) is then only the
                     interference and its counterevents (needs qcd_order 3;
                     the inclusive part is run as usual and must be ignored;
                     setreal warns once per entry without interference
                     ("rflav ... flav+tag") at initialisation)
 
-OUTPUTS (in the run directory)
-  pwg-W<k>.top      all histograms, total (inclusive + exclusive), scale point k
-                    (W1 central; with the analysis weights of cs_scales)
-  pwg-LO-W<k>.top   inclusive part alone;  pwg-EXCL-W<k>.top  exclusive part alone
-  xsct-<lo|nlo|nnlo>.dat   cross section with the cuts of the analysis, per scale point
+OUTPUTS (in the run directory; <iseed> is the seed, at least four digits;
+         <order> is LO, NLO or NNLO)
+  provbfh-<iseed>-<order>-W<k>.top   all histograms, total (inclusive + exclusive),
+                    scale point k (W1 central; with the analysis weights of
+                    cs_scales; with cs_scales 1 there is no -W<k>)
+  provbfh-<iseed>-<order>.dat   cross section with the cuts of the analysis, per
+                    scale point
   grids.dat, grids-excl.dat (plus .top) VEGAS grids; run.log is the standard output
-  At qcd_order 1 only the inclusive part is run (pwg-LO-W<k>.top and pwg-W<k>.top).
+  Only the sum of the parts is written. With cs_write_parts 1 the inclusive and the
+  exclusive part are also written, provbfh-<iseed>-<order>-incl-W<k>.top and
+  provbfh-<iseed>-<order>-excl-W<k>.top (always for cs_4qint 2).
+  At qcd_order 1 only the inclusive part is run, which is then the sum.
+  tools/combine_parts.py averages the files of several seeds (see its header).
 
 VALIDATION (validation/)
   v1_regression.sh  the combined run reproduces the earlier two-job set-up
@@ -95,3 +102,5 @@ VALIDATION (validation/)
                     effect.py, pilot-4qint-W<k>.top: the effect on p1506 (20
                     jobs of cs_4qint 2). Results in RESULT.txt
   make check        unit tests (tests/)
+  (v1 and v3 compare with builds made before the output was renamed and ncall of the
+  inclusive part was no longer mapped; they cannot be run with the current code.)

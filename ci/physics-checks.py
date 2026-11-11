@@ -26,10 +26,11 @@ Checks (default: all):
               At NLO and NNLO the exact check replaces it.
   exact       proVBFH-cs at NLO and NNLO: short, fixed runs (fixed seed,
               fixed ncall) against the frozen outputs in <reference-dir>/exact.
-              The cross sections (xsct-*.dat) must be reproduced byte for
+              The cross sections (provbfh-*.dat) must be reproduced byte for
               byte; the histograms must agree bin by bin (third column), the
-              LO ones (pwg-LO-*.top) to EXACT_RTOL_LO, the NLO/NNLO ones
-              (pwg-W*.top, pwg-EXCL-*.top) to EXACT_RTOL of the bin or
+              inclusive part (provbfh-*-incl-*.top) to EXACT_RTOL_LO, the sum
+              and the exclusive part (provbfh-*-W*.top, provbfh-*-excl-*.top)
+              to EXACT_RTOL of the bin or
               EXACT_ATOL of the VBF cross section. The tolerance is needed
               because the exclusive part of proVBFH-cs turns last-bit
               differences of the phase space into jumps of a few events (see
@@ -78,9 +79,8 @@ MUS = (1.0, 0.5, 2.0)                 # (mu_R, mu_F) = (mu, mu) relative to the 
 HIGGS_ONLY = ("sig incl cuts", "ptH-incl", "yH-incl")
 SIGMA_VBF = "sig(all VBF cuts 2 jets)"
 
-# statistics of the checks (before --stat); the inclusive code takes the
-# number of points per iteration, cs maps ncall of the card (n <= 1e4: n,
-# n <= 1e7: n/10) for its inclusive part
+# statistics of the checks (before --stat); the number of points per iteration
+# (proVBFH-cs uses ncall of the card for both its parts)
 N_INCL = 200000
 N_PROJ = 10000
 MAXRELERR = 0.15      # bins with a larger relative error of the run are not part of the chi2
@@ -104,9 +104,9 @@ N_EXACT = 2000        # ncall1 = ncall2 of the exact runs, itmx1 = itmx2 = 1
 # tolerance below is about five times that; it is still two orders of
 # magnitude below any change of the physics, and far below the statistical
 # checks.
-EXACT_RTOL = 1e-2     # pwg-W, pwg-EXCL: per bin, relative to the frozen bin
-EXACT_ATOL = 3e-5     # pwg-W, pwg-EXCL: per bin, in units of the VBF cross section
-EXACT_RTOL_LO = 1e-5  # pwg-LO: the LO histograms are stable to their last digit
+EXACT_RTOL = 1e-2     # sum and -excl-: per bin, relative to the frozen bin
+EXACT_ATOL = 3e-5     # sum and -excl-: per bin, in units of the VBF cross section
+EXACT_RTOL_LO = 1e-5  # -incl-: the LO histograms are stable to their last digit
 EXACT_ATOL_LO = 1e-9
 
 
@@ -280,6 +280,17 @@ class Setup:
         return d, t
 
 
+def cs_file(d, o, k=None, part=""):
+    """An output of a proVBFH-cs run of order o in directory d, whatever its
+    seed: the cross-section file (k None) or the histogram file of weight k;
+    part '' (the sum), '-incl' or '-excl' (the latter two need cs_write_parts 1)."""
+    pat = "provbfh-*-%s%s" % (o.upper(), ".dat" if k is None else "%s-W%d.top" % (part, k))
+    files = glob.glob(os.path.join(d, pat))
+    if len(files) != 1:
+        raise Failure("proVBFH-cs: expected one %s in %s, found %s" % (pat, d, files))
+    return files[0]
+
+
 def reference_inclusive(refdir):
     ref = {}
     with open(os.path.join(refdir, "inclusive.ref")) as f:
@@ -362,7 +373,6 @@ def check_inclusive(S, rep):
     a = S.a
     ref = reference_inclusive(a.refdir)
     n = int(N_INCL * a.stat)
-    ncs = 10 * n if n > 10000 else n          # cs maps n -> n/10 above 1e4
     jobs, res = {}, {}
     with cf.ThreadPoolExecutor(a.jobs) as ex:
         for o in ("lo", "nlo", "nnlo", "n3lo"):
@@ -370,7 +380,7 @@ def check_inclusive(S, rep):
                 jobs[("A", o, mu)] = ex.submit(S.incl_exe, "A", o, mu, n, a.seed)
             jobs[("B", o, 1.0)] = ex.submit(S.provbfh_incl_only, o, 1.0, n, a.seed)
         for o in ("lo", "nlo", "nnlo"):
-            jobs[("C", o, 1.0)] = ex.submit(S.cs_run, "inclusive-" + o, o, a.seed, ncs, 2, True)
+            jobs[("C", o, 1.0)] = ex.submit(S.cs_run, "inclusive-" + o, o, a.seed, n, 2, True)
         for k, j in jobs.items():
             res[k] = j.result()
     names = {"A": "provbfh_incl", "B": "proVBFH", "C": "proVBFH-cs"}
@@ -383,7 +393,7 @@ def check_inclusive(S, rep):
         rep.pull("%s provbfh_incl vs proVBFH" % o, res[("A", o, 1.0)], res[("B", o, 1.0)], ("A", "B"))
         if o != "n3lo":
             d, _ = res[("C", o, 1.0)]
-            vals = xsct_values(os.path.join(d, "xsct-%s.dat" % o))
+            vals = xsct_values(cs_file(d, o))
             for mu, v in zip(MUS, vals):      # W1 (1,1), W2 (1/2,1/2), W3 (2,2)
                 rep.pull("%s (mu=%g) proVBFH-cs vs ref" % (o, mu), v, ref["%s_%g" % (o, mu)])
             rep.pull("%s provbfh_incl vs proVBFH-cs" % o, res[("A", o, 1.0)], vals[0], ("A", "C"))
@@ -395,14 +405,14 @@ def check_projection(S, rep):
     jobs = {}
     with cf.ThreadPoolExecutor(a.jobs) as ex:
         for o in ("nlo", "nnlo"):
-            jobs[o] = ex.submit(S.cs_run, "projection-" + o, o, a.seed, n)
+            jobs[o] = ex.submit(S.cs_run, "projection-" + o, o, a.seed, n, cs_write_parts=1)
         res = {o: j.result() for o, j in jobs.items()}
     for o in ("nlo", "nnlo"):
         d, t = res[o]
         print("%s (%.0f s):" % (o.upper(), t))
         for k in (1, 2, 3):
-            ex_h = read_top(os.path.join(d, "pwg-EXCL-W%d.top" % k))
-            in_h = read_top(os.path.join(d, "pwg-LO-W%d.top" % k))
+            ex_h = read_top(cs_file(d, o, k, "-excl"))
+            in_h = read_top(cs_file(d, o, k, "-incl"))
             for name in HIGGS_ONLY:
                 scale = max(abs(r[2]) for r in in_h[name])
                 worst = max(abs(r[2]) for r in ex_h[name])
@@ -426,13 +436,13 @@ def check_cs(S, rep):
     jobs = {}
     with cf.ThreadPoolExecutor(a.jobs) as ex:
         n = int(N_INCL * a.stat)
-        jobs["lo"] = ex.submit(S.cs_run, "ref-lo", "lo", a.seed, 10 * n if n > 10000 else n, 2)
+        jobs["lo"] = ex.submit(S.cs_run, "ref-lo", "lo", a.seed, n, 2)
         res = {o: j.result() for o, j in jobs.items()}
     for o in ("lo",):
         d, t = res[o]
         print("%s (%.0f s):" % (o.upper(), t))
         for k in (1, 2, 3):
-            rep.hist("%s W%d" % (o, k), read_top(os.path.join(d, "pwg-W%d.top" % k)),
+            rep.hist("%s W%d" % (o, k), read_top(cs_file(d, o, k)),
                      read_top(os.path.join(a.refdir, "cs-%s-W%d.top" % (o, k))))
 
 
@@ -440,7 +450,7 @@ def exact_files(d):
     """The outputs of a cs run that the exact check freezes and compares:
     the histograms and the cross-section lines (not the grids)."""
     files = []
-    for pattern in ("xsct-*.dat", "pwg-*.top"):
+    for pattern in ("provbfh-*.dat", "provbfh-*.top"):
         files += sorted(glob.glob(os.path.join(d, pattern)))
     return files
 
@@ -474,7 +484,7 @@ def read_top_blocks(path):
 
 
 def vbf_sigma(path):
-    """The VBF cross section of a pwg-W<k>.top file (the scale of the exact
+    """The VBF cross section of a histogram file (the scale of the exact
     tolerances)."""
     blocks = read_top_blocks(path)
     for h, rows in blocks:
@@ -519,7 +529,7 @@ def check_exact(S, rep):
     of the module docstring)."""
     a = S.a
     for o in ("nlo", "nnlo"):
-        d, t = S.cs_run("exact-" + o, o, EXACT_SEED, N_EXACT, 1)
+        d, t = S.cs_run("exact-" + o, o, EXACT_SEED, N_EXACT, 1, cs_write_parts=1)
         print("%s (%.0f s):" % (o.upper(), t), flush=True)
         produced = exact_files(d)
         frozen = sorted(glob.glob(os.path.join(a.refdir, "exact", o, "*")))
@@ -537,10 +547,10 @@ def check_exact(S, rep):
             if not os.path.exists(ref):
                 rep.failed.append("exact %s %s" % (o, name))
                 print("  FAIL %-22s no frozen output %s" % (name, ref), flush=True)
-            elif name.startswith(("pwg-LO-", "pwg-W", "pwg-EXCL-")):
+            elif name.endswith(".top"):
                 k = int(name.rsplit("-", 1)[-1].split(".")[0].lstrip("W"))
-                sigma = vbf_sigma(os.path.join(a.refdir, "exact", o, "pwg-W%d.top" % k))
-                lo = name.startswith("pwg-LO-")
+                sigma = vbf_sigma(cs_file(os.path.join(a.refdir, "exact", o), o, k))
+                lo = "-incl-" in name
                 ok, msg = compare_top(f, ref, sigma,
                                       EXACT_RTOL_LO if lo else EXACT_RTOL,
                                       EXACT_ATOL_LO if lo else EXACT_ATOL)
@@ -594,7 +604,7 @@ def generate(S, parts):
                 ev = math.sqrt(sum(x[1] ** 2 for x in v)) / len(v)
                 es = math.sqrt(sum((x[0] - m) ** 2 for x in v) / (len(v) - 1) / len(v))
                 f.write("%s_%g %.8e %.3e\n" % (o, mu, m, max(ev, es)))
-    for o, n, itmx in (("lo", 10000000, 2),):
+    for o, n, itmx in (("lo", 1000000, 2),):
         if "cs-" + o not in parts:
             continue
         ns = 8
@@ -604,7 +614,7 @@ def generate(S, parts):
             fut = [ex.submit(S.cs_run, "gen-%s-s%d" % (o, seed0 + s), o, seed0 + s, n, itmx) for s in range(ns)]
             dirs = [f.result()[0] for f in fut]
         for k in (1, 2, 3):
-            h = combine([os.path.join(d, "pwg-W%d.top" % k) for d in dirs])
+            h = combine([cs_file(d, o, k) for d in dirs])
             write_top(os.path.join(a.refdir, "cs-%s-W%d.top" % (o, k)), h,
                       header + "\n%s: mean of %d seeds, ncall1 = ncall2 = %d" % (o, ns, n))
     if "exact" in parts:
@@ -615,7 +625,7 @@ def generate(S, parts):
             versions[t] = subprocess.run([t, "--version"], stdout=subprocess.PIPE,
                                          stderr=subprocess.DEVNULL, text=True).stdout.strip().splitlines()[0]
         for o in ("nlo", "nnlo"):
-            d, t = S.cs_run("gen-exact-" + o, o, EXACT_SEED, N_EXACT, 1)
+            d, t = S.cs_run("gen-exact-" + o, o, EXACT_SEED, N_EXACT, 1, cs_write_parts=1)
             out = os.path.join(a.refdir, "exact", o)
             os.makedirs(out, exist_ok=True)
             for f in exact_files(d):
@@ -625,15 +635,18 @@ def generate(S, parts):
             f.write("# Exact-check references\n\n"
                     "Frozen outputs of short, fixed proVBFH-cs runs, compared by\n"
                     "`ci/physics-checks.py exact` (see its docstring): the cross sections\n"
-                    "byte for byte, the histograms bin by bin (LO to %s, NLO/NNLO to %s of\n"
-                    "a bin or %s of the VBF cross section). Regenerate with\n"
+                    "byte for byte, the histograms bin by bin (the inclusive part to %s, the sum and\n"
+                    "the exclusive part to %s of a bin or %s of the VBF cross section). Regenerate with\n"
                     "`ci/physics-checks.py generate exact` after a deliberate change of the\n"
                     "code or of the dependencies or compiler.\n\n"
                     "- Generated: %s\n- Code: commit %s%s\n- gfortran: %s\n- hoppet: %s\n- LHAPDF: %s\n"
                     "- PDF: the hoppet benchmark (ci/benchmark-pdf.sh)\n"
                     "- Runs: qcd_order 2 and 3, iseed %d, ncall1 = ncall2 = %d, itmx1 = itmx2 = 1,\n"
-                    "  13 TeV, scale of 1506.02660 (cs_scales 3), default card otherwise\n"
-                    "- Compared: xsct-*.dat and pwg-*.top of each run (not the grids)\n"
+                    "  13 TeV, scale of 1506.02660 (cs_scales 3), cs_write_parts 1, default card otherwise\n"
+                    "- Files (iseed 1): provbfh-0001-<NLO|NNLO>.dat, the sum -W<k>.top and the parts\n"
+                    "  -incl-W<k>.top, -excl-W<k>.top\n"
+                    "- Compared: provbfh-*.dat and provbfh-*.top of each run, the parts too\n"
+                    "  (cs_write_parts 1), not the grids\n"
                     % (tol_str(EXACT_RTOL_LO), tol_str(EXACT_RTOL), tol_str(EXACT_ATOL),
                        time.strftime("%Y-%m-%d"), info, " (+ uncommitted changes)" if dirty else "",
                        versions["gfortran"], versions["hoppet-config"], versions["lhapdf-config"],

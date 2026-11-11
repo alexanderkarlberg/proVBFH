@@ -19,9 +19,9 @@ higgsmasswindow  30 ! How many widths we integrate around the Breit Wigner peak.
 runningscales 1
                    ! 2: Q1 on upper and Q2 on lower line (slow)
 
-ncall1 200000      ! VEGAS calls per iteration of the grid pass (itmx1 iterations) and the main pass (itmx2).
-ncall2 1600000     ! These are for the exclusive part; the inclusive part (7 dimensions) uses the
-itmx2 3            ! mapped numbers: n <= 1e4 -> n, 1e4 < n <= 1e7 -> n/10, n > 1e7 -> n/100.
+ncall1 200000      ! VEGAS calls per iteration of the grid pass (itmx1 iterations) and the main pass (itmx2),
+ncall2 1600000     ! used as given by the inclusive part (7 dimensions) and by the exclusive part.
+itmx2 3
 
 xgriditeration 1   ! identifier for grid generation
 parallelstage 2
@@ -108,3 +108,4 @@ cs_hard2mode 1     ! 1: second-emission hard channel only behind the hard first 
 cs_smallx 0.3      ! fraction of Born phase-space points in the small-x channels (0: off)
 cs_smallx_x0 0.03  ! x limit of the small-x channels
 cs_4qint 1         ! 1: identical-quark interference in the four-quark reals (H+4 quarks, NNLO); 0: off (as before 2026-10-13); 2: the interference alone
+cs_write_parts 0   ! 1: also write the inclusive and the exclusive part (provbfh-<iseed>-<order>-incl-W<k>.top, -excl-W<k>.top); 0: only the sum

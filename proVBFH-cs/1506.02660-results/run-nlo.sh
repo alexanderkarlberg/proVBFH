@@ -12,13 +12,13 @@ function char {
 for i in $(seq 1 1000)
 do
     ch=`char $i`
-    if [ ! -f pwg-$ch-W1.top ]
+    if [ ! -f provbfh-$ch-NLO-W1.top ]
     then
 	echo "echo $i | ../proVBFH-cs"
     fi
 done > jobs.txt
 thsub -a jobs.txt
 
-#mergedata 1 pwg-0*W1*; mv fort.12 W1.top
-#mergedata 1 pwg-0*W2*; mv fort.12 W2.top
-#mergedata 1 pwg-0*W3*; mv fort.12 W3.top
+#mergedata 1 provbfh-0*-NLO-W1.top; mv fort.12 W1.top
+#mergedata 1 provbfh-0*-NLO-W2.top; mv fort.12 W2.top
+#mergedata 1 provbfh-0*-NLO-W3.top; mv fort.12 W3.top

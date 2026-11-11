@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """V2: the default card (v2_submit.sh) against the final p1506 production.
 
-  v2_check.py <nlo|nnlo> '<run dir>/job-*/pwg-W%d.top'
+  v2_check.py <nlo|nnlo> '<run dir>/job-*/provbfh-*-<NLO|NNLO>-W%d.top'
 
 Per scale point W1..W3: the cross sections 'sig incl cuts' and with all VBF
 cuts for 2, 3 and 4 jets, mean of the finished jobs with the error of the mean

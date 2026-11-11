@@ -55,12 +55,16 @@ options):
   the integral of each histogram (the bins weighted by their widths) is a pull,
   and the shape is a chi2 over the bins whose relative error is below 15%.
   At NLO and NNLO the `exact` check replaces this statistical comparison.
+  (The references were generated with `ncall` 1e7, when `proVBFH-cs` mapped
+  it to 1e6 for the inclusive part, the only part at LO; the checks and the
+  generator now use 1e6 directly, which is the same statistics.)
 - `exact` (Linux only, as in CI): `proVBFH-cs` at NLO and NNLO in short,
   fixed runs (fixed seed, fixed ncall) against the frozen outputs in
-  `ci/reference/exact/`. The cross sections (`xsct-*.dat`) must be reproduced
-  byte for byte, and the histograms bin by bin (third column): the LO ones
-  (`pwg-LO-*.top`) to 1e-5, the NLO/NNLO ones (`pwg-W*.top`,
-  `pwg-EXCL-*.top`) to 1% of the bin or 3e-5 of the VBF cross section. The
+  `ci/reference/exact/`. The cross sections (`provbfh-*.dat`) must be reproduced
+  byte for byte, and the histograms bin by bin (third column): the inclusive
+  part (`provbfh-*-incl-*.top`, run with `cs_write_parts 1`) to 1e-5, the sum
+  (`provbfh-*-W*.top`) and the exclusive part (`provbfh-*-excl-*.top`) to 1% of
+  the bin or 3e-5 of the VBF cross section. The
   tolerance is not laxness: the runs are deterministic, but the exclusive
   part of `proVBFH-cs` contains discrete decisions (the radiation cutoff,
   the VBF cuts on the dipoles), so a last-bit difference of the phase space

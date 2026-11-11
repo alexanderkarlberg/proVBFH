@@ -20,8 +20,8 @@ runningscales 1
                    ! 2: Q1 on upper and Q2 on lower line (slow)
 
 ncall1 500000      ! VEGAS calls per iteration of the grid pass (itmx1 iterations) and the main pass (itmx2).
-ncall2 5000000     ! These are for the exclusive part; the inclusive part (7 dimensions) uses the
-itmx2 3            ! mapped numbers: n <= 1e4 -> n, 1e4 < n <= 1e7 -> n/10, n > 1e7 -> n/100.
+ncall2 5000000     ! (the results here were made with a version that gave the inclusive part n/10 for
+itmx2 3            ! 1e4 < n <= 1e7; both parts now use ncall as given)
 
 xgriditeration 1   ! identifier for grid generation
 parallelstage 2
